@@ -1,0 +1,10 @@
+node_modules
+
+build
+
+.env
+.env.example
+.idea
+artifacts/
+.openzeppelin/
+cache
