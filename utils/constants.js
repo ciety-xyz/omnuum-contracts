@@ -21,11 +21,16 @@ module.exports = {
       initialize: 'Initializable: contract is already initialized',
       onlyOwner: 'Ownable: caller is not the owner',
     },
-    verifier: {
+    senderVerifier: {
       nounce: 'False Nounce',
       topic: 'False Topic',
       sender: 'False Sender',
       signer: 'False Signer',
+    },
+    ticketVerifier: {
+      signer: 'False Signer',
+      nft: 'False NFT',
+      minter: 'False Minter',
     },
     code: {
       ARG1: 'ARG1',
@@ -51,7 +56,7 @@ module.exports = {
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
-    TICKETMANAGER: 'TICKETMANAGER',
+    TICKET: 'TICKET',
     MINTMANAGER: 'MINTMANAGER',
     EXCHANGE: 'EXCHANGE',
     WALLET: 'WALLET',
@@ -74,5 +79,6 @@ module.exports = {
   },
   testValues: {
     mintFee: 2500, // 0.025 == 2.5%
+    coverUri: 'https://testCover.com'
   },
 };

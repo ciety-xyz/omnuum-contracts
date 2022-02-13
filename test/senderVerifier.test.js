@@ -62,7 +62,7 @@ describe('SenderVerifier', () => {
           group_id,
           payload,
         ),
-      ).to.be.revertedWith(Constants.reasons.verifier.topic);
+      ).to.be.revertedWith(Constants.reasons.senderVerifier.topic);
     });
     it('[Revert] False Signer', async () => {
       const {
@@ -80,7 +80,7 @@ describe('SenderVerifier', () => {
           group_id,
           payload,
         ),
-      ).to.be.revertedWith(Constants.reasons.verifier.signer);
+      ).to.be.revertedWith(Constants.reasons.senderVerifier.signer);
     });
     it('[Revert] False Nounce', async () => {
       const {
@@ -98,7 +98,7 @@ describe('SenderVerifier', () => {
           group_id + 1, // nounce - false
           payload,
         ),
-      ).to.be.revertedWith(Constants.reasons.verifier.nounce);
+      ).to.be.revertedWith(Constants.reasons.senderVerifier.nounce);
     });
     it('[Revert] False Sender', async () => {
       const {
@@ -110,7 +110,7 @@ describe('SenderVerifier', () => {
 
       await expect(
         senderVerifier.verify(omnuumAC.address, falseSenderAC.address, Constants.payloadTopic.ticket, group_id, payload),
-      ).to.be.revertedWith(Constants.reasons.verifier.sender);
+      ).to.be.revertedWith(Constants.reasons.senderVerifier.sender);
     });
   });
 });

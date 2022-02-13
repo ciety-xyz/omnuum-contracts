@@ -30,6 +30,41 @@ module.exports = {
 
     return { ...data, signature };
   },
+  async createTicket(data, signer, verifierAddress) {
+    const SIGNING_DOMAIN_NAME = 'OmnuumTicket';
+    const SIGNING_DOMAIN_VERSION = '1';
+
+    const types = {
+      Ticket: [
+        { name: 'user', type: 'address' },
+        { name: 'nft', type: 'address' },
+        { name: 'price', type: 'uint256' },
+        { name: 'quantity', type: 'uint16' },
+        { name: 'groupId', type: 'uint16' },
+      ],
+    };
+
+    const domain = {
+      name: SIGNING_DOMAIN_NAME,
+      version: SIGNING_DOMAIN_VERSION,
+      verifyingContract: verifierAddress,
+      chainId: (await ethers.provider.getNetwork()).chainId,
+    };
+
+    const signature = await signer._signTypedData(domain, types, data);
+
+    return { ...data, signature };
+  },
+  createEmptyTicketForPublicMint(price) {
+    return {
+      user: module.exports.nullAddress,
+      nft: module.exports.nullAddress,
+      price,
+      quantity: 0,
+      groupId: 0,
+      signature: module.exports.nullAddress,
+    };
+  },
   async isLocalNetwork(provider) {
     const { chainId } = await provider.getNetwork();
     return chainId != 1 && chainId != 4;

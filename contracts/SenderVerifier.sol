@@ -22,10 +22,7 @@ contract SenderVerifier is EIP712 {
         address signer = recoverSigner(_payload);
         require(_owner == signer, 'False Signer');
         require(_nounce == _payload.nounce, 'False Nounce');
-        require(
-            keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)),
-            'False Topic'
-        );
+        require(keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)), 'False Topic');
         require(_payload.sender == _sender, 'False Sender');
     }
 
