@@ -32,7 +32,7 @@ async function createTicketMintCase(quantity) {
     accounts: [omnuumAC, minterAC, receiverAC],
     senderVerifier,
     omnuumNFT1155,
-    ticketVerifier,
+    ticketManager,
   } = this;
 
   const group_id = 1;
@@ -44,9 +44,9 @@ async function createTicketMintCase(quantity) {
   const ticket = await createTicket(
     { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
     omnuumAC,
-    ticketVerifier.address,
+    ticketManager.address,
   );
-  await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+  await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
   const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 

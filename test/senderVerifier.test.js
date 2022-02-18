@@ -5,7 +5,7 @@ const { signPayload } = require('./etc/util.js');
 const Constants = require('../utils/constants.js');
 require('chai').should();
 
-const { prepareDeploy, testDeploy } = require('./etc/mock.js');
+const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js');
 
 const group_id = 0;
 
@@ -14,6 +14,7 @@ upgrades.silenceWarnings();
 describe('SenderVerifier', () => {
   before(async () => {
     await prepareDeploy.call(this);
+    await prepareMockDeploy.call(this);
   });
 
   beforeEach(async () => {

@@ -5,7 +5,7 @@ require('chai').should();
 
 Error.stackTraceLimit = Infinity;
 
-const { prepareDeploy, testDeploy } = require('./etc/mock.js');
+const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js');
 const { nullAddress, isLocalNetwork } = require('./etc/util.js');
 
 upgrades.silenceWarnings();
@@ -13,6 +13,7 @@ upgrades.silenceWarnings();
 describe('OmnuumExchange', () => {
   before(async () => {
     await prepareDeploy.call(this);
+    await prepareMockDeploy.call(this);
   });
 
   beforeEach(async () => {
@@ -29,44 +30,28 @@ describe('OmnuumExchange', () => {
       );
     });
   });
-
-  describe('[Method] getExchangeRate', () => {
-    it('Get Exchange Rate for token', async () => {
+  describe('[Method] getExchangeAmount', () => {
+    it('Get Exchange Amount for token', async () => {
       const { omnuumExchange } = this;
-      const amount = 2;
-      const exchange_rate = await omnuumExchange.getExchangeRate(
-        nullAddress,
-        Constants.chainlink.rinkeby.LINK,
-        amount,
-      );
+      const amount = ethers.utils.parseEther('2');
+      const exchangeAmount = await omnuumExchange.getExchangeAmount(nullAddress, Constants.chainlink.rinkeby.LINK, amount);
 
-      expect(exchange_rate).to.be.equal(ethers.utils.parseEther('0.006').mul(amount));
+      expect(exchangeAmount).to.be.equal(Constants.testValues.tmpExchangeRate.mul(amount).div(ethers.utils.parseEther('1')));
     });
   });
-
   describe('[Method] exchangeToken', () => {
     // !! Only work for rinkeby or mainnet, in local, LINK token contract is required
     it('Receive token from exchange', async () => {
       if (await isLocalNetwork(ethers.provider)) return;
       const { omnuumExchange, accounts } = this;
       const amount = 2;
-      const tx = await omnuumExchange.exchangeToken(
-        Constants.chainlink.rinkeby.LINK,
-        amount,
-        accounts[1].address,
-      );
+      const tx = await omnuumExchange.exchangeToken(Constants.chainlink.rinkeby.LINK, amount, accounts[1].address);
 
       await tx.wait();
 
       expect(tx)
         .to.emit(omnuumExchange, 'Exchange')
-        .withArgs(
-          nullAddress,
-          Constants.chainlink.rinkeby.LINK,
-          amount,
-          accounts[0].address,
-          accounts[1].address,
-        );
+        .withArgs(nullAddress, Constants.chainlink.rinkeby.LINK, amount, accounts[0].address, accounts[1].address);
     });
 
     it('[Revert] check sender is omnuum registered contract or address', async () => {
@@ -77,22 +62,17 @@ describe('OmnuumExchange', () => {
       const amount = 2;
 
       expect(
-        omnuumExchange
-          .connect(not_omnuum)
-          .exchangeToken(Constants.chainlink.rinkeby.LINK, amount, not_omnuum.address),
+        omnuumExchange.connect(not_omnuum).exchangeToken(Constants.chainlink.rinkeby.LINK, amount, not_omnuum.address),
       ).to.be.revertedWith(Constants.reasons.code.OO3);
     });
   });
-
   describe('[Method] updateTmpExchangeRate', () => {
     it('should update exchangeRate', async () => {
       const { omnuumExchange } = this;
 
-      const prev_rate = await omnuumExchange.getExchangeRate(
-        nullAddress,
-        Constants.chainlink.rinkeby.LINK,
-        1,
-      );
+      const uintAmount = ethers.utils.parseEther('1');
+
+      const prev_rate = await omnuumExchange.getExchangeAmount(nullAddress, Constants.chainlink.rinkeby.LINK, uintAmount);
 
       const rate = ethers.utils.parseEther('0.1');
 
@@ -102,11 +82,7 @@ describe('OmnuumExchange', () => {
 
       await tx.wait();
 
-      const exchange_rate = await omnuumExchange.getExchangeRate(
-        nullAddress,
-        Constants.chainlink.rinkeby.LINK,
-        1,
-      );
+      const exchange_rate = await omnuumExchange.getExchangeAmount(nullAddress, Constants.chainlink.rinkeby.LINK, uintAmount);
 
       expect(exchange_rate).to.be.equal(rate);
     });
@@ -116,19 +92,20 @@ describe('OmnuumExchange', () => {
 
       const rate = ethers.utils.parseEther('0.1');
 
-      expect(omnuumExchange.connect(accounts[1]).updateTmpExchangeRate(rate)).to.be.revertedWith(
-        Constants.reasons.code.OO3,
-      );
+      expect(omnuumExchange.connect(accounts[1]).updateTmpExchangeRate(rate)).to.be.revertedWith(Constants.reasons.code.OO3);
     });
   });
   describe('[Method] withdraw', () => {
     it('Withdraw successfully', async () => {
-      const { omnuumExchange, accounts } = this;
+      const { omnuumExchange, mockLink, accounts } = this;
 
       const value = ethers.utils.parseEther('1.5');
+      const test_link_move_amount = ethers.utils.parseEther('1');
 
       // 1. send ether to exchange
-      const deposit_tx = await omnuumExchange.deposit({ value });
+      const deposit_tx = await omnuumExchange.exchangeToken(mockLink.address, test_link_move_amount, accounts[1].address, {
+        value,
+      });
 
       await deposit_tx.wait();
 

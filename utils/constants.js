@@ -6,13 +6,24 @@ module.exports = {
       TransferSingle: 'TransferSingle', // address operator, address from, address to, uint256 id, uint256 value
       Ticket: 'Ticket',
       Public: 'Public',
-      UriChanged: 'UriChanged',
+      Uri: 'Uri',
     },
     MintManager: {
       SetFee: 'SetFee',
       Airdrop: 'Airdrop',
+      SetSchedule: 'SetSchedule',
+      PublicMint: 'PublicMint',
     },
     CAManager: {
+      Updated: 'Updated',
+    },
+    TicketManager: {
+      EndDate: 'EndDate',
+      UseTicket: 'UseTicket',
+    },
+    VRFManager: {
+      RequestVRF: 'RequestVRF',
+      ResponseVRF: 'ResponseVRF',
       Updated: 'Updated',
     },
   },
@@ -27,10 +38,18 @@ module.exports = {
       sender: 'False Sender',
       signer: 'False Signer',
     },
-    ticketVerifier: {
+    ticketManager: {
       signer: 'False Signer',
       nft: 'False NFT',
       minter: 'False Minter',
+    },
+    vrfManager: {
+      LINK: 'Not enough LINK',
+      Ether: 'Not enough Ether',
+      Once: 'Already used',
+    },
+    RevertMessage: {
+      silent: 'Transaction reverted silently',
     },
     code: {
       ARG1: 'ARG1',
@@ -38,13 +57,14 @@ module.exports = {
       OO1: 'OO1',
       OO2: 'OO2',
       OO3: 'OO3',
-      NE1: 'NE1',
-      MT1: 'MT1',
-      MT2: 'MT2',
-      MT5: 'MT5',
-      MT3: 'MT3',
-      MT7: 'MT7',
-      MT8: 'MT8',
+      NE1: 'NE1', // Fee rate should be lower than 100%
+      MT1: 'MT1', // There is no available ticket
+      MT2: 'MT2', // Cannot mint more than possible amount per address
+      MT3: 'MT3', // Remaining token count is not enough
+      MT5: 'MT5', // Not enough money
+      MT7: 'MT7', // Mint is ended
+      MT8: 'MT8', // Minting period is ended
+      MT9: 'MT9', // Mint subject cannot be CA
     },
   },
   payloadTopic: {
@@ -79,6 +99,7 @@ module.exports = {
   },
   testValues: {
     mintFee: 2500, // 0.025 == 2.5%
-    coverUri: 'https://testCover.com'
+    coverUri: 'https://testCover.com',
+    tmpExchangeRate: ethers.utils.parseEther('0.0055'),
   },
 };

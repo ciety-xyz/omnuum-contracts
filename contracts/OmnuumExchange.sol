@@ -15,25 +15,21 @@ contract OmnuumExchange is OwnableUpgradeable {
 
     event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
 
-    function initialize(address _caMAnagerA) public initializer {
+    function initialize(address _caManagerA) public initializer {
         __Ownable_init();
 
-        caManager = OmnuumCAManager(_caMAnagerA);
+        caManager = OmnuumCAManager(_caManagerA);
 
-        tmpLinkExRate = 0.006 ether; // TODO: should change before deploy
-    }
-
-    function deposit() public payable {
-        console.log('recevied %s', msg.value);
+        tmpLinkExRate = 0.0055 ether; // TODO: should change before deploy
     }
 
     // temporary function for fixed link exchange rate -
-    function getExchangeRate(
+    function getExchangeAmount(
         address _baseToken,
         address _targetToken,
         uint256 _amount
     ) public view returns (uint256) {
-        return tmpLinkExRate * _amount;
+        return tmpLinkExRate * _amount / 1 ether;
     }
 
     function updateTmpExchangeRate(uint256 _newRate) public {
@@ -55,7 +51,6 @@ contract OmnuumExchange is OwnableUpgradeable {
     }
 
     function withdraw() public {
-        console.log('Send!! to: %s, amount: %s', msg.sender, address(this).balance);
         require(caManager.isRegistered(msg.sender), 'OO3');
         payable(msg.sender).transfer(address(this).balance);
     }

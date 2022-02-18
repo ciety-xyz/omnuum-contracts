@@ -13,7 +13,7 @@ module.exports = {
       Payload: [
         { name: 'sender', type: 'address' },
         { name: 'topic', type: 'string' },
-        { name: 'nounce', type: 'uint32' },
+        { name: 'nounce', type: 'uint256' },
       ],
     };
 
@@ -39,8 +39,8 @@ module.exports = {
         { name: 'user', type: 'address' },
         { name: 'nft', type: 'address' },
         { name: 'price', type: 'uint256' },
-        { name: 'quantity', type: 'uint16' },
-        { name: 'groupId', type: 'uint16' },
+        { name: 'quantity', type: 'uint32' },
+        { name: 'groupId', type: 'uint256' },
       ],
     };
 
@@ -55,16 +55,6 @@ module.exports = {
 
     return { ...data, signature };
   },
-  createEmptyTicketForPublicMint(price) {
-    return {
-      user: module.exports.nullAddress,
-      nft: module.exports.nullAddress,
-      price,
-      quantity: 0,
-      groupId: 0,
-      signature: module.exports.nullAddress,
-    };
-  },
   async isLocalNetwork(provider) {
     const { chainId } = await provider.getNetwork();
     return chainId != 1 && chainId != 4;
@@ -74,5 +64,8 @@ module.exports = {
   },
   toSolDate(date) {
     return Math.floor(date / 1000);
+  },
+  parseEvent(ifaces, receipt) {
+    return receipt.logs.map((log, idx) => ifaces[idx].parseLog(log));
   },
 };

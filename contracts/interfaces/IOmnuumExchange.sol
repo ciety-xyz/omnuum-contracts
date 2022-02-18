@@ -9,7 +9,7 @@ interface IOmnuumExchange {
     function deposit() external payable;
 
     // temporary function for fixed link exchange rate -
-    function getExchangeRate(
+    function getExchangeAmount(
         address _baseToken,
         address _targetToken,
         uint256 _amount

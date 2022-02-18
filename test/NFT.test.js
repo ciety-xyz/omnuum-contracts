@@ -5,8 +5,8 @@ const { addDays } = require('date-fns');
 const Constants = require('../utils/constants.js');
 require('chai').should();
 
-const { createNftContractArgs, prepareDeploy, testDeploy, deployNFT } = require('./etc/mock.js');
-const { signPayload, nullAddress, toSolDate, calcGasFeeInEther, createTicket, createEmptyTicketForPublicMint } = require('./etc/util.js');
+const { createNftContractArgs, prepareDeploy, testDeploy, deployNFT, prepareMockDeploy } = require('./etc/mock.js');
+const { signPayload, nullAddress, toSolDate, calcGasFeeInEther, createTicket } = require('./etc/util.js');
 
 const nounce = 1;
 const end_date = toSolDate(addDays(new Date(), 2));
@@ -17,6 +17,7 @@ upgrades.silenceWarnings();
 describe('OmnuumNFT', () => {
   before(async () => {
     await prepareDeploy.call(this);
+    await prepareMockDeploy.call(this);
   });
 
   beforeEach(async () => {
@@ -34,10 +35,8 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155
           .connect(accounts[0])
           .initialize(
-            defaultArgs.uri,
             defaultArgs.caManagerAddress,
             defaultArgs.omnuumAddress,
-            defaultArgs.maxMintPerAddress,
             defaultArgs.maxSupply,
             defaultArgs.coverUri,
             defaultArgs.prjOwner,
@@ -45,96 +44,286 @@ describe('OmnuumNFT', () => {
       ).to.be.revertedWith(Constants.reasons.common.initialize);
     });
   });
-
-  describe('[Method] changePublicMint', () => {
-    it('Change NFT status to public and set basePrice', async () => {
-      const { omnuumNFT1155 } = this;
-
-      const price = ethers.utils.parseEther('0.1');
-
-      // make NFT public
-      const tx = await omnuumNFT1155.changePublicMint(true, price, end_date, 2000);
-      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.Public).withArgs(true, price, end_date, 2000);
-    });
-
-    it('[Revert] not owner', async () => {
-      const { omnuumNFT1155, accounts } = this;
-
-      const price = ethers.utils.parseEther('0.1');
-      // make NFT public
-      await expect(omnuumNFT1155.connect(accounts[1]).changePublicMint(true, price, end_date, 2000)).to.be.revertedWith(
-        Constants.reasons.common.onlyOwner,
-      );
-    });
-  });
-
-  describe('[Method] mint', () => {
-    it('Mint with ticket', async () => {
+// TODO: contract 으로 호출하는 경우 케이스 짜기
+  describe('[Method] Public Mint', () => {
+    it('Public mint', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
         omnuumNFT1155,
-        ticketVerifier,
-      } = this;
-
-      const price = ethers.utils.parseEther('0.2');
-
-      // give Ticket to minter
-      const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
-        omnuumAC,
-        ticketVerifier.address,
-      );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
-
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
-
-      const tx = await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, ticket, payload, {
-        value: price.mul(2),
-      });
-
-      await map(
-        (idx) =>
-          expect(tx)
-            .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
-            .withArgs(minterAC.address, nullAddress, receiverAC.address, idx, 1),
-        [1, 2],
-      );
-    });
-    it('Mint without ticket when NFT is on public sale', async () => {
-      const {
-        accounts: [omnuumAC, minterAC, receiverAC],
-        senderVerifier,
-        omnuumNFT1155,
+        omnuumMintManager,
       } = this;
 
       const basePrice = ethers.utils.parseEther('0.1');
 
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
       // make NFT public
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, end_date, 2000)).wait();
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
 
-      const priceWithEmptyTicket = createEmptyTicketForPublicMint(basePrice);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, nounce, omnuumAC, senderVerifier.address);
-
-      const tx = await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, priceWithEmptyTicket, payload, {
+      const tx = await omnuumNFT1155.connect(minterAC).publicMint(2, group_id, payload, {
         value: basePrice.mul(2),
       });
 
-      await map(
-        (idx) =>
-          expect(tx)
-            .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
-            .withArgs(minterAC.address, nullAddress, receiverAC.address, idx, 1),
-        [1, 2],
-      );
+      await expect(tx)
+        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
+
+      await expect(tx)
+        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
     });
     it('Omnuum should receive fee when mint success', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
         omnuumNFT1155,
-        ticketVerifier,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.2');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+      const quantity = 2;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const prev_bal = await omnuumAC.getBalance();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await (
+        await omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+          value: basePrice.mul(quantity),
+        })
+      ).wait();
+
+      const mint_fee = basePrice
+        .mul(quantity)
+        .mul(Constants.testValues.mintFee)
+        .div(10 ** 5);
+
+      const cur_bal = await omnuumAC.getBalance();
+
+      expect(cur_bal).to.equal(prev_bal.add(mint_fee));
+    });
+    it('[Revert] Payload authenticate fail - (sender, signer)', async () => {
+      const {
+        accounts: [omnuumAC, minterAC, maliciousAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      // CASE1: valid payload, but malicious sender
+      await expect(
+        omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, payload, {
+          value: basePrice.mul(2),
+        }),
+      ).revertedWith(Constants.reasons.senderVerifier.sender);
+
+      // CASE2: invalid signer
+      const invalidSignedPayload = await signPayload(
+        minterAC.address,
+        Constants.payloadTopic.mint,
+        group_id,
+        maliciousAC,
+        senderVerifier.address,
+      );
+
+      await expect(
+        omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, invalidSignedPayload, {
+          value: basePrice.mul(2),
+        }),
+      ).revertedWith(Constants.reasons.senderVerifier.signer);
+    });
+    it('[Revert] Cannot mint as public after public mint schedule ended', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+      const immediate_end_date = toSolDate(+new Date() + 1000);
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          immediate_end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      // wait 3 second for expire
+      await delay(3000, 1);
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).publicMint(2, group_id, payload, {
+          value: basePrice.mul(2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT8);
+    });
+    it('[Revert] Pay less money than required', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+      const quantity = 2;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+          value: basePrice.mul(quantity).div(2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT5);
+    });
+    it('[Revert] Cannot mint more quantity than max quantity per address (public)', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).publicMint(max_min_per_address + 1, group_id, payload, {
+          value: basePrice.mul(max_min_per_address + 1),
+        }),
+      ).revertedWith(Constants.reasons.code.MT2);
+    });
+    it('[Revert] Remaining public mint amount is not enough', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 3000;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).publicMint(open_quantity + 2, group_id, payload, {
+          value: basePrice.mul(open_quantity + 2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT3);
+    });
+  });
+
+  describe('[Method] ticketMint', () => {
+    it('Mint with ticket', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        ticketManager,
       } = this;
 
       const price = ethers.utils.parseEther('0.2');
@@ -143,15 +332,47 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
+
+      const tx = await omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
+        value: price.mul(2),
+      });
+
+      await expect(tx)
+        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
+
+      await expect(tx)
+        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
+    });
+    it('Omnuum should receive fee when mint success', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        ticketManager,
+      } = this;
+
+      const price = ethers.utils.parseEther('0.2');
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       const prev_bal = await omnuumAC.getBalance();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
-      await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, ticket, payload, {
+      await omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
         value: price.mul(2),
       });
 
@@ -166,10 +387,10 @@ describe('OmnuumNFT', () => {
     });
     it('[Revert] Pay less money than required', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
         omnuumNFT1155,
-        ticketVerifier,
+        ticketManager,
       } = this;
 
       const price = ethers.utils.parseEther('0.2');
@@ -178,248 +399,133 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
           value: price.mul(2).sub(price.div(2)),
         }),
       ).revertedWith(Constants.reasons.code.MT5);
     });
-    it('[Revert] Cannot mint as public after public mint schedule ended', async () => {
+    it('[Revert] Payload authenticate fail - (sender, signer)', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC, maliciousAC, anonymousAC],
         senderVerifier,
         omnuumNFT1155,
+        ticketManager,
       } = this;
 
-      const basePrice = ethers.utils.parseEther('0.1');
-      const immediate_end_date = toSolDate(+new Date() + 1000);
-
-      const priceWithEmptyTicket = createEmptyTicketForPublicMint(basePrice);
-
-      // make NFT public
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, immediate_end_date, 2000)).wait();
-
-      // wait 3 second for expire
-      await delay(3000, 1);
-
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, nounce, omnuumAC, senderVerifier.address);
-
-      await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, priceWithEmptyTicket, payload, {
-          value: basePrice.mul(2),
-        }),
-      ).to.be.revertedWith(Constants.reasons.code.MT8);
-    }).timeout(5000);
-    it('[Revert] Remaining public mint amount is not enough', async () => {
-      const {
-        accounts: [omnuumAC, minterAC, receiverAC],
-        senderVerifier,
-        omnuumNFT1155,
-      } = this;
-
-      const basePrice = ethers.utils.parseEther('0.1');
-      const openAmount = 10;
-      // make NFT public
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, end_date, openAmount)).wait();
-
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, nounce, omnuumAC, senderVerifier.address);
-
-      const priceWithEmptyTicket = createEmptyTicketForPublicMint(basePrice);
-
-      await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, openAmount + 2, priceWithEmptyTicket, payload, {
-          value: basePrice.mul(openAmount + 2),
-        }),
-      ).to.be.revertedWith(Constants.reasons.code.MT3);
-    });
-    it('[Revert] Payload authenticate fail - (sender, nounce, topic)', async () => {
-      const {
-        accounts: [omnuumAC, minterAC, receiverAC, maliciousAC, anonymousAC],
-        senderVerifier,
-        omnuumNFT1155,
-        ticketVerifier,
-      } = this;
-
-      const basePrice = ethers.utils.parseEther('0.1');
       const ticketPrice = ethers.utils.parseEther('0.4');
 
       // give Ticket to minter
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price: ticketPrice, quantity: 2 },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
-
-      const priceWithEmptyTicket = createEmptyTicketForPublicMint(basePrice);
-
-      // make NFT public
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, end_date, 2000)).wait();
-
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, nounce, omnuumAC, senderVerifier.address);
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       // CASE1: valid payload, but malicious sender
-      await expect(
-        omnuumNFT1155.connect(maliciousAC).mint(receiverAC.address, 2, priceWithEmptyTicket, payload, {
-          value: basePrice.mul(2),
-        }),
-      ).revertedWith(Constants.reasons.senderVerifier.sender);
-
-      // CASE2: valid payload, but signed for another purpose (topic)
-      // required 'mint' but use 'ticket'
-      const ticketPayload = await signPayload(
+      const invalidSenderPayload = await signPayload(
         minterAC.address,
-        Constants.payloadTopic.ticket, // not mint topic payload
-        nounce,
-        omnuumAC,
-        senderVerifier.address,
-      );
-
-      await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, priceWithEmptyTicket, ticketPayload, {
-          value: basePrice.mul(2),
-        }),
-      ).revertedWith(Constants.reasons.senderVerifier.topic);
-
-      // required 'ticket' but use 'mint'
-      const publicPayload = await signPayload(
-        minterAC.address,
-        Constants.payloadTopic.mint, // not mint topic payload
+        Constants.payloadTopic.ticket,
         group_id,
         omnuumAC,
         senderVerifier.address,
       );
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, ticket, publicPayload, {
+        omnuumNFT1155.connect(maliciousAC).ticketMint(2, ticket, invalidSenderPayload, {
           value: ticketPrice.mul(2),
         }),
-      ).revertedWith(Constants.reasons.senderVerifier.topic);
+      ).revertedWith(Constants.reasons.senderVerifier.sender);
 
-      // CASE3: invalid payload, signed by anonymous
+      // CASE2: invalid payload, signed by anonymous
       const anonymousSignedPayload = await signPayload(
         minterAC.address,
-        Constants.payloadTopic.vrf, // not mint topic payload
+        Constants.payloadTopic.ticket, // not mint topic payload
         nounce,
         anonymousAC, // anonymous signer
         senderVerifier.address,
       );
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, priceWithEmptyTicket, anonymousSignedPayload, {
-          value: basePrice.mul(2),
+        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, anonymousSignedPayload, {
+          value: ticketPrice.mul(2),
         }),
       ).revertedWith(Constants.reasons.senderVerifier.signer);
-
-      // CASE4: expired payload, malicious nounce
-
-      // increase nounce
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, end_date, 2000)).wait();
-
-      await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, priceWithEmptyTicket, payload, {
-          value: basePrice.mul(2),
-        }),
-      ).revertedWith(Constants.reasons.senderVerifier.nounce);
-    });
-    it('[Revert] Cannot mint more quantity than max quantity per address (public)', async () => {
-      const {
-        accounts: [omnuumAC, minterAC, receiverAC],
-        senderVerifier,
-        omnuumNFT1155,
-      } = this;
-
-      const defaultArgs = createNftContractArgs(this);
-
-      const basePrice = ethers.utils.parseEther('0.1');
-
-      const priceWithEmptyTicket = createEmptyTicketForPublicMint(basePrice);
-
-      // make NFT public
-      await (await omnuumNFT1155.connect(omnuumAC).changePublicMint(true, basePrice, end_date, 2000)).wait();
-
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, nounce, omnuumAC, senderVerifier.address);
-
-      await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, defaultArgs.maxMintPerAddress + 1, priceWithEmptyTicket, payload, {
-          value: basePrice.mul(defaultArgs.maxMintPerAddress + 1),
-        }),
-      ).revertedWith(Constants.reasons.code.MT2);
     });
     it('[Revert] Invalid ticket (user, price, groupId)', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC, maliciousAC, anotherNFTcontract],
+        accounts: [omnuumAC, minterAC, maliciousAC, anotherNFTcontract],
         senderVerifier,
-        ticketVerifier,
+        ticketManager,
         omnuumNFT1155,
       } = this;
 
       const price = ethers.utils.parseEther('0.4');
       const quantity = 5;
-      const cur_nounce = await omnuumNFT1155.nounce();
 
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
 
       // CASE1: invalid signer
       const invalidSignedticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
         maliciousAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, cur_nounce, omnuumAC, senderVerifier.address);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, quantity, invalidSignedticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(quantity, invalidSignedticket, payload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketVerifier.signer);
+      ).to.be.revertedWith(Constants.reasons.ticketManager.signer);
 
       // CASE2: invalid minter - normal payload, but use another address' ticket
       const invalidMinterPayload = await signPayload(
         maliciousAC.address,
         Constants.payloadTopic.ticket,
-        cur_nounce,
+        group_id,
         omnuumAC,
         senderVerifier.address,
       );
 
       await expect(
-        omnuumNFT1155.connect(maliciousAC).mint(receiverAC.address, quantity, ticket, invalidMinterPayload, {
+        omnuumNFT1155.connect(maliciousAC).ticketMint(quantity, ticket, invalidMinterPayload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketVerifier.minter);
+      ).to.be.revertedWith(Constants.reasons.ticketManager.minter);
 
       // CASE3: invalid nft contract - ex) use A NFT ticket for B NFT
       const anotherContractTicket = await createTicket(
         { user: minterAC.address, nft: anotherNFTcontract.address, groupId: group_id, price, quantity },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, quantity, anotherContractTicket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(quantity, anotherContractTicket, payload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketVerifier.nft);
+      ).to.be.revertedWith(Constants.reasons.ticketManager.nft);
     });
     it('[Revert] Time expired ticket', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
         omnuumNFT1155,
-        ticketVerifier,
+        ticketManager,
       } = this;
 
       const price = ethers.utils.parseEther('0.2');
@@ -429,26 +535,26 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, immediate_end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, immediate_end_date)).wait();
 
       await delay(1000 * 3, 1);
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, 2, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
           value: price.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT8);
     }).timeout(5000);
     it('[Revert] Minter request more quantity than ticket', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
         omnuumNFT1155,
-        ticketVerifier,
+        ticketManager,
       } = this;
 
       const price = ethers.utils.parseEther('0.2');
@@ -461,44 +567,44 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: ticketCount },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       // fail: try minting more than ticket amount
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, initialTryCount, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(initialTryCount, ticket, payload, {
           value: price.mul(initialTryCount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       // success: ticket count - 2
       await (
-        await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, successTryCount, ticket, payload, {
+        await omnuumNFT1155.connect(minterAC).ticketMint(successTryCount, ticket, payload, {
           value: price.mul(successTryCount),
         })
       ).wait();
 
       // fail - try minting more than remaining ticket amount
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, secondTryCount, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(secondTryCount, ticket, payload, {
           value: price.mul(secondTryCount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       await (
-        await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, successRemainingCount, ticket, payload, {
+        await omnuumNFT1155.connect(minterAC).ticketMint(successRemainingCount, ticket, payload, {
           value: price.mul(secondTryCount),
         })
       ).wait();
     }).timeout(3000);
     it('[Revert] Minter request more quantity than total remaining quantity', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC],
+        accounts: [omnuumAC, minterAC],
         senderVerifier,
-        ticketVerifier,
+        ticketManager,
         NFTbeacon,
         OmnuumNFT1155,
         omnuumCAManager,
@@ -521,27 +627,27 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 20 },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, initialTryAmount, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(initialTryAmount, ticket, payload, {
           value: price.mul(initialTryAmount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       // use 8 of 10
       await (
-        await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, usingAmount, ticket, payload, {
+        await omnuumNFT1155.connect(minterAC).ticketMint(usingAmount, ticket, payload, {
           value: price.mul(usingAmount),
         })
       ).wait();
 
       await expect(
-        omnuumNFT1155.connect(minterAC).mint(receiverAC.address, lastTryAmount, ticket, payload, {
+        omnuumNFT1155.connect(minterAC).ticketMint(lastTryAmount, ticket, payload, {
           value: price.mul(lastTryAmount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
@@ -610,7 +716,7 @@ describe('OmnuumNFT', () => {
       const tx = await omnuumNFT1155.setUri(uri);
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.UriChanged).withArgs(uri, 'base');
+      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.Uri).withArgs(uri);
       await expect(await omnuumNFT1155.isRevealed()).to.be.true;
     });
     it('[Revert] only owner', async () => {
@@ -649,12 +755,12 @@ describe('OmnuumNFT', () => {
   describe('[Method] withdraw', () => {
     it('Should withdraw balance', async () => {
       const {
-        accounts: [omnuumAC, minterAC, receiverAC, prjOwnerAC],
+        accounts: [omnuumAC, minterAC, prjOwnerAC],
         senderVerifier,
         NFTbeacon,
         OmnuumNFT1155,
         omnuumCAManager,
-        ticketVerifier,
+        ticketManager,
       } = this;
 
       const omnuumNFT1155 = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
@@ -669,9 +775,9 @@ describe('OmnuumNFT', () => {
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: ticketCount },
         omnuumAC,
-        ticketVerifier.address,
+        ticketManager.address,
       );
-      await (await ticketVerifier.connect(prjOwnerAC).setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.connect(prjOwnerAC).setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
@@ -679,7 +785,7 @@ describe('OmnuumNFT', () => {
 
       // send money
       await (
-        await omnuumNFT1155.connect(minterAC).mint(receiverAC.address, ticketCount, ticket, payload, {
+        await omnuumNFT1155.connect(minterAC).ticketMint(ticketCount, ticket, payload, {
           value: price.mul(ticketCount),
         })
       ).wait();
