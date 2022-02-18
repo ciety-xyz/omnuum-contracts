@@ -7,8 +7,6 @@ import './OmnuumCAManager.sol';
 contract RevealManager {
     OmnuumCAManager caManager;
 
-    event Reveal(address nftContract, uint256 num);
-
     constructor(address _caManager) {
         caManager = OmnuumCAManager(_caManager);
     }
@@ -17,11 +15,6 @@ contract RevealManager {
         require(OmnuumNFT1155(_nftContract).owner() == msg.sender, 'OO1');
         require(!OmnuumNFT1155(_nftContract).isRevealed(), 'ARG2');
 
-        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }();
-    }
-
-    function vrfResponse(address _nftContract, uint256 _num) external {
-        require(msg.sender == caManager.getContract('VRF'));
-        emit Reveal(_nftContract, _num);
+        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(_nftContract);
     }
 }

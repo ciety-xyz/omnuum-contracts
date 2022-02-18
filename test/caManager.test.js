@@ -5,7 +5,7 @@ require('chai').should();
 
 Error.stackTraceLimit = Infinity;
 
-const { prepareDeploy, testDeploy } = require('./etc/mock.js');
+const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js');
 const { nullAddress } = require('./etc/util.js');
 
 upgrades.silenceWarnings();
@@ -13,6 +13,7 @@ upgrades.silenceWarnings();
 describe('OmnuumCAManager', () => {
   before(async () => {
     await prepareDeploy.call(this);
+    await prepareMockDeploy.call(this);
   });
 
   beforeEach(async () => {

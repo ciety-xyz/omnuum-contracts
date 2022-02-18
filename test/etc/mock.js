@@ -6,22 +6,18 @@ Error.stackTraceLimit = Infinity;
 
 module.exports = {
   createNftContractArgs: (context, { caManagerAddress, prjOwner, maxSupply = 10000 } = {}) => ({
-    uri: 'uri',
     omnuumAddress: context?.accounts?.[0]?.address,
     caManagerAddress,
-    maxMintPerAddress: 10,
     maxSupply,
-    coverUri: '',
+    coverUri: testValues.coverUri,
     prjOwner: prjOwner || context?.accounts?.[0]?.address,
   }),
   deployNFT(beacon, artifact, context, overrideArgs) {
     const args = module.exports.createNftContractArgs(context, overrideArgs);
 
     return upgrades.deployBeaconProxy(beacon, artifact, [
-      args.uri,
       args.caManagerAddress,
       args.omnuumAddress,
-      args.maxMintPerAddress,
       args.maxSupply,
       args.coverUri,
       args.prjOwner,
@@ -30,7 +26,7 @@ module.exports = {
   async prepareDeploy() {
     this.OmnuumMintManager = await ethers.getContractFactory('OmnuumMintManager');
     this.OmnuumNFT1155 = await ethers.getContractFactory('OmnuumNFT1155');
-    this.OmnuumTicketManager = await ethers.getContractFactory('OmnuumTicketManager');
+    this.TicketManager = await ethers.getContractFactory('TicketManager');
     this.SenderVerifier = await ethers.getContractFactory('SenderVerifier');
     this.OmnuumCAManager = await ethers.getContractFactory('OmnuumCAManager');
     this.OmnuumVRFManager = await ethers.getContractFactory('OmnuumVRFManager');
@@ -38,18 +34,45 @@ module.exports = {
     this.RevealManager = await ethers.getContractFactory('RevealManager');
     this.NFTbeacon = await upgrades.deployBeacon(this.OmnuumNFT1155);
   },
-  async testDeploy(accounts) {
+  async prepareMockDeploy() {
+    this.MockLink = await ethers.getContractFactory('MockLink');
+    this.MockVrfCoords = await ethers.getContractFactory('MockVrfCoords');
+    this.MockNFT = await ethers.getContractFactory('MockNFT');
+  },
+  async testDeploy(accounts, overrides) {
     this.omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
+
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
     await this.revealManager.deployed();
+
     this.omnuumMintManager = await upgrades.deployProxy(this.OmnuumMintManager, [testValues.mintFee]);
-    this.senderVerifier = await this.SenderVerifier.deploy();
-    await this.senderVerifier.deployed();
-    this.omnuumTicketManager = await this.OmnuumTicketManager.deploy();
-    await this.omnuumTicketManager.deployed();
+
+    this.omnuumCAManager.registerContract(this.omnuumMintManager.address, ContractTopic.MINTMANAGER);
+
+    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords] = await Promise.all([
+      this.SenderVerifier.deploy(),
+      this.TicketManager.deploy(),
+      this.MockLink.deploy(),
+      this.MockVrfCoords.deploy(),
+    ]);
+
+    await Promise.all([
+      this.senderVerifier.deployed(),
+      this.ticketManager.deployed(),
+      this.mockLink.deployed(),
+      this.mockVrfCoords.deployed(),
+    ]);
+
+    // exchange is before vrf
+    this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
+    await (await this.omnuumCAManager.registerContract(this.omnuumExchange.address, ContractTopic.EXCHANGE)).wait();
+
+    this.mockNFT = await this.MockNFT.deploy(this.senderVerifier.address, this.ticketManager.address);
+    await this.mockNFT.deployed();
+
     this.omnuumVRFManager = await this.OmnuumVRFManager.deploy(
-      chainlink.rinkeby.LINK,
-      accounts[1].address, // account 1 as vrf coord contract
+      this.mockLink.address,
+      this.mockVrfCoords.address,
       chainlink.rinkeby.hash,
       chainlink.rinkeby.fee,
       this.omnuumCAManager.address,
@@ -58,16 +81,14 @@ module.exports = {
 
     this.omnuumNFT1155 = await module.exports.deployNFT(this.NFTbeacon, this.OmnuumNFT1155, this, {
       caManagerAddress: this.omnuumCAManager.address,
+      ...overrides,
     });
-
-    this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
 
     // register to CA manager
     const registerTxs = await Promise.all([
-      this.omnuumCAManager.registerContract(this.omnuumMintManager.address, ContractTopic.MINTMANAGER),
       this.omnuumCAManager.registerContract(this.omnuumVRFManager.address, ContractTopic.VRF),
-      this.omnuumCAManager.registerContract(this.omnuumExchange.address, ContractTopic.EXCHANGE),
-      this.omnuumCAManager.registerContract(this.omnuumTicketManager.address, ContractTopic.TICKETMANAGER),
+
+      this.omnuumCAManager.registerContract(this.ticketManager.address, ContractTopic.TICKET),
       this.omnuumCAManager.registerContract(this.senderVerifier.address, ContractTopic.VERIFIER),
       this.omnuumCAManager.registerContract(this.revealManager.address, ContractTopic.REVEAL),
       this.omnuumCAManager.registerContract(accounts[0].address, ContractTopic.WALLET), // register index 0 address as WALLET

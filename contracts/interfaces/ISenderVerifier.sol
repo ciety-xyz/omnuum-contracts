@@ -5,7 +5,7 @@ interface ISenderVerifier {
     struct Payload {
         address sender;
         string topic;
-        uint32 nounce;
+        uint256 nounce;
         bytes signature;
     }
 
@@ -13,7 +13,7 @@ interface ISenderVerifier {
         address _owner,
         address _sender,
         string calldata _topic,
-        uint32 _nounce,
+        uint256 _nounce,
         Payload calldata _payload
     ) external view;
 }

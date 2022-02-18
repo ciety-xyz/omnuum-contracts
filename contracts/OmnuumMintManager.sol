@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 import './OmnuumNFT1155.sol';
 
 contract OmnuumMintManager is OwnableUpgradeable {
@@ -10,6 +11,20 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
     event SetFee(uint256 feeRate);
     event Airdrop(address indexed Contract, uint256 count);
+    event SetSchedule(address indexed nft, uint256 indexed groupId);
+    event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
+
+    struct PublicMintSchedule {
+        uint32 supply;
+        uint32 mintedTotal;
+        uint32 maxMintAtAddress;
+        mapping(address => uint32) minted;
+        uint256 endDate;
+        uint256 basePrice;
+    }
+
+    // nft => groupId => PublicMintSchedule
+    mapping(address => mapping(uint256 => PublicMintSchedule)) public publicMintSchedules;
 
     function initialize(uint256 _feeRate) public initializer {
         __Ownable_init();
@@ -20,6 +35,45 @@ contract OmnuumMintManager is OwnableUpgradeable {
         require(_feeRate <= 100000, 'NE1');
         feeRate = _feeRate;
         emit SetFee(feeRate);
+    }
+
+    function setPublicMintSchedule(
+        address _nft,
+        uint256 _groupId,
+        uint256 _endDate,
+        uint256 _basePrice,
+        uint32 _supply,
+        uint32 _maxMintAtAddress
+    ) public {
+        require(Ownable(_nft).owner() == msg.sender, 'OO1');
+
+        PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
+
+        schedule.supply = _supply;
+        schedule.endDate = _endDate;
+        schedule.basePrice = _basePrice;
+        schedule.maxMintAtAddress = _maxMintAtAddress;
+
+        emit SetSchedule(_nft, _groupId);
+    }
+
+    function publicMint(
+        uint16 _groupId,
+        uint32 _quantity,
+        uint256 value,
+        address _minter
+    ) public {
+        PublicMintSchedule storage schedule = publicMintSchedules[msg.sender][_groupId];
+
+        require(block.timestamp <= schedule.endDate, 'MT8');
+        require(schedule.basePrice * _quantity <= value, 'MT5');
+        require(schedule.minted[_minter] + _quantity <= schedule.maxMintAtAddress, 'MT2');
+        require(schedule.mintedTotal + _quantity <= schedule.supply, 'MT3');
+
+        schedule.minted[_minter] += _quantity;
+        schedule.mintedTotal += _quantity;
+
+        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
     }
 
     // mint to multiple address ex) airdrop

@@ -1,23 +1,24 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { flatMap, mapC, go, range, map } = require('fxjs');
 const { addDays } = require('date-fns');
 
-const { toSolDate } = require('./etc/util.js');
+const { toSolDate, createTicket, signPayload } = require('./etc/util.js');
 const Constants = require('../utils/constants.js');
 require('chai').should();
 
-const { prepareDeploy, testDeploy, deployNFT } = require('./etc/mock.js');
+const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js');
 
 const end_date = toSolDate(addDays(new Date(), 2));
 const group_id = 0;
+const nounce = 0;
 
 upgrades.silenceWarnings();
 
 // *Ticket Manager Contract will be removed and this feature will be replaced by off-chain lazy minting method.
-describe('OmnuumTicketManager', () => {
+describe('TicketManager', () => {
   before(async () => {
     await prepareDeploy.call(this);
+    await prepareMockDeploy.call(this);
   });
 
   beforeEach(async () => {
@@ -25,95 +26,241 @@ describe('OmnuumTicketManager', () => {
     await testDeploy.call(this, this.accounts);
   });
 
-  describe('[Method] giveTicketBatch', () => {
-    it('Mint ticket for token minting', async () => {
-      const {
-        accounts: [, minterAC, minter2AC],
-        omnuumNFT1155,
-        omnuumTicketManager,
-      } = this;
+  describe('[Method] setEndDate', () => {
+    it('Should set end date', async () => {
+      const { ticketManager, omnuumNFT1155 } = this;
 
-      const quantitys = [5, 3];
-      const prices = [ethers.utils.parseEther('0.2'), ethers.utils.parseEther('0.3')];
+      const tx = await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date);
 
-      // address CA, address[] _tos, uint16[] _quantitys, uint256[]  _prices
-      const tx = await omnuumTicketManager.giveTicketBatch(
-        omnuumNFT1155.address,
-        [minterAC.address, minter2AC.address],
-        quantitys,
-        prices,
-        group_id,
-        end_date,
-      );
+      await tx.wait();
 
-      // Ticket: address CA, address to, uint256 price, uint256 quantity, string actionType
-      await expect(tx)
-        .to.emit(omnuumTicketManager, Constants.events.NFT.Ticket)
-        .withArgs(omnuumNFT1155.address, minterAC.address, quantitys[0], prices[0], group_id, 'mint');
-
-      await expect(tx)
-        .to.emit(omnuumTicketManager, Constants.events.NFT.Ticket)
-        .withArgs(omnuumNFT1155.address, minter2AC.address, quantitys[1], prices[1], group_id, 'mint');
+      await expect(tx).to.emit(ticketManager, Constants.events.TicketManager.EndDate).withArgs(omnuumNFT1155.address, group_id, end_date);
     });
-    it('Mint ticket for token minting (Gas estimation - 500)', async () => {
-      const { accounts, omnuumNFT1155, omnuumTicketManager } = this;
-
-      const count = 500;
-
-      const addresses = go(
-        range(count / 100),
-        flatMap(() => accounts),
-        map((a) => a.address),
-      );
-      const quantitys = range(1, count + 1);
-      const prices = go(
-        range(1, count + 1),
-        map((n) => n % 10),
-        map((n) => ethers.utils.parseEther(`${(n * 2) / 10}`)),
-      );
-
-      // address[] _tos, uint16[] _quantitys, uint256[]  _prices
-      const tx = await omnuumTicketManager.giveTicketBatch(omnuumNFT1155.address, addresses, quantitys, prices, group_id, end_date);
-
-      // Ticket: address to, uint256 price, uint256 quantity, string actionType
-      await mapC(
-        (idx) =>
-          expect(tx)
-            .to.emit(omnuumTicketManager, Constants.events.NFT.Ticket)
-            .withArgs(omnuumNFT1155.address, addresses[idx], quantitys[idx], prices[idx], group_id, 'mint'),
-        [0, 1, 2, count - 3, count - 2, count - 1],
-      );
-    }).timeout(1000 * 15);
-    it('[Revert] only project owner', async () => {
+    it('[Revert] not owner of NFT', async () => {
       const {
-        accounts: [omnuumAC, minterAC, maliciousAC, prjOwnerAC],
-        omnuumTicketManager,
-        NFTbeacon,
-        OmnuumNFT1155,
-        omnuumCAManager,
+        ticketManager,
+        omnuumNFT1155,
+        accounts: [, maliciousAC],
       } = this;
 
-      const basePrice = ethers.utils.parseEther('0.1');
-
-      const omnuumNFT1155 = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
-        caManagerAddress: omnuumCAManager.address,
-        prjOwner: prjOwnerAC.address,
-      });
-
-      await expect(
-        omnuumTicketManager
-          .connect(maliciousAC)
-          .giveTicketBatch(omnuumNFT1155.address, [minterAC.address], [3], [basePrice], group_id, end_date),
-      ).to.be.revertedWith(Constants.reasons.code.OO1);
-
-      // even ticket manager owner cannot access this
-      await expect(
-        omnuumTicketManager
-          .connect(omnuumAC)
-          .giveTicketBatch(omnuumNFT1155.address, [minterAC.address], [3], [basePrice], group_id, end_date),
-      ).to.be.revertedWith(Constants.reasons.code.OO1);
+      await expect(ticketManager.connect(maliciousAC).setEndDate(omnuumNFT1155.address, group_id, end_date)).to.be.revertedWith(
+        Constants.reasons.code.OO1,
+      );
     });
   });
 
-  describe('[Method] useTicket', () => {});
+  describe('[Method] verify', () => {
+    it('Should verified as success', async () => {
+      const {
+        ticketManager,
+        mockNFT,
+        accounts: [omnuumAC, minterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 10;
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: mockNFT.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
+
+      // signer, minter, quantity, ticket
+      await (await mockNFT.verify(omnuumAC.address, minterAC.address, quantity, ticket)).wait();
+    });
+    it('[Revert] expired ticket', async () => {
+      const {
+        ticketManager,
+        mockNFT,
+        accounts: [omnuumAC, minterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 10;
+      const immediate_end_date = toSolDate(+new Date() + 3000);
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: mockNFT.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(mockNFT.address, group_id, immediate_end_date)).wait();
+
+      await expect(mockNFT.verify(omnuumAC.address, minterAC.address, quantity, ticket)).to.be.revertedWith(Constants.reasons.code.MT8);
+    }).timeout(5000);
+    it('[Revert] False Signer', async () => {
+      const {
+        ticketManager,
+        mockNFT,
+        accounts: [omnuumAC, minterAC, fakeSignerAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 10;
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: mockNFT.address, groupId: group_id, price, quantity },
+        fakeSignerAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
+
+      await expect(mockNFT.verify(omnuumAC.address, minterAC.address, quantity, ticket)).to.be.revertedWith(
+        Constants.reasons.senderVerifier.signer,
+      );
+    });
+    it('[Revert] False NFT', async () => {
+      const {
+        ticketManager,
+        omnuumNFT1155,
+        mockNFT,
+        accounts: [omnuumAC, minterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 10;
+
+      // omnuumNFT1155 <-> mockNFT
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
+
+      await expect(mockNFT.verify(omnuumAC.address, minterAC.address, quantity, ticket)).to.be.revertedWith(
+        Constants.reasons.ticketManager.nft,
+      );
+    });
+    it('[Revert] False Minter', async () => {
+      const {
+        ticketManager,
+        mockNFT,
+        accounts: [omnuumAC, minterAC, fakeMinterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 10;
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: mockNFT.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
+
+      await expect(mockNFT.verify(omnuumAC.address, fakeMinterAC.address, quantity, ticket)).to.be.revertedWith(
+        Constants.reasons.ticketManager.minter,
+      );
+    });
+  });
+
+  describe('[Method] useTicket', () => {
+    it('Can use ticket for mint', async () => {
+      const {
+        omnuumNFT1155,
+        ticketManager,
+        senderVerifier,
+        accounts: [omnuumAC, minterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 20;
+      const use_quantity = 15;
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nounce, omnuumAC, senderVerifier.address);
+
+      const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity, ticket, payload, {
+        value: price.mul(use_quantity),
+      });
+      await expect(tx1)
+        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
+        .withArgs(omnuumNFT1155.address, minterAC.address, use_quantity, [
+          ticket.user,
+          ticket.nft,
+          ticket.price,
+          ticket.quantity,
+          ticket.groupId,
+        ]);
+    });
+    it('[Revert] Cannot mint more than remaining quantity', async () => {
+      const {
+        omnuumNFT1155,
+        ticketManager,
+        senderVerifier,
+        accounts: [omnuumAC, minterAC],
+      } = this;
+
+      const price = ethers.utils.parseEther('0.1');
+      const quantity = 20;
+      const use_quantity1 = 15;
+      const fail_quantity1 = 6;
+      const use_quantity2 = 5;
+      const fail_quantity2 = 1;
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nounce, omnuumAC, senderVerifier.address);
+
+      const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity1, ticket, payload, {
+        value: price.mul(use_quantity1),
+      });
+
+      await expect(tx1)
+        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
+        .withArgs(omnuumNFT1155.address, minterAC.address, use_quantity1, [
+          ticket.user,
+          ticket.nft,
+          ticket.price,
+          ticket.quantity,
+          ticket.groupId,
+        ]);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).ticketMint(fail_quantity1, ticket, payload, {
+          value: price.mul(fail_quantity1),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT3);
+
+      const tx2 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity2, ticket, payload, {
+        value: price.mul(use_quantity2),
+      });
+
+      await expect(tx2)
+        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
+        .withArgs(omnuumNFT1155.address, minterAC.address, use_quantity2, [
+          ticket.user,
+          ticket.nft,
+          ticket.price,
+          ticket.quantity,
+          ticket.groupId,
+        ]);
+
+      await expect(
+        omnuumNFT1155.connect(minterAC).ticketMint(fail_quantity2, ticket, payload, {
+          value: price.mul(fail_quantity2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT3);
+    });
+  });
 });
