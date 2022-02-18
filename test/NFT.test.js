@@ -44,7 +44,7 @@ describe('OmnuumNFT', () => {
       ).to.be.revertedWith(Constants.reasons.common.initialize);
     });
   });
-// TODO: contract 으로 호출하는 경우 케이스 짜기
+
   describe('[Method] Public Mint', () => {
     it('Public mint', async () => {
       const {
@@ -129,6 +129,41 @@ describe('OmnuumNFT', () => {
       const cur_bal = await omnuumAC.getBalance();
 
       expect(cur_bal).to.equal(prev_bal.add(mint_fee));
+    });
+    it('[Revert] Prevent CA call to mint', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+        mockNFT,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      // mint through CA
+      await expect(
+        mockNFT.publicContractMint(omnuumNFT1155.address, 2, group_id, payload, {
+          value: basePrice.mul(2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT9);
     });
     it('[Revert] Payload authenticate fail - (sender, signer)', async () => {
       const {
@@ -384,6 +419,33 @@ describe('OmnuumNFT', () => {
       const cur_bal = await omnuumAC.getBalance();
 
       expect(cur_bal).to.equal(prev_bal.add(mint_fee));
+    });
+    it('[Revert] Prevent CA call to mint', async () => {
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        ticketManager,
+        mockNFT,
+      } = this;
+
+      const price = ethers.utils.parseEther('0.2');
+
+      // give Ticket to minter
+      const ticket = await createTicket(
+        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        omnuumAC,
+        ticketManager.address,
+      );
+      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
+
+      await expect(
+        mockNFT.ticketContractMint(omnuumNFT1155.address, 2, ticket, payload, {
+          value: price.mul(2),
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.MT9);
     });
     it('[Revert] Pay less money than required', async () => {
       const {

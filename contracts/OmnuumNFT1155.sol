@@ -83,8 +83,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         TicketManager.Ticket calldata _ticket,
         ISenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(_ticket.price * _quantity <= msg.value, 'MT5');
         require(!isContract(msg.sender), 'MT9');
+        require(_ticket.price * _quantity <= msg.value, 'MT5');
 
         ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
         TicketManager(caManager.getContract('TICKET')).useTicket(omA, msg.sender, _quantity, _ticket);
