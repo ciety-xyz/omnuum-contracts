@@ -48,14 +48,6 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         transferOwnership(_prjOwner);
     }
 
-    function isContract(address _addr) internal view returns (bool) {
-        uint32 codeSize;
-        assembly {
-            codeSize := extcodesize(_addr)
-        }
-        return codeSize > 0;
-    }
-
     function sendFee() internal {
         uint256 feeRate = mintManager.feeRate();
         uint8 rateDecimal = mintManager.rateDecimal();
@@ -69,7 +61,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint16 _groupId,
         ISenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(!isContract(msg.sender), 'MT9');
+        require(msg.sender.code.length == 0, 'MT9');
         ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
         mintManager.publicMint(_groupId, _quantity, msg.value, msg.sender);
@@ -83,7 +75,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         TicketManager.Ticket calldata _ticket,
         ISenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(!isContract(msg.sender), 'MT9');
+        require(msg.sender.code.length == 0, 'MT9');
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
         ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
