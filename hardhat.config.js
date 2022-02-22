@@ -9,6 +9,8 @@ require('@nomiclabs/hardhat-solhint');
 require('@openzeppelin/hardhat-upgrades');
 require('hardhat-contract-sizer');
 
+require('hardhat-abi-exporter');
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
@@ -52,5 +54,13 @@ module.exports = {
     disambiguatePaths: false,
     runOnCompile: true,
     strict: true,
+  },
+  abiExporter: {
+    path: './data/abi',
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    spacing: 2,
+    pretty: true,
   },
 };

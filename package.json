@@ -19,6 +19,7 @@
     "hardhat": "^2.8.3",
     "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",
+    "hardhat-abi-exporter": "^2.8.0",
     "keccak256": "^1.0.6",
     "solidity-coverage": "^0.7.18"
   },
