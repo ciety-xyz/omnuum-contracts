@@ -1,0 +1,4 @@
+[
+  "constructor()",
+  "function verify(address,address,string,uint256,tuple(address,string,uint256,bytes)) view"
+]

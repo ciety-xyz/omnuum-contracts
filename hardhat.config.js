@@ -47,7 +47,5 @@ module.exports = {
     spacing: 2,
     pretty: true,
   },
-  mocha: {
-    timeout: 5000
-  }
+
 };

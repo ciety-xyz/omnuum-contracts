@@ -1,0 +1,14 @@
+[
+  "event Public(bool,uint256)",
+  "event UriChanged(string,string)",
+  "function changePublicMint(bool,uint256)",
+  "function endMint()",
+  "function initialize()",
+  "function mint(address,uint16,uint256,tuple(address,string,uint256,bytes)) payable",
+  "function mintDirect(address,uint16)",
+  "function setCoverUri(string)",
+  "function setUri(string)",
+  "function supportsInterface(bytes4) view returns (bool)",
+  "function uri(uint256) view returns (string)",
+  "function withdraw()"
+]
