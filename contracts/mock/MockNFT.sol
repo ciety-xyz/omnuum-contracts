@@ -4,7 +4,7 @@ pragma solidity >=0.7.0 <0.9.0;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '../TicketManager.sol';
 import '../OmnuumMintManager.sol';
-import '../interfaces/ISenderVerifier.sol';
+import '../SenderVerifier.sol';
 
 // for ticket manager
 contract MockNFT is Ownable {
@@ -49,7 +49,7 @@ contract MockNFT is Ownable {
         address _target,
         uint16 _groupId,
         uint32 _quantity,
-        ISenderVerifier.Payload calldata _payload
+        SenderVerifier.Payload calldata _payload
     ) public payable {
         OmnuumNFT1155(_target).publicMint(_quantity, _groupId, _payload);
     }
@@ -58,7 +58,7 @@ contract MockNFT is Ownable {
         address _target,
         uint32 _quantity,
         TicketManager.Ticket calldata _ticket,
-        ISenderVerifier.Payload calldata _payload
+        SenderVerifier.Payload calldata _payload
     ) public payable {
         OmnuumNFT1155(_target).ticketMint(_quantity, _ticket, _payload);
     }

@@ -3,9 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import './interfaces/IOmnuumExchange.sol';
 import './OmnuumCAManager.sol';
-import 'hardhat/console.sol';
 
 // in future, this contract will act like internal token exchange for business
 contract OmnuumExchange is OwnableUpgradeable {
