@@ -11,6 +11,8 @@ import './OmnuumCAManager.sol';
 import './TicketManager.sol';
 
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+    using AddressUpgradeable for address;
+    using AddressUpgradeable for address payable;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
 
@@ -52,7 +54,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint256 feeRate = mintManager.feeRate();
         uint8 rateDecimal = mintManager.rateDecimal();
         uint256 amount = (msg.value * feeRate) / (10**rateDecimal);
-        payable(omA).transfer(amount);
+        payable(omA).sendValue(amount);
         emit ReceiveFee(amount);
     }
 
@@ -61,7 +63,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint16 _groupId,
         ISenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(msg.sender.code.length == 0, 'MT9');
+        require(!msg.sender.isContract(), 'MT9');
         ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
         mintManager.publicMint(_groupId, _quantity, msg.value, msg.sender);
@@ -75,7 +77,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         TicketManager.Ticket calldata _ticket,
         ISenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(msg.sender.code.length == 0, 'MT9');
+        require(!msg.sender.isContract(), 'MT9');
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
         ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
@@ -113,6 +115,6 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     function withdraw() external onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
+        payable(msg.sender).sendValue(address(this).balance);
     }
 }
