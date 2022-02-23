@@ -1,0 +1,10 @@
+[
+  "event Exchange(address,address,uint256,address,address)",
+  "function deposit() payable",
+  "function exchangeToken(address,uint256,address,uint8) payable",
+  "function exchangeToken(address,address,uint256,address) payable",
+  "function getExchangeAmount(address,address,uint256) returns (uint256)",
+  "function initialize(address)",
+  "function updateTmpExchangeRate(uint256)",
+  "function withdraw()"
+]
