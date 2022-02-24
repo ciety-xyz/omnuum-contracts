@@ -16,7 +16,6 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     OmnuumCAManager caManager;
     OmnuumMintManager mintManager;
-    SenderVerifier senderVerifier;
     address omA;
 
     uint32 public maxSupply;
