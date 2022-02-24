@@ -16,8 +16,6 @@ npm install
 ## Testing
 
 
-- 70~80% of test is completed.
-
 - test command
 
 ```shell

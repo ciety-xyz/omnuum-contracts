@@ -1,0 +1,14 @@
+[
+  "function allowance(address,address) view returns (uint256)",
+  "function approve(address,uint256) returns (bool)",
+  "function balanceOf(address) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function decreaseApproval(address,uint256) returns (bool)",
+  "function increaseApproval(address,uint256)",
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function totalSupply() view returns (uint256)",
+  "function transfer(address,uint256) returns (bool)",
+  "function transferAndCall(address,uint256,bytes) returns (bool)",
+  "function transferFrom(address,address,uint256) returns (bool)"
+]

@@ -1,0 +1,18 @@
+[
+  "event Airdrop(address indexed,uint256)",
+  "event OwnershipTransferred(address indexed,address indexed)",
+  "event PublicMint(address indexed,address indexed,uint256 indexed,uint32)",
+  "event SetFee(uint256)",
+  "event SetSchedule(address indexed,uint256 indexed)",
+  "function feeRate() view returns (uint256)",
+  "function initialize(uint256)",
+  "function mintMultiple(address,address[],uint16[])",
+  "function owner() view returns (address)",
+  "function publicMint(uint16,uint32,uint256,address)",
+  "function publicMintSchedules(address,uint256) view returns (uint32, uint32, uint32, uint256, uint256)",
+  "function rateDecimal() view returns (uint8)",
+  "function renounceOwnership()",
+  "function setFeeRate(uint256)",
+  "function setPublicMintSchedule(address,uint256,uint256,uint256,uint32,uint32)",
+  "function transferOwnership(address)"
+]

@@ -7,14 +7,14 @@ import './OmnuumCAManager.sol';
 contract RevealManager {
     OmnuumCAManager caManager;
 
-    constructor(address _caManager) {
-        caManager = OmnuumCAManager(_caManager);
+    constructor(OmnuumCAManager _caManager) {
+        caManager = _caManager;
     }
 
-    function vrfRequest(address _nftContract) external payable {
-        require(OmnuumNFT1155(_nftContract).owner() == msg.sender, 'OO1');
-        require(!OmnuumNFT1155(_nftContract).isRevealed(), 'ARG2');
+    function vrfRequest(OmnuumNFT1155 _nftContract) external payable {
+        require(_nftContract.owner() == msg.sender, 'OO1');
+        require(!_nftContract.isRevealed(), 'ARG2');
 
-        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(_nftContract);
+        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(address(_nftContract));
     }
 }

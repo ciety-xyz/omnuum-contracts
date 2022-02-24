@@ -1,10 +1,9 @@
 {
   "scripts": {
-    "compile": "truffle compile",
-    "console:test": "truffle console --network rinkeby",
-    "console:local": "truffle console",
-    "size": "truffle run contract-size",
-    "test": "truffle test --reporter eth-gas-reporter"
+    "compile": "npx hardhat compile",
+    "test:local": "npx hardhat test",
+    "node": "npx hardhat node",
+    "run:local": "npx hardhat --network localhost run "
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",
@@ -19,6 +18,7 @@
     "hardhat": "^2.8.3",
     "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",
+    "hardhat-abi-exporter": "^2.8.0",
     "keccak256": "^1.0.6",
     "solidity-coverage": "^0.7.18"
   },
