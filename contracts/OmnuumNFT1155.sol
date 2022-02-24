@@ -5,7 +5,7 @@ import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import './interfaces/ISenderVerifier.sol';
+import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
@@ -61,10 +61,11 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     function publicMint(
         uint32 _quantity,
         uint16 _groupId,
-        ISenderVerifier.Payload calldata _payload
+        SenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
-        require(!msg.sender.isContract(), 'MT9');
-        ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
+        require(msg.sender.code.length == 0, 'MT9');
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
+
 
         mintManager.publicMint(_groupId, _quantity, msg.value, msg.sender);
 
@@ -75,12 +76,12 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     function ticketMint(
         uint32 _quantity,
         TicketManager.Ticket calldata _ticket,
-        ISenderVerifier.Payload calldata _payload
+        SenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
         require(!msg.sender.isContract(), 'MT9');
         require(_ticket.price * _quantity <= msg.value, 'MT5');
-
-        ISenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
+    
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
         TicketManager(caManager.getContract('TICKET')).useTicket(omA, msg.sender, _quantity, _ticket);
 
         mintLoop(msg.sender, _quantity);
