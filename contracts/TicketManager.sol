@@ -46,7 +46,7 @@ contract TicketManager is EIP712 {
         uint32 _quantity,
         Ticket calldata _ticket
     ) public {
-        verify(_signer, _minter, _quantity, _ticket);
+        verify(_signer, msg.sender, _minter, _quantity, _ticket);
 
         ticketUsed[msg.sender][_ticket.groupId][_minter] += _quantity;
         emit UseTicket(msg.sender, _minter, _quantity, _ticket);
@@ -54,15 +54,16 @@ contract TicketManager is EIP712 {
 
     function verify(
         address _signer,
+        address _nft,
         address _minter,
         uint32 _quantity,
         Ticket calldata _ticket
     ) public view {
-        require(block.timestamp <= endDates[msg.sender][_ticket.groupId], 'MT8');
+        require(block.timestamp <= endDates[_nft][_ticket.groupId], 'MT8');
         require(_signer == recoverSigner(_ticket), 'False Signer');
-        require(_ticket.nft == msg.sender, 'False NFT');
+        require(_ticket.nft == _nft, 'False NFT');
         require(_minter == _ticket.user, 'False Minter');
-        require(ticketUsed[msg.sender][_ticket.groupId][_minter] + _quantity <= _ticket.quantity, 'MT3');
+        require(ticketUsed[_nft][_ticket.groupId][_minter] + _quantity <= _ticket.quantity, 'MT3');
     }
 
     function recoverSigner(Ticket calldata _ticket) internal view returns (address) {

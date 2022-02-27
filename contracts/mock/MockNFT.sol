@@ -16,16 +16,6 @@ contract MockNFT is Ownable {
         ticketManager = _ticketManagerAddress;
     }
 
-    // direct verify for test verify function
-    function verify(
-        address _signer,
-        address _minter,
-        uint16 _quantity,
-        TicketManager.Ticket calldata _ticket
-    ) public {
-        TicketManager(ticketManager).verify(_signer, _minter, _quantity, _ticket);
-    }
-
     function useTicket(
         address _signer,
         address _minter,
