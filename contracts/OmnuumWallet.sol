@@ -135,14 +135,8 @@ contract OmnuumWallet {
         assembly {
             nftContract := mload(add(_data, 20))
         }
-        console.log('nftContract', nftContract);
         emit FeeReceived(nftContract, msg.sender, msg.value);
     }
-
-    //
-    //    receive() external payable {
-    //        emit FeeReceived(address(0), msg.sender, msg.value);
-    //    }
 
     // =========== WALLET LOGICs =========== //
     // === 인출 요청 === //
