@@ -19,6 +19,10 @@ module.exports = {
     hardhat: {
       accounts: {
         count: 100
+      },
+      mining: {
+        auto: true,
+        interval: 1000
       }
     },
     rinkeby: {

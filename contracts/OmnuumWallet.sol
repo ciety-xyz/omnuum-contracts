@@ -73,7 +73,7 @@ contract OmnuumWallet {
     uint256 public minAgreeNo; //당사자들끼리 과반수로 할지, 만장일치로 할지, 특성 수 이상으로 동의를 하게 할지 컨트랙 배포 전 결정
     address[] public owners; //공동 소유 오너들
     mapping(address => bool) public isOwner; //오너주소 => 오너여부
-    mapping(uint256 => mapping(address => bool)) approvals; //reqId => 주소 => 승인 여부
+    mapping(uint256 => mapping(address => bool)) public approvals; //reqId => 주소 => 승인 여부
     struct Request {
         address destination;
         uint256 value;
