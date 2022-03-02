@@ -47,7 +47,6 @@ pragma solidity >=0.7.0 <0.9.0;
          - 수명: 시작 => 요청 1건 - 승인 완료 - 출금 1건 => 끝
 */
 
-import 'hardhat/console.sol';
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 
 contract OmnuumWallet {
