@@ -47,6 +47,7 @@ pragma solidity >=0.7.0 <0.9.0;
          - 수명: 시작 => 요청 1건 - 승인 완료 - 출금 1건 => 끝
 */
 
+import 'hardhat/console.sol';
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 
 contract OmnuumWallet {
@@ -130,16 +131,18 @@ contract OmnuumWallet {
     fallback() external payable {
         // msg.data will be address for NFT proxy contract
         address nftContract;
-        bytes memory _data;
+        bytes memory _data = msg.data;
         assembly {
             nftContract := mload(add(_data, 20))
         }
+        console.log('nftContract', nftContract);
         emit FeeReceived(nftContract, msg.sender, msg.value);
     }
 
-    receive() external payable {
-        emit FeeReceived(address(0), msg.sender, msg.value);
-    }
+    //
+    //    receive() external payable {
+    //        emit FeeReceived(address(0), msg.sender, msg.value);
+    //    }
 
     // =========== WALLET LOGICs =========== //
     // === 인출 요청 === //
