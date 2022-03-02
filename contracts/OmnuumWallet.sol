@@ -4,6 +4,7 @@ pragma solidity >=0.7.0 <0.9.0;
 /*
     @dev
          Omnuum 의 fee 를 수령하는 비즈니스 공동 지갑
+         항상 owner 들의 의견이 만장일치가 되어야 reuqest 가 승인됨.
     @purpose
          한명의 EOA 가 자금 출금을 독단적으로 하는 것을 방지하고자
          공동의 동의가 있어야만 출금이 가능하도록 합의에 의한 출금을 강제하며
@@ -46,18 +47,27 @@ pragma solidity >=0.7.0 <0.9.0;
          - 수명: 시작 => 요청 1건 - 승인 완료 - 출금 1건 => 끝
 */
 
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 
 contract OmnuumWallet {
     using AddressUpgradeable for address;
-    
+    using AddressUpgradeable for address payable;
+
     // =========== EVENTs =========== //
-    event FeeReceived(address indexed nftContract, address indexed sender, uint256 value);
+    event FeeReceived(
+        address indexed nftContract,
+        address indexed sender,
+        uint256 value
+    );
     event Requested(uint256 indexed reqId, address indexed requester);
     event Approved(uint256 indexed reqId, address indexed owner);
     event Revoked(uint256 indexed reqId, address indexed owner);
-    event Withdrawn(uint256 indexed reqId, address indexed receiver, uint256 value);
-    
+    event Withdrawn(
+        uint256 indexed reqId,
+        address indexed receiver,
+        uint256 value
+    );
+
     // =========== STORAGEs =========== //
     uint256 public minAgreeNo; //당사자들끼리 과반수로 할지, 만장일치로 할지, 특성 수 이상으로 동의를 하게 할지 컨트랙 배포 전 결정
     address[] public owners; //공동 소유 오너들
@@ -69,51 +79,53 @@ contract OmnuumWallet {
         bool withdrawn;
     } //인출 EOA 주소, 인출 금액, 인출 여부
     Request[] public requests;
-    
+
     // =========== MODIFIERs =========== //
     modifier onlyOwners() {
-        require(isOwner[msg.sender], "Only Owner is permitted");
+        require(isOwner[msg.sender], 'Only Owner is permitted');
         _;
     }
     modifier reqExists(uint256 _id) {
-        require(_id < requests.length, "transaction does not exist");
+        require(_id < requests.length, 'transaction does not exist');
         _;
     }
     modifier notApproved(uint256 _id) {
-        require(!approvals[_id][msg.sender], "owner already approved");
+        require(!approvals[_id][msg.sender], 'owner already approved');
         _;
     }
     modifier isApproved(uint256 _id) {
-        require(approvals[_id][msg.sender], "owner already not approved");
+        require(approvals[_id][msg.sender], 'owner already not approved');
         _;
     }
     modifier notWithdrawn(uint256 _id) {
-        require(!requests[_id].withdrawn, "transaction already withdrawn");
+        require(!requests[_id].withdrawn, 'transaction already withdrawn');
         _;
     }
-    modifier isAgreed(uint256 _id) {
-        require(getApprovalCount(_id) >= minAgreeNo, "consensus is not yet reached");
+    modifier isAllAgreed(uint256 _id) {
+        require(
+            getApprovalCount(_id) == owners.length,
+            'Unanimous consensus is not yet reached'
+        );
         _;
     }
-    
+
     // =========== CONSTRUCTOR =========== //
-    constructor(address[] memory _owners, uint256 _minAgreeNo) {
-        require(_owners.length > 1, "Multiple wallet owners are required");
-        require(_minAgreeNo > 0 && _minAgreeNo < _owners.length, "Invalid number of agreements");
-        
+    constructor(address[] memory _owners) {
+        //minimum 2 owners are required for multi sig wallet
+        require(_owners.length > 1, 'Multiple wallet owners are required');
+
+        //Register owners
         for (uint256 i; i < _owners.length; i++) {
             address owner = _owners[i];
-            require(!isOwner[owner], "Owner already exists");
-            require(!owner.isContract(), "owner must be EOA");
-            require(owner != address(0), "Invalid owner address");
-            
+            require(!isOwner[owner], 'Owner already exists');
+            require(!owner.isContract(), 'owner must be EOA');
+            require(owner != address(0), 'Invalid owner address');
+
             isOwner[owner] = true;
             owners.push(owner);
         }
-        
-        minAgreeNo = _minAgreeNo;
     }
-    
+
     // =========== FEE RECEIVER =========== //
     fallback() external payable {
         // msg.data will be address for NFT proxy contract
@@ -124,70 +136,98 @@ contract OmnuumWallet {
         }
         emit FeeReceived(nftContract, msg.sender, msg.value);
     }
-    
+
+    receive() external payable {
+        emit FeeReceived(address(0), msg.sender, msg.value);
+    }
+
     // =========== WALLET LOGICs =========== //
     // === 인출 요청 === //
-    
-    function approvalRequest(uint256 _withdrawalValue) external onlyOwners returns (uint256 reqId) {
+    function approvalRequest(uint256 _withdrawalValue)
+        external
+        onlyOwners
+        returns (uint256)
+    {
         require(
             _withdrawalValue <= address(this).balance,
-            "Withdrawal value cannot exceed the balance"
+            'Withdrawal value cannot exceed the balance'
         );
+
+        //Register owner request to requests array
         requests.push(
-            Request({ destination: msg.sender, value: _withdrawalValue, withdrawn: false })
+            Request({
+                destination: msg.sender,
+                value: _withdrawalValue,
+                withdrawn: false
+            })
         );
-        emit Requested(requests.length - 1, msg.sender);
-        return (requests.length - 1);
+
+        uint256 reqId = requests.length - 1;
+
+        //msg.sender self-approval
+        approve(reqId);
+
+        emit Requested(reqId, msg.sender);
+        return reqId;
     }
-    
+
     function approve(uint256 _reqId)
-    external
-    onlyOwners
-    reqExists(_reqId)
-    notApproved(_reqId)
-    notWithdrawn(_reqId)
+        public
+        onlyOwners
+        reqExists(_reqId)
+        notApproved(_reqId)
+        notWithdrawn(_reqId)
     {
         approvals[_reqId][msg.sender] = true;
         emit Approved(_reqId, msg.sender);
     }
-    
-    function checkApproval(uint256 _reqId, address _approver) public view returns (bool) {
+
+    function checkApproval(uint256 _reqId, address _approver)
+        public
+        view
+        returns (bool)
+    {
         return approvals[_reqId][_approver];
     }
-    
-    function getApprovalCount(uint256 _reqId) public view returns (uint256 count) {
+
+    function getApprovalCount(uint256 _reqId) public view returns (uint256) {
+        uint256 count;
         for (uint256 i; i < owners.length; i++) {
             if (checkApproval(_reqId, owners[i])) {
                 count++;
             }
         }
+        return count;
     }
-    
+
     function withdrawal(uint256 _reqId)
-    external
-    onlyOwners
-    reqExists(_reqId)
-    notWithdrawn(_reqId)
-    isAgreed(_reqId)
+        external
+        onlyOwners
+        reqExists(_reqId)
+        notWithdrawn(_reqId)
+        isAllAgreed(_reqId)
     {
         Request storage request = requests[_reqId];
-        require(msg.sender == request.destination, "Withdrawer must be the requester");
+        require(
+            msg.sender == request.destination,
+            'Withdrawer must be the requester'
+        );
         request.withdrawn = true;
-        request.destination.sendValue(request.value);
+        payable(request.destination).sendValue(request.value);
         emit Withdrawn(_reqId, request.destination, request.value);
     }
-    
+
     function revokeApproval(uint256 _reqId)
-    external
-    onlyOwners
-    reqExists(_reqId)
-    isApproved(_reqId)
-    notWithdrawn(_reqId)
+        external
+        onlyOwners
+        reqExists(_reqId)
+        isApproved(_reqId)
+        notWithdrawn(_reqId)
     {
         approvals[_reqId][msg.sender] = false;
         emit Revoked(_reqId, msg.sender);
     }
-    
+
     /*
     TODO - 고민해 볼 것
     1. 합의로 특정 오너를 ban out 시키는 기능 필요
