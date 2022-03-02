@@ -139,7 +139,6 @@ contract OmnuumWallet {
     }
 
     // =========== WALLET LOGICs =========== //
-    // === 인출 요청 === //
     function approvalRequest(uint256 _withdrawalValue)
         external
         onlyOwners
@@ -150,7 +149,6 @@ contract OmnuumWallet {
             'Withdrawal value cannot exceed the balance'
         );
 
-        //Register owner request to requests array
         requests.push(
             Request({
                 destination: msg.sender,
@@ -161,11 +159,10 @@ contract OmnuumWallet {
 
         uint256 reqId = requests.length - 1;
 
-        //msg.sender self-approval
         approve(reqId);
 
         emit Requested(reqId, msg.sender);
-        return reqId;
+        return (reqId);
     }
 
     function approve(uint256 _reqId)
@@ -197,6 +194,17 @@ contract OmnuumWallet {
         return count;
     }
 
+    function revokeApproval(uint256 _reqId)
+        external
+        onlyOwners
+        reqExists(_reqId)
+        isApproved(_reqId)
+        notWithdrawn(_reqId)
+    {
+        approvals[_reqId][msg.sender] = false;
+        emit Revoked(_reqId, msg.sender);
+    }
+
     function withdrawal(uint256 _reqId)
         external
         onlyOwners
@@ -213,21 +221,4 @@ contract OmnuumWallet {
         payable(request.destination).sendValue(request.value);
         emit Withdrawn(_reqId, request.destination, request.value);
     }
-
-    function revokeApproval(uint256 _reqId)
-        external
-        onlyOwners
-        reqExists(_reqId)
-        isApproved(_reqId)
-        notWithdrawn(_reqId)
-    {
-        approvals[_reqId][msg.sender] = false;
-        emit Revoked(_reqId, msg.sender);
-    }
-
-    /*
-    TODO - 고민해 볼 것
-    1. 합의로 특정 오너를 ban out 시키는 기능 필요
-    2. 오너 추가? 교체? 제거?
-    */
 }
