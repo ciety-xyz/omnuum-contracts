@@ -1,5 +1,5 @@
 [
-  "constructor(address,address,bytes32,uint256,address,address)",
+  "constructor(address,address,bytes32,uint256,address)",
   "event OwnershipTransferred(address indexed,address indexed)",
   "event RequestVRF(address indexed,bytes32 indexed)",
   "event ResponseVRF(bytes32 indexed,uint256,bool,string)",

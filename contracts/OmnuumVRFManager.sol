@@ -24,14 +24,12 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         address _vrf_coord,
         bytes32 _key_hash,
         uint256 _fee,
-        address _omnuumCA,
-        address _exchangeAddress
+        address _omnuumCA
     ) VRFConsumerBase(_vrf_coord, _LINK) {
         s_LINK = _LINK;
         s_key_hash = _key_hash;
         fee = _fee;
         omnuumCA = OmnuumCAManager(_omnuumCA);
-        exchangeAddress = _exchangeAddress;
     }
 
     mapping(address => bytes32) aToId;

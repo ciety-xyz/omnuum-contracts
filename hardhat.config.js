@@ -22,7 +22,7 @@ module.exports = {
       },
       mining: {
         auto: true,
-        interval: 100
+        interval: process.env.MINING_INTERVAL !== undefined ? Number(process.env.MINING_INTERVAL) : 0
       }
     },
     rinkeby: {

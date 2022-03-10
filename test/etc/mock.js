@@ -60,8 +60,7 @@ module.exports = {
       this.mockVrfCoords.address,
       chainlink.rinkeby.hash,
       chainlink.rinkeby.fee,
-      this.omnuumCAManager.address,
-      this.omnuumExchange.address
+      this.omnuumCAManager.address
     );
 
     /* Register CA accounts to CA Manager */
