@@ -24,13 +24,14 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         address _vrf_coord,
         bytes32 _key_hash,
         uint256 _fee,
-        address _omnuumCA
+        address _omnuumCA,
+        address _exchangeAddress
     ) VRFConsumerBase(_vrf_coord, _LINK) {
         s_LINK = _LINK;
         s_key_hash = _key_hash;
         fee = _fee;
         omnuumCA = OmnuumCAManager(_omnuumCA);
-        exchangeAddress = omnuumCA.getContract('EXCHANGE');
+        exchangeAddress = _exchangeAddress;
     }
 
     mapping(address => bytes32) aToId;
@@ -43,6 +44,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     // Only for allowed CA (Omnuum contracts except NFT contract)
     function requestVRF() external {
+        address exchangeAddress = omnuumCA.getContract('EXCHANGE');
         require(LINK.balanceOf(exchangeAddress) > 2 ether, 'Not enough LINK');
         require(omnuumCA.isRegistered(msg.sender), 'OO3');
 
@@ -54,6 +56,8 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     function requestVRFOnce(address targetAddress) external payable {
         require(omnuumCA.isRegistered(msg.sender), 'OO3');
+
+        address exchangeAddress = omnuumCA.getContract('EXCHANGE');
 
         require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'Not enough LINK');
 

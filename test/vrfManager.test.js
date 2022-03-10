@@ -27,7 +27,7 @@ describe('OmnuumVRFManager', () => {
         omnuumVRFManager,
         mockVrfCoords,
         omnuumCAManager,
-        accounts: [omnuumAC],
+        accounts: [omnuumAC]
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
@@ -41,7 +41,7 @@ describe('OmnuumVRFManager', () => {
 
       const [requestEvent] = parseEvent([iface], await requestTx.wait());
       const {
-        args: { requestId, roller },
+        args: { requestId, roller }
       } = requestEvent;
 
       await expect(requestTx)
@@ -78,7 +78,7 @@ describe('OmnuumVRFManager', () => {
     it('[Revert] Not Omnuum contract', async () => {
       const {
         omnuumVRFManager,
-        accounts: [, maliciousAC],
+        accounts: [, maliciousAC]
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
@@ -106,7 +106,7 @@ describe('OmnuumVRFManager', () => {
 
       const [, requestEvent] = parseEvent([exchangeIface, vrfIface], await requestTx.wait());
       const {
-        args: { requestId },
+        args: { requestId }
       } = requestEvent;
 
       await expect(requestTx)
@@ -131,7 +131,7 @@ describe('OmnuumVRFManager', () => {
     it('[Revert] only omnuum - reveal manager', async () => {
       const {
         omnuumVRFManager,
-        accounts: [, not_omnuumAC, anyAC],
+        accounts: [, not_omnuumAC, anyAC]
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
@@ -142,7 +142,7 @@ describe('OmnuumVRFManager', () => {
       const {
         omnuumVRFManager,
         mockLink,
-        accounts: [anyAC],
+        accounts: [anyAC]
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
@@ -157,7 +157,7 @@ describe('OmnuumVRFManager', () => {
         omnuumVRFManager,
         omnuumExchange,
         mockLink,
-        accounts: [anyAC],
+        accounts: [anyAC]
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
@@ -169,8 +169,8 @@ describe('OmnuumVRFManager', () => {
 
       await expect(
         omnuumVRFManager.requestVRFOnce(anyAC.address, {
-          value: exchangeAmount.mul(safetyRatio).div(100).sub(lackAmount),
-        }),
+          value: exchangeAmount.mul(safetyRatio).div(100).sub(lackAmount)
+        })
       ).to.be.revertedWith(Constants.reasons.vrfManager.Ether);
     });
     it('[Revert] Already used address', async () => {
@@ -187,7 +187,7 @@ describe('OmnuumVRFManager', () => {
 
       const [, requestEvent] = parseEvent([exchangeIface, vrfIface], await requestTx.wait());
       const {
-        args: { requestId },
+        args: { requestId }
       } = requestEvent;
 
       await expect(requestTx)
@@ -206,7 +206,7 @@ describe('OmnuumVRFManager', () => {
 
       // fail for second try
       await expect(revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) })).to.be.revertedWith(
-        Constants.reasons.vrfManager.Once,
+        Constants.reasons.vrfManager.Once
       );
     });
   });
@@ -226,7 +226,7 @@ describe('OmnuumVRFManager', () => {
     it('[Revert] only owner', async () => {
       const {
         omnuumVRFManager,
-        accounts: [, maliciousAC],
+        accounts: [, maliciousAC]
       } = this;
 
       const fee = ethers.utils.parseEther('2.5');
@@ -250,7 +250,7 @@ describe('OmnuumVRFManager', () => {
     it('[Revert] only owner', async () => {
       const {
         omnuumVRFManager,
-        accounts: [, maliciousAC],
+        accounts: [, maliciousAC]
       } = this;
 
       const ratio = 120;
