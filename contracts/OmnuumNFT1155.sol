@@ -56,7 +56,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
             (mintManager.baseFeeRate() / 10**rateDecimal) *
             (1 - (mintManager.discountRate(address(this)) / 10**rateDecimal));
         if (amount > 0) {
-            payable(omA).sendValue(amount);
+            address feeReceiver = caManager.getContract('WALLET');
+            payable(feeReceiver).sendValue(amount);
         }
         emit ReceiveFee(amount);
     }
