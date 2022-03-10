@@ -9,6 +9,7 @@ import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
+import 'hardhat/console.sol';
 
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
@@ -52,9 +53,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     function sendFee() internal {
         uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 amount = msg.value *
-            (mintManager.baseFeeRate() / 10**rateDecimal) *
-            (1 - (mintManager.discountRate(address(this)) / 10**rateDecimal));
+        uint256 baseFeeRate = mintManager.baseFeeRate();
+        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
+        uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
             payable(feeReceiver).sendValue(amount);

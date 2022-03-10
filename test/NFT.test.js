@@ -87,6 +87,7 @@ describe('OmnuumNFT', () => {
     });
     it('Omnuum should receive fee when mint success', async () => {
       const walletAddress = this.omnuumWallet.address;
+
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
@@ -122,10 +123,60 @@ describe('OmnuumNFT', () => {
         })
       ).wait();
 
-      const mint_fee = basePrice
-        .mul(quantity)
+      const payment = basePrice.mul(quantity);
+
+      const mint_fee = payment.mul(Constants.testValues.baseFeeRate).div(10 ** 5);
+
+      const cur_bal = await ethers.provider.getBalance(walletAddress);
+
+      expect(cur_bal).to.equal(prev_bal.add(mint_fee));
+    });
+    it('Omnuum should receive fee when mint success with discounted price', async () => {
+      const walletAddress = this.omnuumWallet.address;
+
+      const {
+        accounts: [omnuumAC, minterAC],
+        senderVerifier,
+        omnuumNFT1155,
+        omnuumMintManager,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.2');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+      const quantity = 1;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT1155.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      await omnuumMintManager.setDiscountRate(omnuumNFT1155.address, Constants.testValues.discountFeeRate);
+
+      const prev_bal = await ethers.provider.getBalance(walletAddress);
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
+
+      await (
+        await omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+          value: basePrice.mul(quantity),
+        })
+      ).wait();
+
+      const payment = basePrice.mul(quantity);
+
+      const mint_fee = payment
         .mul(Constants.testValues.baseFeeRate)
-        .div(10 ** 5);
+        .mul(10 ** 5 - Constants.testValues.discountFeeRate)
+        .div(10 ** 10);
 
       const cur_bal = await ethers.provider.getBalance(walletAddress);
 
