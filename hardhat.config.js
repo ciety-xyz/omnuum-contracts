@@ -22,13 +22,12 @@ module.exports = {
       },
       mining: {
         auto: true,
-        interval: 1000
+        interval: process.env.MINING_INTERVAL !== undefined ? Number(process.env.MINING_INTERVAL) : 0
       }
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : []
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : []
     }
   },
   paths: {

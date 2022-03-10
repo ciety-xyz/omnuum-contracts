@@ -29,5 +29,6 @@ module.exports = {
     'no-multi-str': 'off',
     eqeqeq: 0,
     'no-unused-expressions': 0,
+    'comma-dangle': 'off',
   },
 };
