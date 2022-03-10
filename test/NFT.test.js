@@ -124,7 +124,7 @@ describe('OmnuumNFT', () => {
 
       const mint_fee = basePrice
         .mul(quantity)
-        .mul(Constants.testValues.mintFee)
+        .mul(Constants.testValues.baseFeeRate)
         .div(10 ** 5);
 
       const cur_bal = await ethers.provider.getBalance(walletAddress);
@@ -416,7 +416,7 @@ describe('OmnuumNFT', () => {
 
       const mint_fee = price
         .mul(2)
-        .mul(Constants.testValues.mintFee)
+        .mul(Constants.testValues.baseFeeRate)
         .div(10 ** 5);
 
       const cur_bal = await ethers.provider.getBalance(walletAddress);
@@ -863,7 +863,7 @@ describe('OmnuumNFT', () => {
 
       const mint_fee = price
         .mul(ticketCount)
-        .mul(Constants.testValues.mintFee)
+        .mul(Constants.testValues.baseFeeRate)
         .div(10 ** 5);
 
       expect(cur_bal).to.be.equal(prev_bal.add(price.mul(ticketCount).sub(mint_fee).sub(gas_fee)));

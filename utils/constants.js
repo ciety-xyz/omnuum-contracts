@@ -98,7 +98,7 @@ module.exports = {
     },
   },
   testValues: {
-    mintFee: 2500, // 0.025 == 2.5%
+    baseFeeRate: 5000, // converted as 0.05 (decimal: 5)
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
   },
