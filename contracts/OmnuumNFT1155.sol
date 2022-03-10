@@ -10,11 +10,7 @@ import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
 
-contract OmnuumNFT1155 is
-    ERC1155Upgradeable,
-    ReentrancyGuardUpgradeable,
-    OwnableUpgradeable
-{
+contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
     using CountersUpgradeable for CountersUpgradeable.Counter;
@@ -58,7 +54,8 @@ contract OmnuumNFT1155 is
         uint256 feeRate = mintManager.feeRate();
         uint8 rateDecimal = mintManager.rateDecimal();
         uint256 amount = (msg.value * feeRate) / (10**rateDecimal);
-        payable(omA).sendValue(amount);
+        address feeReceiver = caManager.getContract('WALLET');
+        payable(feeReceiver).sendValue(amount);
         emit ReceiveFee(amount);
     }
 
@@ -68,13 +65,7 @@ contract OmnuumNFT1155 is
         SenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
         require(msg.sender.code.length == 0, 'MT9');
-        SenderVerifier(caManager.getContract('VERIFIER')).verify(
-            omA,
-            msg.sender,
-            'MINT',
-            _groupId,
-            _payload
-        );
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
         mintManager.publicMint(_groupId, _quantity, msg.value, msg.sender);
 
@@ -90,30 +81,15 @@ contract OmnuumNFT1155 is
         require(!msg.sender.isContract(), 'MT9');
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
-        SenderVerifier(caManager.getContract('VERIFIER')).verify(
-            omA,
-            msg.sender,
-            'TICKET',
-            _ticket.groupId,
-            _payload
-        );
-        TicketManager(caManager.getContract('TICKET')).useTicket(
-            omA,
-            msg.sender,
-            _quantity,
-            _ticket
-        );
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
+        TicketManager(caManager.getContract('TICKET')).useTicket(omA, msg.sender, _quantity, _ticket);
 
         mintLoop(msg.sender, _quantity);
         sendFee();
     }
 
     function mintDirect(address _to, uint32 _quantity) public {
-        require(
-            msg.sender == caManager.getContract('MINTMANAGER') ||
-                msg.sender == owner(),
-            'OO2'
-        );
+        require(msg.sender == caManager.getContract('MINTMANAGER') || msg.sender == owner(), 'OO2');
         mintLoop(_to, _quantity);
     }
 

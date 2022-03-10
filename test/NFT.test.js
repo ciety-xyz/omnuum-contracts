@@ -86,6 +86,7 @@ describe('OmnuumNFT', () => {
         .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
     });
     it('Omnuum should receive fee when mint success', async () => {
+      const walletAddress = this.omnuumWallet.address;
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
@@ -111,7 +112,7 @@ describe('OmnuumNFT', () => {
         )
       ).wait();
 
-      const prev_bal = await omnuumAC.getBalance();
+      const prev_bal = await ethers.provider.getBalance(walletAddress);
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, omnuumAC, senderVerifier.address);
 
@@ -126,7 +127,7 @@ describe('OmnuumNFT', () => {
         .mul(Constants.testValues.mintFee)
         .div(10 ** 5);
 
-      const cur_bal = await omnuumAC.getBalance();
+      const cur_bal = await ethers.provider.getBalance(walletAddress);
 
       expect(cur_bal).to.equal(prev_bal.add(mint_fee));
     });
@@ -385,7 +386,9 @@ describe('OmnuumNFT', () => {
         .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
         .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
     });
-    it('Omnuum should receive fee when mint success', async () => {
+    it('Wallet should receive fee when mint success', async () => {
+      const walletAddress = this.omnuumWallet.address;
+
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
@@ -403,7 +406,7 @@ describe('OmnuumNFT', () => {
       );
       await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const prev_bal = await omnuumAC.getBalance();
+      const prev_bal = await ethers.provider.getBalance(walletAddress);
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
@@ -416,7 +419,7 @@ describe('OmnuumNFT', () => {
         .mul(Constants.testValues.mintFee)
         .div(10 ** 5);
 
-      const cur_bal = await omnuumAC.getBalance();
+      const cur_bal = await ethers.provider.getBalance(walletAddress);
 
       expect(cur_bal).to.equal(prev_bal.add(mint_fee));
     });
