@@ -4,5 +4,5 @@
   "event UseTicket(address indexed,address,uint32,tuple(address,address,uint256,uint32,uint256,bytes))",
   "function setEndDate(address,uint256,uint256)",
   "function useTicket(address,address,uint32,tuple(address,address,uint256,uint32,uint256,bytes))",
-  "function verify(address,address,uint32,tuple(address,address,uint256,uint32,uint256,bytes)) view"
+  "function verify(address,address,address,uint32,tuple(address,address,uint256,uint32,uint256,bytes)) view"
 ]

@@ -2,9 +2,10 @@ require('dotenv').config();
 
 require('@nomiclabs/hardhat-etherscan');
 require('@nomiclabs/hardhat-waffle');
+require('@nomiclabs/hardhat-solhint');
+
 require('hardhat-gas-reporter');
 require('solidity-coverage');
-require('@nomiclabs/hardhat-solhint');
 
 require('@openzeppelin/hardhat-upgrades');
 require('hardhat-contract-sizer');
@@ -17,27 +18,34 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        count: 100,
+        count: 100
       },
+      mining: {
+        auto: true,
+        interval: process.env.MINING_INTERVAL !== undefined ? Number(process.env.MINING_INTERVAL) : 0
+      }
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : []
+    }
+  },
+  paths: {
+    sources: './contracts'
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: 'USD',
-    coinmarketcap: process.env.COINMARKETCAP_KEY,
+    coinmarketcap: process.env.COINMARKETCAP_KEY
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.ETHERSCAN_API_KEY
   },
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,
     runOnCompile: true,
-    strict: true,
+    strict: true
   },
   abiExporter: {
     path: './data/abi',
@@ -45,7 +53,6 @@ module.exports = {
     clear: true,
     flat: true,
     spacing: 2,
-    pretty: true,
-  },
-
+    pretty: true
+  }
 };

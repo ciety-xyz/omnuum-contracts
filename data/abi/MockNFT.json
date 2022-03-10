@@ -7,6 +7,5 @@
   "function renounceOwnership()",
   "function ticketContractMint(address,uint32,tuple(address,address,uint256,uint32,uint256,bytes),tuple(address,string,uint256,bytes)) payable",
   "function transferOwnership(address)",
-  "function useTicket(address,address,uint16,tuple(address,address,uint256,uint32,uint256,bytes))",
-  "function verify(address,address,uint16,tuple(address,address,uint256,uint32,uint256,bytes))"
+  "function useTicket(address,address,uint16,tuple(address,address,uint256,uint32,uint256,bytes))"
 ]

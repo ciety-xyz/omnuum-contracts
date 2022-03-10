@@ -1,16 +1,9 @@
 {
-  "overrides": [
-    {
-      "files": "*.sol",
-      "options": {
-        "singleQuote": true,
-        "trailingComma": "all",
-        "printWidth": 140,
-        "bracketSpacing": true,
-        "formatOnSave": true,
-        "semi": true,
-        "explicitTypes": "always"
-      }
-    }
-  ]
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 140,
+  "bracketSpacing": true,
+  "formatOnSave": true,
+  "semi": true,
+  "explicitTypes": "always"
 }
