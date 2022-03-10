@@ -13,7 +13,6 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     uint256 fee;
     bytes32 s_key_hash;
     address omA;
-    address exchangeAddress;
 
     OmnuumCAManager omnuumCA;
 
