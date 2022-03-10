@@ -11,7 +11,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     mapping(address => uint256) public discountRate;
 
     event ChangeBaseFeeRate(uint256 baseFeeRate);
-    event SetDiscountFeeRate(address nftContract, uint256 discountFeeRate);
+    event SetDiscountRate(address nftContract, uint256 discountFeeRate);
     event Airdrop(address indexed Contract, uint256 count);
     event SetSchedule(address indexed nft, uint256 indexed groupId);
     event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
@@ -42,7 +42,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     function setDiscountRate(address _nftContract, uint256 _discountRate) external onlyOwner {
         require(_discountRate <= 100000, 'NE1');
         discountRate[_nftContract] = _discountRate;
-        emit SetDiscountFeeRate(_nftContract, _discountRate);
+        emit SetDiscountRate(_nftContract, _discountRate);
     }
 
     function setPublicMintSchedule(

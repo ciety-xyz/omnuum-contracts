@@ -3,7 +3,7 @@
   "event ChangeBaseFeeRate(uint256)",
   "event OwnershipTransferred(address indexed,address indexed)",
   "event PublicMint(address indexed,address indexed,uint256 indexed,uint32)",
-  "event SetDiscountFeeRate(address,uint256)",
+  "event SetDiscountRate(address,uint256)",
   "event SetSchedule(address indexed,uint256 indexed)",
   "function baseFeeRate() view returns (uint256)",
   "function changeBaseFeeRate(uint256)",

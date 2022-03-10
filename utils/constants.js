@@ -9,7 +9,8 @@ module.exports = {
       Uri: 'Uri',
     },
     MintManager: {
-      SetFee: 'SetFee',
+      SetDiscountRate: 'SetDiscountRate',
+      ChangeBaseFeeRate: 'ChangeBaseFeeRate',
       Airdrop: 'Airdrop',
       SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
@@ -98,7 +99,8 @@ module.exports = {
     },
   },
   testValues: {
-    baseFeeRate: 5000, // converted as 0.05 (decimal: 5)
+    baseFeeRate: 5000, // converted as 0.05 (5 percent)
+    discountFeeRate: 10000, // converted as 0.1 (10 percent)
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
   },

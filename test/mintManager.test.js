@@ -31,38 +31,56 @@ describe('OmnuumMintManager', () => {
     });
   });
 
-  describe('[Method] setFeeRate', () => {
-    it('Get fee', async () => {
+  describe('[Method] changeBaseFeeRate', () => {
+    it('Get Base Fee', async () => {
       const { omnuumMintManager } = this;
-
-      const fee_rate = await omnuumMintManager.feeRate();
-
-      expect(fee_rate).equal(2500);
+      expect((await omnuumMintManager.baseFeeRate()).toNumber()).to.equal(Constants.testValues.baseFeeRate);
     });
-    it('Set fee', async () => {
-      const { omnuumMintManager, accounts } = this;
-
-      const tx = await omnuumMintManager.connect(accounts[0]).setFeeRate(3000);
-
-      await tx.wait();
-
-      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.SetFee).withArgs(3000);
-      expect(await omnuumMintManager.feeRate()).to.equal(3000);
+    it('Change Base Fee', async () => {
+      const { omnuumMintManager } = this;
+      const newBaseFee = 123;
+      await (await omnuumMintManager.changeBaseFeeRate(newBaseFee)).wait();
+      expect((await omnuumMintManager.baseFeeRate()).toNumber()).to.equal(newBaseFee);
     });
     it('[Revert] not owner', async () => {
       const { omnuumMintManager, accounts } = this;
-
-      const tx = omnuumMintManager.connect(accounts[1]).setFeeRate(3000);
-
-      await expect(tx).to.be.reverted;
+      const notOwner = accounts[1];
+      await expect(omnuumMintManager.connect(notOwner).changeBaseFeeRate(0)).to.be.reverted;
     });
     it('[Revert] Fee rate should be lower than 100%', async () => {
-      // rate deicimal is 5, so 100000 == 100%
+      const { omnuumMintManager } = this;
+      await expect(omnuumMintManager.changeBaseFeeRate(100001)).to.be.revertedWith(Constants.reasons.code.NE1);
+    });
+  });
+  describe('[Method] setDiscountRate', () => {
+    it('Get baseFeeRate', async () => {
+      const { omnuumMintManager } = this;
+      const baseFeeRate = await omnuumMintManager.baseFeeRate();
+      expect(baseFeeRate.toNumber()).to.equal(Constants.testValues.baseFeeRate);
+    });
+    it('Set discount rate of nft contract', async () => {
+      const { omnuumMintManager } = this;
+      const nftContractAddr = this.omnuumNFT1155.address;
+      const tx = await omnuumMintManager.setDiscountRate(nftContractAddr, Constants.testValues.discountFeeRate);
+      await tx.wait();
+
+      await expect(tx)
+        .to.emit(omnuumMintManager, Constants.events.MintManager.SetDiscountRate)
+        .withArgs(nftContractAddr, Constants.testValues.discountFeeRate);
+
+      expect(await omnuumMintManager.discountRate(nftContractAddr)).to.equal(Constants.testValues.discountFeeRate);
+    });
+    it('[Revert] not owner', async () => {
       const { omnuumMintManager, accounts } = this;
-
-      const tx = omnuumMintManager.connect(accounts[0]).setFeeRate(100001);
-
-      await expect(tx).to.be.revertedWith(Constants.reasons.code.NE1);
+      const nftContractAddr = this.omnuumNFT1155.address;
+      const notOwner = accounts[1];
+      await expect(omnuumMintManager.connect(notOwner).setDiscountRate(nftContractAddr, Constants.testValues.discountFeeRate)).to.be
+        .reverted;
+    });
+    it('[Revert] Fee discount rate should be lower than 100%', async () => {
+      const { omnuumMintManager } = this;
+      const nftContractAddr = this.omnuumNFT1155.address;
+      await expect(omnuumMintManager.setDiscountRate(nftContractAddr, 100001)).to.be.revertedWith(Constants.reasons.code.NE1);
     });
   });
 
