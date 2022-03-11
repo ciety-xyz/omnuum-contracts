@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@openzeppelin/contracts/interfaces/IERC20.sol';
 import './OmnuumCAManager.sol';
 
 // in future, this contract will act like internal token exchange for business
@@ -27,7 +27,7 @@ contract OmnuumExchange is OwnableUpgradeable {
         address _targetToken,
         uint256 _amount
     ) public view returns (uint256) {
-        return tmpLinkExRate * _amount / 1 ether;
+        return (tmpLinkExRate * _amount) / 1 ether;
     }
 
     function updateTmpExchangeRate(uint256 _newRate) public {
@@ -43,7 +43,7 @@ contract OmnuumExchange is OwnableUpgradeable {
     ) public payable {
         require(caManager.isRegistered(msg.sender), 'OO3');
 
-        ERC20(_token).transfer(msg.sender, _amount);
+        IERC20(_token).transfer(msg.sender, _amount);
 
         emit Exchange(address(0), _token, _amount, msg.sender, _to);
     }
