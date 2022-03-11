@@ -78,6 +78,7 @@ module.exports = {
           this.senderVerifier.address,
           this.revealManager.address,
           this.omnuumWallet.address,
+          this.accounts[0].address,
         ],
         [
           ContractTopic.VRF,
@@ -87,6 +88,7 @@ module.exports = {
           ContractTopic.VERIFIER,
           ContractTopic.REVEAL,
           ContractTopic.WALLET,
+          ContractTopic.DEV,
         ],
       )
     ).wait();

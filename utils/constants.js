@@ -74,6 +74,7 @@ module.exports = {
     ticket: 'TICKET',
   },
   ContractTopic: {
+    DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
