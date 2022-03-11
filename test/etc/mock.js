@@ -1,5 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { mapC, go, zip } = require('fxjs');
+const { mapC, go } = require('fxjs');
 const { ContractTopic, chainlink, testValues } = require('../../utils/constants.js');
 
 Error.stackTraceLimit = Infinity;
@@ -47,7 +47,8 @@ module.exports = {
     this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
 
     /* Deploy Contracts */
-    this.omnuumWallet = await this.OmnuumWallet.deploy(accounts.slice(-3).map((account) => account.address));
+    this.walletOwners = accounts.slice(-testValues.walletOwnersLen);
+    this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwners.map((account) => account.address));
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
     [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords] = await go(
       [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords],

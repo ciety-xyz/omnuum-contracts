@@ -8,24 +8,16 @@ contract OmnuumWallet {
     using Address for address payable;
 
     // =========== EVENTs =========== //
-    event FeeReceived(
-        address indexed nftContract,
-        address indexed sender,
-        uint256 value
-    );
+    event FeeReceived(address indexed nftContract, address indexed sender, uint256 value);
     event Requested(uint256 indexed reqId, address indexed requester);
     event Approved(uint256 indexed reqId, address indexed owner);
     event Revoked(uint256 indexed reqId, address indexed owner);
-    event Withdrawn(
-        uint256 indexed reqId,
-        address indexed receiver,
-        uint256 value
-    );
+    event Withdrawn(uint256 indexed reqId, address indexed receiver, uint256 value);
 
     // =========== STORAGEs =========== //
     address[] public owners;
     mapping(address => bool) public isOwner; //owner address => true/false
-    mapping(uint256 => mapping(address => bool)) public approvals; //reqId => address => approval
+    mapping(uint256 => mapping(address => bool)) approvals; //reqId => address => approval
     struct Request {
         address destination;
         uint256 value;
@@ -35,44 +27,41 @@ contract OmnuumWallet {
 
     // =========== MODIFIERs =========== //
     modifier onlyOwners() {
-        require(isOwner[msg.sender], 'Only Owner is permitted');
+        require(isOwner[msg.sender], 'only owner');
         _;
     }
     modifier reqExists(uint256 _id) {
-        require(_id < requests.length, 'transaction does not exist');
+        require(_id < requests.length, 'request not exist');
         _;
     }
     modifier notApproved(uint256 _id) {
-        require(!approvals[_id][msg.sender], 'owner already approved');
+        require(!approvals[_id][msg.sender], 'already approved');
         _;
     }
     modifier isApproved(uint256 _id) {
-        require(approvals[_id][msg.sender], 'owner already not approved');
+        require(approvals[_id][msg.sender], 'not approved');
         _;
     }
     modifier notWithdrawn(uint256 _id) {
-        require(!requests[_id].withdrawn, 'transaction already withdrawn');
+        require(!requests[_id].withdrawn, 'already withdrawn');
         _;
     }
     modifier isAllAgreed(uint256 _id) {
-        require(
-            getApprovalCount(_id) == owners.length,
-            'Unanimous consensus is not yet reached'
-        );
+        require(getApprovalCount(_id) == owners.length, 'consensus not reached');
         _;
     }
 
     // =========== CONSTRUCTOR =========== //
     constructor(address[] memory _owners) {
         //minimum 2 owners are required for multi sig wallet
-        require(_owners.length > 1, 'Multiple wallet owners are required');
+        require(_owners.length > 1, 'single owner');
 
         //Register owners
         for (uint256 i; i < _owners.length; i++) {
             address owner = _owners[i];
-            require(!isOwner[owner], 'Owner already exists');
-            require(!owner.isContract(), 'owner must be EOA');
-            require(owner != address(0), 'Invalid owner address');
+            require(!isOwner[owner], 'Owner exists');
+            require(!owner.isContract(), 'not EOA');
+            require(owner != address(0), 'Invalid address');
 
             isOwner[owner] = true;
             owners.push(owner);
@@ -91,23 +80,10 @@ contract OmnuumWallet {
     }
 
     // =========== WALLET LOGICs =========== //
-    function approvalRequest(uint256 _withdrawalValue)
-        external
-        onlyOwners
-        returns (uint256)
-    {
-        require(
-            _withdrawalValue <= address(this).balance,
-            'Withdrawal value cannot exceed the balance'
-        );
+    function approvalRequest(uint256 _withdrawalValue) external onlyOwners returns (uint256) {
+        require(_withdrawalValue <= address(this).balance, 'request value exceeds balance');
 
-        requests.push(
-            Request({
-                destination: msg.sender,
-                value: _withdrawalValue,
-                withdrawn: false
-            })
-        );
+        requests.push(Request({ destination: msg.sender, value: _withdrawalValue, withdrawn: false }));
 
         uint256 reqId = requests.length - 1;
 
@@ -117,22 +93,12 @@ contract OmnuumWallet {
         return (reqId);
     }
 
-    function approve(uint256 _reqId)
-        public
-        onlyOwners
-        reqExists(_reqId)
-        notApproved(_reqId)
-        notWithdrawn(_reqId)
-    {
+    function approve(uint256 _reqId) public onlyOwners reqExists(_reqId) notApproved(_reqId) notWithdrawn(_reqId) {
         approvals[_reqId][msg.sender] = true;
         emit Approved(_reqId, msg.sender);
     }
 
-    function checkApproval(uint256 _reqId, address _approver)
-        public
-        view
-        returns (bool)
-    {
+    function checkApproval(uint256 _reqId, address _approver) public view returns (bool) {
         return approvals[_reqId][_approver];
     }
 
@@ -146,29 +112,14 @@ contract OmnuumWallet {
         return count;
     }
 
-    function revokeApproval(uint256 _reqId)
-        external
-        onlyOwners
-        reqExists(_reqId)
-        isApproved(_reqId)
-        notWithdrawn(_reqId)
-    {
+    function revokeApproval(uint256 _reqId) external onlyOwners reqExists(_reqId) isApproved(_reqId) notWithdrawn(_reqId) {
         approvals[_reqId][msg.sender] = false;
         emit Revoked(_reqId, msg.sender);
     }
 
-    function withdrawal(uint256 _reqId)
-        external
-        onlyOwners
-        reqExists(_reqId)
-        notWithdrawn(_reqId)
-        isAllAgreed(_reqId)
-    {
+    function withdrawal(uint256 _reqId) external onlyOwners reqExists(_reqId) notWithdrawn(_reqId) isAllAgreed(_reqId) {
         Request storage request = requests[_reqId];
-        require(
-            msg.sender == request.destination,
-            'Withdrawer must be the requester'
-        );
+        require(msg.sender == request.destination, 'withdrawer and requester must be equal');
         request.withdrawn = true;
         payable(request.destination).sendValue(request.value);
         emit Withdrawn(_reqId, request.destination, request.value);
