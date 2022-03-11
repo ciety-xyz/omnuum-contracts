@@ -1,5 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { mapC, go, zip } = require('fxjs');
+const { mapC, go } = require('fxjs');
 const { ContractTopic, chainlink, testValues } = require('../../utils/constants.js');
 
 Error.stackTraceLimit = Infinity;
@@ -10,7 +10,7 @@ module.exports = {
     caManagerAddress,
     maxSupply,
     coverUri: testValues.coverUri,
-    prjOwner: prjOwner || context?.accounts?.[0]?.address
+    prjOwner: prjOwner || context?.accounts?.[0]?.address,
   }),
   deployNFT(beacon, artifact, context, overrideArgs) {
     const args = module.exports.createNftContractArgs(context, overrideArgs);
@@ -20,7 +20,7 @@ module.exports = {
       args.omnuumAddress,
       args.maxSupply,
       args.coverUri,
-      args.prjOwner
+      args.prjOwner,
     ]);
   },
   async prepareDeploy() {
@@ -32,6 +32,7 @@ module.exports = {
     this.OmnuumVRFManager = await ethers.getContractFactory('OmnuumVRFManager');
     this.OmnuumExchange = await ethers.getContractFactory('OmnuumExchange');
     this.RevealManager = await ethers.getContractFactory('RevealManager');
+    this.OmnuumWallet = await ethers.getContractFactory('OmnuumWallet');
     this.NFTbeacon = await upgrades.deployBeacon(this.OmnuumNFT1155);
   },
   async prepareMockDeploy() {
@@ -40,10 +41,14 @@ module.exports = {
     this.MockNFT = await ethers.getContractFactory('MockNFT');
   },
   async testDeploy(accounts, overrides) {
+    /* Deploy Upgradeable Proxies */
     this.omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
     this.omnuumMintManager = await upgrades.deployProxy(this.OmnuumMintManager, [testValues.mintFee]);
     this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
 
+    /* Deploy Contracts */
+    this.walletOwners = accounts.slice(-testValues.walletOwnersLen);
+    this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwners.map((account) => account.address));
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
     [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords] = await go(
       [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords],
@@ -51,16 +56,16 @@ module.exports = {
         const contract = await conFactory.deploy();
         await contract.deployed();
         return contract;
-      })
+      }),
     );
 
-    /* Deploy VRF Manager and Register to CA Manager */
+    /* Deploy VRF Manager */
     this.omnuumVRFManager = await this.OmnuumVRFManager.deploy(
       this.mockLink.address,
       this.mockVrfCoords.address,
       chainlink.rinkeby.hash,
       chainlink.rinkeby.fee,
-      this.omnuumCAManager.address
+      this.omnuumCAManager.address,
     );
 
     /* Register CA accounts to CA Manager */
@@ -73,7 +78,7 @@ module.exports = {
           this.ticketManager.address,
           this.senderVerifier.address,
           this.revealManager.address,
-          accounts[0].address
+          this.omnuumWallet.address,
         ],
         [
           ContractTopic.VRF,
@@ -82,8 +87,8 @@ module.exports = {
           ContractTopic.TICKET,
           ContractTopic.VERIFIER,
           ContractTopic.REVEAL,
-          ContractTopic.WALLET
-        ]
+          ContractTopic.WALLET,
+        ],
       )
     ).wait();
 
@@ -91,11 +96,11 @@ module.exports = {
     this.omnuumNFT1155 = await (
       await module.exports.deployNFT(this.NFTbeacon, this.OmnuumNFT1155, this, {
         caManagerAddress: this.omnuumCAManager.address,
-        ...overrides
+        ...overrides,
       })
     ).deployed();
 
     /* Deploy Mock NFT */
     this.mockNFT = await (await this.MockNFT.deploy(this.senderVerifier.address, this.ticketManager.address)).deployed();
-  }
+  },
 };
