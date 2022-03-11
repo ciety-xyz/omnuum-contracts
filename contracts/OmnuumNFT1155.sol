@@ -9,7 +9,6 @@ import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
-import 'hardhat/console.sol';
 
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
