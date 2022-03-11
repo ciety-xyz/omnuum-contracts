@@ -4,6 +4,7 @@
 
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
+
 const { mapL, mapC, zip, zipWithIndexL, range, go, takeAll, reduce } = require('fxjs');
 
 const { testDeploy, prepareDeploy, prepareMockDeploy } = require('./etc/mock.js');
@@ -47,6 +48,7 @@ describe('Wallet', () => {
       );
       expect(registeredOwners).to.deep.equal(this.walletOwners.map((owner) => owner.address));
     });
+
     it('[Revert] Registered only owners, not other account', async () => {
       await expect(this.omnuumWallet.owners(testValues.walletOwnersLen)).to.be.reverted;
     });
@@ -151,6 +153,7 @@ describe('Wallet', () => {
   });
 
   describe('[Method] Approval request', () => {
+
     it('Can request approval and emit requested and approval Events when owner requests', async () => {
       const requester = this.walletOwners[0];
       const reqTx = await requestWithdrawal({ signer: requester, reqValue: '0' });
@@ -177,6 +180,7 @@ describe('Wallet', () => {
         sender: ethers.provider.getSigner(projectOwner),
         sendEthValue: testValues.sendEthValue,
       });
+
       await sendTx.wait();
       const currentWalletBalance = await ethers.provider.getBalance(walletAddress);
       await expect(this.omnuumWallet.connect(requester).approvalRequest(currentWalletBalance.add(1))).to.be.revertedWith(
@@ -220,6 +224,7 @@ describe('Wallet', () => {
       const notExistReqId = '1';
 
       await expect(wallet.requests(existReqId)).to.not.be.reverted;
+
       await expect(wallet.connect(approver).approve(existReqId)).to.not.be.revertedWith(reasons.wallet.reqNotExists);
 
       await expect(wallet.requests(notExistReqId)).to.be.reverted;
@@ -235,6 +240,7 @@ describe('Wallet', () => {
       });
       await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
       await (await wallet.connect(approver).approve('0')).wait();
+
       await expect(wallet.connect(approver).approve('0')).to.be.revertedWith(reasons.wallet.alreadyApproved);
     });
   });
@@ -342,6 +348,7 @@ describe('Wallet', () => {
       const walletBalance = await ethers.provider.getBalance(wallet.address);
       expect(walletBalance.toString()).to.be.equal(ethers.utils.parseEther('0'));
     });
+
     it('[Revert] Only owner can withdraw', async () => {
       const nftAddress = this.omnuumNFT1155.address;
       const wallet = this.omnuumWallet;
@@ -366,6 +373,7 @@ describe('Wallet', () => {
         mapC((tx) => tx.wait()),
       );
 
+
       await expect(wallet.connect(this.accounts[0]).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.onlyOwner);
     });
     it('[Revert] Withdraw by other owner', async () => {
@@ -378,7 +386,6 @@ describe('Wallet', () => {
         sendData: nftAddress,
         sendEthValue: testValues.sendEthValue,
       });
-
       await sendTx.wait();
 
       // request by owner
@@ -406,7 +413,6 @@ describe('Wallet', () => {
         sendData: nftAddress,
         sendEthValue: testValues.sendEthValue,
       });
-
       await sendTx.wait();
 
       // request by owner

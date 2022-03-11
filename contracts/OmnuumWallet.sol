@@ -119,7 +119,8 @@ contract OmnuumWallet {
 
     function withdrawal(uint256 _reqId) external onlyOwners reqExists(_reqId) notWithdrawn(_reqId) isAllAgreed(_reqId) {
         Request storage request = requests[_reqId];
-        require(msg.sender == request.destination, 'withdrawer and requester must be equal');
+        require(msg.sender == request.destination, 'withdrawer must be the requester');
+
         request.withdrawn = true;
         payable(request.destination).sendValue(request.value);
         emit Withdrawn(_reqId, request.destination, request.value);

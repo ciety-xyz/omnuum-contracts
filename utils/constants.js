@@ -9,7 +9,8 @@ module.exports = {
       Uri: 'Uri',
     },
     MintManager: {
-      SetFee: 'SetFee',
+      SetDiscountRate: 'SetDiscountRate',
+      ChangeBaseFeeRate: 'ChangeBaseFeeRate',
       Airdrop: 'Airdrop',
       SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
@@ -90,6 +91,7 @@ module.exports = {
     ticket: 'TICKET',
   },
   ContractTopic: {
+    DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
@@ -115,6 +117,8 @@ module.exports = {
     },
   },
   testValues: {
+    baseFeeRate: 5000, // converted as 0.05 (5 percent)
+    discountFeeRate: 10000, // converted as 0.1 (10 percent)
     walletOwnersLen: 3,
     sendEthValue: '10',
     mintFee: 2500, // 0.025 == 2.5%
