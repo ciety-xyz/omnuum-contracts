@@ -27,6 +27,13 @@ module.exports = {
       ResponseVRF: 'ResponseVRF',
       Updated: 'Updated',
     },
+    Wallet: {
+      FeeReceived: 'FeeReceived',
+      Requested: 'Requested',
+      Approved: 'Approved',
+      Revoked: 'Revoked',
+      Withdrawn: 'Withdrawn',
+    },
   },
   reasons: {
     common: {
@@ -51,6 +58,16 @@ module.exports = {
     },
     RevertMessage: {
       silent: 'Transaction reverted silently',
+    },
+    wallet: {
+      onlyOwner: 'only owner',
+      reqNotExists: 'request not exist',
+      alreadyApproved: 'already approved',
+      notApproved: 'not approved',
+      alreadyWithdrawn: 'already withdrawn',
+      consensusNotReached: 'consensus not reached',
+      notEnoughBalance: 'request value exceeds balance',
+      notRequester: 'withdrawer and requester must be equal',
     },
     code: {
       ARG1: 'ARG1',
