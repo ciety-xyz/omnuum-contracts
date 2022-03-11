@@ -98,6 +98,8 @@ module.exports = {
     },
   },
   testValues: {
+    walletOwnersLen: 3,
+    sendEthValue: '10',
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
