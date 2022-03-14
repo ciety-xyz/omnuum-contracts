@@ -1,6 +1,8 @@
+/scripts/deployments/deployResults/
 node_modules
 
 build
+data/
 
 .env
 .env.example

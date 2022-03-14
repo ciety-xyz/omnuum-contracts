@@ -43,7 +43,11 @@ const structurizeContractData = (deployObj) => ({
     revealManager: structurizeContractData(revealManager),
     senderVerifier: structurizeContractData(senderVerifier),
     wallet: structurizeContractData(wallet),
-    nft: {
+    nft1155: {
+      Impl: nft.implAddress,
+      beacon: nft.beacon.address,
+    },
+    nftProject: {
       beaconProxy: deployNFTResult.contract.address,
       owner: NFT_PRJ_OWNER,
     },
