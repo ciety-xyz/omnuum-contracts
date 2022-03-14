@@ -9,7 +9,6 @@ require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
 require('hardhat-contract-sizer');
-
 require('hardhat-abi-exporter');
 
 module.exports = {
@@ -27,14 +26,18 @@ module.exports = {
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: [
+        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ],
     },
   },
-  paths: {
-    sources: './contracts',
-  },
   gasReporter: {
-    enabled: process.env.REPORT_GAS ?? false,
+    enabled: process.env.REPORT_GAS !== undefined,
     currency: 'USD',
     coinmarketcap: process.env.COINMARKETCAP_KEY,
   },
