@@ -1,0 +1,27 @@
+{
+  "deployer": "0xF891E5556686b588269762d59466451FD7cE49B9",
+  "caManager": {
+    "proxy": "0x3fd184f4105eF61259fCB9187BBf812Ca166e7ED",
+    "impl": "0xE2F3cd360Fe677C16B0B86De13217B18107D88E5",
+    "admin": "0x665B458D587eA51FE1Ed782ce8C68E7c71c8D0Fa",
+    "gasUsed": 643292
+  },
+  "mintManager": {
+    "proxy": "0x605567fdd941224471f383B6fc0848562fd25B9B",
+    "impl": "0x181a8C1003c4c1212f919A93AF7C05662461DfCE",
+    "admin": "0x665B458D587eA51FE1Ed782ce8C68E7c71c8D0Fa",
+    "gasUsed": 665978
+  },
+  "exchanger": {
+    "proxy": "0xB893aBAf5f504435A127734cD761056c68b4E2B2",
+    "impl": "0x2587909DC2b4df9c7D646Bc987a58003d6190c26",
+    "admin": "0x665B458D587eA51FE1Ed782ce8C68E7c71c8D0Fa",
+    "gasUsed": 688366
+  },
+  "ticketManager": { "contract": "0x67A0255A7660E6b4e69e15b055b5169dedd09a59", "gasUsed": 1556316 },
+  "vrfManager": { "contract": "0xE13033BD72e1b7920f3F3E4e5a08F3a110Cf55a1", "gasUsed": 2016606 },
+  "revealManager": { "contract": "0x8109B93603CbACd65CB48Fa2742C7e08a8EAed90", "gasUsed": 410123 },
+  "senderVerifier": { "contract": "0x56E531E50A7457985aBF12CaA632A03de0822214", "gasUsed": 1108723 },
+  "wallet": { "contract": "0x4b1321C0e8b5f306d7E5F04471a55a921a8ce9e5", "gasUsed": 1601161 },
+  "nft": { "beaconProxy": "0x3a767bB379a97278B76989A3C73Ee67cfAC5Bf77", "owner": "0xE8B67856F9f9Fc97b135139759ce575dB19dA5b1" }
+}

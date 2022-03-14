@@ -34,6 +34,8 @@ module.exports = {
         process.env.ACCOUNT_TESTER_D,
         process.env.ACCOUNT_TESTER_E,
       ],
+      gasPrice: 30 * 10 ** 9,
+      gasLimit: 30000000,
     },
   },
   gasReporter: {
