@@ -17,7 +17,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     CountersUpgradeable.Counter private _tokenIdCounter;
 
     OmnuumCAManager caManager;
-    OmnuumMintManager mintManager;
+    address mintManagerA;
     address omA;
 
     uint32 public maxSupply;
@@ -52,9 +52,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     function sendFee() internal {
-        uint8 rateDecimal = OmnuumMintManager(mintManager).rateDecimal();
-        uint256 baseFeeRate = OmnuumMintManager(mintManager).baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - OmnuumMintManager(mintManager).discountRate(address(this)));
+        uint8 rateDecimal = OmnuumMintManager(mintManagerA).rateDecimal();
+        uint256 baseFeeRate = OmnuumMintManager(mintManagerA).baseFeeRate();
+        uint256 feeRate = baseFeeRate * (10**rateDecimal - OmnuumMintManager(mintManagerA).discountRate(address(this)));
         uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
@@ -71,7 +71,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         require(msg.sender.code.length == 0, 'MT9');
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
-        OmnuumMintManager(mintManager).publicMint(_groupId, _quantity, msg.value, msg.sender);
+        OmnuumMintManager(mintManagerA).publicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
         sendFee();
@@ -92,8 +92,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         sendFee();
     }
 
-    function mintDirect(address _to, uint32 _quantity) public {
+    function mintDirect(address _to, uint32 _quantity) public payable {
         require(msg.sender == mintManagerA || msg.sender == owner(), 'OO2');
+
         mintLoop(_to, _quantity);
     }
 
