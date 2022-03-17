@@ -1,6 +1,7 @@
 [
   "event ContractRegistered(address,bytes32)",
   "event ContractRemoved(address,bytes32)",
+  "event NftContractRegistered(address)",
   "event OwnershipTransferred(address indexed,address indexed)",
   "function getContract(string) view returns (address)",
   "function initialize()",
@@ -8,6 +9,7 @@
   "function owner() view returns (address)",
   "function registerContract(address,string)",
   "function registerContractMultiple(address[],string[])",
+  "function registerNftContract(address)",
   "function removeContract(address)",
   "function renounceOwnership()",
   "function transferOwnership(address)"

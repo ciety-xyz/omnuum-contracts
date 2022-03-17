@@ -10,13 +10,12 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     mapping(address => bool) nftContracts;
-    mapping(address => Contract) contracts;
+    mapping(address => Contract) managerContracts;
     mapping(string => address) indexedContracts;
 
     event ContractRegistered(address, bytes32);
     event ContractRemoved(address, bytes32);
     event NftContractRegistered(address);
-
 
     function initialize() public initializer {
         __Ownable_init();
@@ -35,24 +34,24 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     function registerContract(address CA, string calldata topic) public onlyOwner {
-        contracts[CA] = Contract(topic, true);
+        managerContracts[CA] = Contract(topic, true);
         indexedContracts[topic] = CA;
-        emit ContractRegistered(CA, keccak256(abi.encodePacked(contracts[CA].topic)));
+        emit ContractRegistered(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
     }
 
     function removeContract(address CA) public onlyOwner {
-        string memory topic = contracts[CA].topic;
-        delete contracts[CA];
+        string memory topic = managerContracts[CA].topic;
+        delete managerContracts[CA];
 
         if (indexedContracts[topic] == CA) {
             delete indexedContracts[topic];
         }
 
-        emit ContractRemoved(CA, keccak256(abi.encodePacked(contracts[CA].topic)));
+        emit ContractRemoved(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
     }
 
     function isRegistered(address CA) public view returns (bool) {
-        return contracts[CA].active;
+        return managerContracts[CA].active;
     }
 
     function getContract(string calldata topic) public view returns (address) {
