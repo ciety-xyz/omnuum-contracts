@@ -2,7 +2,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol';
 
 contract OmnuumCAManager is OwnableUpgradeable {
     struct Contract {
@@ -10,16 +9,14 @@ contract OmnuumCAManager is OwnableUpgradeable {
         bool active;
     }
 
+    mapping(address => bool) nftContracts;
     mapping(address => Contract) contracts;
     mapping(string => address) indexedContracts;
 
     event ContractRegistered(address, bytes32);
     event ContractRemoved(address, bytes32);
+    event NftContractRegistered(address);
 
-    // 비콘 프록시 배포
-    function deployNFT() public {
-        new BeaconProxy();
-    }
 
     function initialize() public initializer {
         __Ownable_init();
@@ -30,6 +27,11 @@ contract OmnuumCAManager is OwnableUpgradeable {
         for (uint256 i; i < CAs.length; i++) {
             registerContract(CAs[i], topics[i]);
         }
+    }
+
+    function registerNftContract(address _nftContract) public onlyOwner {
+        nftContracts[_nftContract] = true;
+        emit NftContractRegistered(_nftContract);
     }
 
     function registerContract(address CA, string calldata topic) public onlyOwner {
@@ -49,7 +51,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
         emit ContractRemoved(CA, keccak256(abi.encodePacked(contracts[CA].topic)));
     }
 
-    function isRegistered(address CA) external view returns (bool) {
+    function isRegistered(address CA) public view returns (bool) {
         return contracts[CA].active;
     }
 
