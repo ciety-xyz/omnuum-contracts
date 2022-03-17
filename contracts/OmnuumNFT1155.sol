@@ -27,7 +27,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     string internal coverUri;
 
     event Uri(string uri);
-    event ReceiveFee(uint256 amount);
+    event SendFee(uint256 amount);
 
     function initialize(
         address _caManagerAddress,
@@ -60,7 +60,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
             address feeReceiver = caManager.getContract('WALLET');
             payable(feeReceiver).sendValue(amount);
         }
-        emit ReceiveFee(amount);
+        emit SendFee(amount);
     }
 
     function publicMint(
