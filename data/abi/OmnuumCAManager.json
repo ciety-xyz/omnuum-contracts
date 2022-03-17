@@ -5,17 +5,17 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "",
+        "name": "managerContract",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "",
+        "name": "topic",
         "type": "bytes32"
       }
     ],
-    "name": "ContractRegistered",
+    "name": "ManagerContractRegistered",
     "type": "event"
   },
   {
@@ -24,17 +24,17 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "",
+        "name": "managerContract",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "",
+        "name": "topic",
         "type": "bytes32"
       }
     ],
-    "name": "ContractRemoved",
+    "name": "ManagerContractRemoved",
     "type": "event"
   },
   {
@@ -43,13 +43,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "",
+        "name": "nftContract",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "",
+        "name": "nftOwner",
         "type": "address"
       }
     ],

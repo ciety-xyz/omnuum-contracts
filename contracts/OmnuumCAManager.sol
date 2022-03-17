@@ -36,7 +36,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     function registerContract(address CA, string calldata topic) public onlyOwner {
         managerContracts[CA] = Contract(topic, true);
         indexedContracts[topic] = CA;
-        emit ContractRegistered(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
+        emit ManagerContractRegistered(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
     }
 
     function removeContract(address CA) public onlyOwner {
@@ -47,7 +47,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
             delete indexedContracts[topic];
         }
 
-        emit ContractRemoved(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
+        emit ManagerContractRemoved(CA, keccak256(abi.encodePacked(managerContracts[CA].topic)));
     }
 
     function isRegistered(address CA) public view returns (bool) {
