@@ -1,5 +1,7 @@
 const { ethers } = require('hardhat');
 const fs = require('fs');
+const { ContractTopic } = require('../../utils/constants');
+
 const { deployManagers } = require('./deployManagers');
 const { deployNFTProject } = require('./deployNFTProject');
 
@@ -15,6 +17,9 @@ const structurizeContractData = (deployObj) => ({
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
 });
 
+const getDateSuffix = () =>
+  `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
+
 !(async () => {
   const [devDeployer, userA, , ownerA, ownerB, ownerC] = await ethers.getSigners();
   const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } = await deployManagers(
@@ -22,7 +27,7 @@ const structurizeContractData = (deployObj) => ({
   );
 
   const NFT_PRJ_OWNER = userA.address;
-  const deployNFTResult = await deployNFTProject({
+  const deployNFTProjectResult = await deployNFTProject({
     nftBeacon: nft.beacon,
     nftContractFactory: nft.contractFactory,
     caManageProxyAddr: caManager.proxyContract.address,
@@ -31,7 +36,10 @@ const structurizeContractData = (deployObj) => ({
     coverUri: 'https://marpple.com',
     projectOwnerAddr: NFT_PRJ_OWNER,
   });
-  console.log(`🌹 NFT Project Proxy is deployed at ${deployNFTResult.contract.address} by Owner ${NFT_PRJ_OWNER}\n`);
+  console.log(`🌹 NFT Project Proxy is deployed at ${deployNFTProjectResult.beaconProxy.address} by Owner ${NFT_PRJ_OWNER}\n`);
+
+  // register NFT beacon proxy to CA manager
+  await (await caManager.proxyContract.registerContract(deployNFTProjectResult.beaconProxy.address, ContractTopic.NFT)).wait();
 
   const resultData = {
     deployer: devDeployer.address,
@@ -48,13 +56,13 @@ const structurizeContractData = (deployObj) => ({
       beacon: nft.beacon.address,
     },
     nftProject: {
-      beaconProxy: deployNFTResult.contract.address,
+      beaconProxy: deployNFTProjectResult.beaconProxy.address,
       owner: NFT_PRJ_OWNER,
     },
   };
 
   fs.writeFileSync(
-    `./scripts/deployments/deployResults/network_${ethers.provider.network.chainId}_address_${new Date().toLocaleTimeString()}.json`,
+    `./scripts/deployments/deployResults/chain-${ethers.provider.network.chainId}_deployedAt-${getDateSuffix()}.json`,
     Buffer.from(JSON.stringify(resultData)),
     'utf-8',
   );

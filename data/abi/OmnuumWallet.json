@@ -2,7 +2,7 @@
   "constructor(address[])",
   "event Approved(uint256 indexed,address indexed)",
   "event FeeReceived(address indexed,address indexed,uint256)",
-  "event Requested(uint256 indexed,address indexed)",
+  "event Requested(uint256 indexed,address indexed,uint256)",
   "event Revoked(uint256 indexed,address indexed)",
   "event Withdrawn(uint256 indexed,address indexed,uint256)",
   "function approvalRequest(uint256) returns (uint256)",

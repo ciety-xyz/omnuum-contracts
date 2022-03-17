@@ -1,6 +1,7 @@
 [
+  "event ContractRegistered(address,bytes32)",
+  "event ContractRemoved(address,bytes32)",
   "event OwnershipTransferred(address indexed,address indexed)",
-  "event Updated(address,tuple(string,bool),string)",
   "function getContract(string) view returns (address)",
   "function initialize()",
   "function isRegistered(address) view returns (bool)",

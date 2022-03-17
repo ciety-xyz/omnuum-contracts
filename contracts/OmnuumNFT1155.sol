@@ -45,6 +45,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         omA = _omA;
         caManager = OmnuumCAManager(_caManagerAddress);
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
+
         coverUri = _coverUri;
 
         transferOwnership(_prjOwner);

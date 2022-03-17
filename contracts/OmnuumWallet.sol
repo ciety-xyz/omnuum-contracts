@@ -9,7 +9,7 @@ contract OmnuumWallet {
 
     // =========== EVENTs =========== //
     event FeeReceived(address indexed nftContract, address indexed sender, uint256 value);
-    event Requested(uint256 indexed reqId, address indexed requester);
+    event Requested(uint256 indexed reqId, address indexed requester, uint256 withdrawalValue);
     event Approved(uint256 indexed reqId, address indexed owner);
     event Revoked(uint256 indexed reqId, address indexed owner);
     event Withdrawn(uint256 indexed reqId, address indexed receiver, uint256 value);
@@ -89,7 +89,7 @@ contract OmnuumWallet {
 
         approve(reqId);
 
-        emit Requested(reqId, msg.sender);
+        emit Requested(reqId, msg.sender, _withdrawalValue);
         return (reqId);
     }
 
