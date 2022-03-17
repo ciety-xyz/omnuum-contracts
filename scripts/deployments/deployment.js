@@ -1,6 +1,5 @@
 const { ethers } = require('hardhat');
 const fs = require('fs');
-const { ContractTopic } = require('../../utils/constants');
 
 const { deployManagers } = require('./deployManagers');
 const { deployNFTProject } = require('./deployNFTProject');
@@ -38,8 +37,8 @@ const getDateSuffix = () =>
   });
   console.log(`🌹 NFT Project Proxy is deployed at ${deployNFTProjectResult.beaconProxy.address} by Owner ${NFT_PRJ_OWNER}\n`);
 
-  // register NFT beacon proxy to CA manager
-  await (await caManager.proxyContract.registerContract(deployNFTProjectResult.beaconProxy.address, ContractTopic.NFT)).wait();
+  // register NFT beacon proxy contract to CA manager
+  await (await caManager.proxyContract.registerNftContract(deployNFTProjectResult.beaconProxy.address)).wait();
 
   const resultData = {
     deployer: devDeployer.address,

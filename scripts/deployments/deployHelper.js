@@ -24,7 +24,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
 
 const deployProxy = async ({ contractName, deploySigner, args = [], log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
-  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args);
+  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { pollingInterval: 10000 });
   const txResponse = await proxyContract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
