@@ -38,7 +38,7 @@ const getDateSuffix = () =>
   console.log(`🌹 NFT Project Proxy is deployed at ${deployNFTProjectResult.beaconProxy.address} by Owner ${NFT_PRJ_OWNER}\n`);
 
   // register NFT beacon proxy contract to CA manager
-  await (await caManager.proxyContract.registerNftContract(deployNFTProjectResult.beaconProxy.address)).wait();
+  await (await caManager.proxyContract.registerNftContract(deployNFTProjectResult.beaconProxy.address, NFT_PRJ_OWNER)).wait();
 
   const resultData = {
     deployer: devDeployer.address,
