@@ -1,6 +1,7 @@
 const { chainlink, ContractTopic } = require('../../utils/constants');
 const { deployProxy, deployNormal, deployBeacon } = require('./deployHelper');
 
+// Todo - deployed block number 같이 기록
 module.exports.deployManagers = async ({ devDeployer, owners }) => {
   // /* Deploy CA Manager */
   const caManager = await deployProxy({
