@@ -44,7 +44,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
         omA = _omA;
         caManager = OmnuumCAManager(_caManagerAddress);
-        mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
+        mintManagerA = caManager.getContract('MINTMANAGER');
 
         coverUri = _coverUri;
 
@@ -52,9 +52,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     function sendFee() internal {
-        uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 baseFeeRate = mintManager.baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
+        uint8 rateDecimal = OmnuumMintManager(mintManager).rateDecimal();
+        uint256 baseFeeRate = OmnuumMintManager(mintManager).baseFeeRate();
+        uint256 feeRate = baseFeeRate * (10**rateDecimal - OmnuumMintManager(mintManager).discountRate(address(this)));
         uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
@@ -71,7 +71,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         require(msg.sender.code.length == 0, 'MT9');
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
-        mintManager.publicMint(_groupId, _quantity, msg.value, msg.sender);
+        OmnuumMintManager(mintManager).publicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
         sendFee();
@@ -93,7 +93,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     function mintDirect(address _to, uint32 _quantity) public {
-        require(msg.sender == caManager.getContract('MINTMANAGER') || msg.sender == owner(), 'OO2');
+        require(msg.sender == mintManagerA || msg.sender == owner(), 'OO2');
         mintLoop(_to, _quantity);
     }
 
