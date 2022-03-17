@@ -15,7 +15,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
     event ContractRegistered(address, bytes32);
     event ContractRemoved(address, bytes32);
-    event NftContractRegistered(address);
+    event NftContractRegistered(address, address);
 
     function initialize() public initializer {
         __Ownable_init();
@@ -28,9 +28,9 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    function registerNftContract(address _nftContract) public onlyOwner {
+    function registerNftContract(address _nftContract, address _initialOwner) public onlyOwner {
         nftContracts[_nftContract] = true;
-        emit NftContractRegistered(_nftContract);
+        emit NftContractRegistered(_nftContract, _initialOwner);
     }
 
     function registerContract(address CA, string calldata topic) public onlyOwner {
