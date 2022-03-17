@@ -8,7 +8,6 @@ import './OmnuumExchange.sol';
 import './library/RevertMessage.sol';
 
 contract OmnuumVRFManager is Ownable, VRFConsumerBase {
-    //RINKBY CHAINLINK
     address s_LINK;
     uint256 fee;
     bytes32 s_key_hash;
