@@ -180,11 +180,6 @@
         "internalType": "address",
         "name": "_initialOwner",
         "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_coverHash",
-        "type": "bytes32"
       }
     ],
     "name": "registerNftContract",

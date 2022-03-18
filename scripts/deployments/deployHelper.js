@@ -29,7 +29,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
   const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
-  const { gasUsed } = deployTxReceipt;
+  const { gasUsed, blockNumber } = deployTxReceipt;
   log && deployProxyConsole(contractName, proxyContract.address, implAddress, adminAddress, gasUsed);
   return {
     proxyContract,
@@ -37,6 +37,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
     adminAddress,
     contractFactory,
     gasUsed,
+    blockNumber,
   };
 };
 
@@ -45,11 +46,12 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
-  const { gasUsed } = deployTxReceipt;
+  const { gasUsed, blockNumber } = deployTxReceipt;
   log && deployConsole(contractName, contract.address, gasUsed);
   return {
     contract,
     gasUsed,
+    blockNumber,
   };
 };
 

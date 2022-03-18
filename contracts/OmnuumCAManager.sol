@@ -28,11 +28,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    function registerNftContract(
-        address _nftContract,
-        address _initialOwner,
-        bytes32 _coverHash
-    ) public onlyOwner {
+    function registerNftContract(address _nftContract, address _initialOwner) public onlyOwner {
         nftContracts[_nftContract] = true;
         emit NftContractRegistered(_nftContract, _initialOwner);
     }
