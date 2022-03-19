@@ -8,6 +8,9 @@ module.exports.deployManagers = async ({ devDeployer, owners }) => {
     deploySigner: devDeployer,
   });
 
+  // register itself
+  await (await caManager.proxyContract.registerContract(caManager.proxyContract.address, ContractTopic.CAMANAGER)).wait();
+
   /* Deploy Mint Manager */
   const mintManager = await deployProxy({
     contractName: 'OmnuumMintManager',

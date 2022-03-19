@@ -34,8 +34,20 @@ module.exports = {
         process.env.ACCOUNT_TESTER_D,
         process.env.ACCOUNT_TESTER_E,
       ].filter((a) => a),
-      gasPrice: 50 * 10 ** 9,
+      // gasPrice: 50 * 10 ** 9,
+      gasPrice: 'auto',
       gasLimit: 30000000,
+    },
+    ropsten: {
+      url: process.env.ROPSTEN_URL || '',
+      accounts: [
+        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
     },
   },
   gasReporter: {
