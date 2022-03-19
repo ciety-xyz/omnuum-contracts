@@ -8,7 +8,7 @@ require('hardhat-gas-reporter');
 require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
-require('hardhat-contract-sizer');
+// require('hardhat-contract-sizer');
 require('hardhat-abi-exporter');
 
 module.exports = {
@@ -33,7 +33,7 @@ module.exports = {
         process.env.ACCOUNT_TESTER_C,
         process.env.ACCOUNT_TESTER_D,
         process.env.ACCOUNT_TESTER_E,
-      ],
+      ].filter((a) => a),
       gasPrice: 50 * 10 ** 9,
       gasLimit: 30000000,
     },

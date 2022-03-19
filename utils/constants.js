@@ -14,9 +14,12 @@ module.exports = {
       Airdrop: 'Airdrop',
       SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
+      SetMinFee: 'SetMinFee'
     },
     CAManager: {
-      Updated: 'Updated',
+      ManagerContractRegistered: 'ManagerContractRegistered',
+      NftContractRegistered: 'NftContractRegistered',
+      ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
       EndDate: 'EndDate',
@@ -28,7 +31,8 @@ module.exports = {
       Updated: 'Updated',
     },
     Wallet: {
-      FeeReceived: 'FeeReceived',
+      EtherReceived: 'EtherReceived',
+      PaymentReceived: 'PaymentReceived',
       Requested: 'Requested',
       Approved: 'Approved',
       Revoked: 'Revoked',
@@ -67,7 +71,8 @@ module.exports = {
       alreadyWithdrawn: 'already withdrawn',
       consensusNotReached: 'consensus not reached',
       notEnoughBalance: 'request value exceeds balance',
-      notRequester: 'withdrawer and requester must be equal',
+      notRequester: 'withdrawer must be the requester',
+      useless: 'Useless payment',
     },
     code: {
       ARG1: 'ARG1',
@@ -122,7 +127,8 @@ module.exports = {
     walletOwnersLen: 3,
     sendEthValue: '10',
     mintFee: 2500, // 0.025 == 2.5%
+    minFee: ethers.utils.parseEther('0.0005'),
     coverUri: 'https://testCover.com',
-    tmpExchangeRate: ethers.utils.parseEther('0.0055'),
+    tmpExchangeRate: ethers.utils.parseEther('0.0053'),
   },
 };

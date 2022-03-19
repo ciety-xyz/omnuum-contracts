@@ -34,7 +34,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     mapping(bytes32 => address) idToA;
 
     // actionType: fee, safetyRatio
-    event Updated(uint256 value, string actionType);
+    event Updated(uint256 value, bytes32 actionType);
     event RequestVRF(address indexed roller, bytes32 indexed requestId);
     event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bool success, string reason);
 
@@ -87,11 +87,11 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     function updateFee(uint256 _fee) external onlyOwner {
         fee = _fee;
-        emit Updated(_fee, 'fee');
+        emit Updated(_fee, keccak256(abi.encodePacked('fee')));
     }
 
     function updateSafetyRatio(uint16 _safetyRatio) external onlyOwner {
         safetyRatio = _safetyRatio;
-        emit Updated(_safetyRatio, 'safetyRatio');
+        emit Updated(_safetyRatio, keccak256(abi.encodePacked('safetyRatio')));
     }
 }

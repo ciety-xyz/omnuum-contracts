@@ -110,9 +110,9 @@
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "actionType",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "Updated",

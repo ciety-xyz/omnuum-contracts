@@ -8,6 +8,7 @@ import './OmnuumNFT1155.sol';
 contract OmnuumMintManager is OwnableUpgradeable {
     uint8 public constant rateDecimal = 5;
     uint256 public baseFeeRate;
+    uint256 public minFee;
     mapping(address => uint256) public discountRate;
 
     event ChangeBaseFeeRate(uint256 baseFeeRate);
@@ -15,6 +16,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     event Airdrop(address indexed Contract, uint256 count);
     event SetSchedule(address indexed nft, uint256 indexed groupId);
     event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
+    event SetMinFee(uint256 minFee);
 
     struct PublicMintSchedule {
         uint32 supply;
@@ -31,6 +33,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     function initialize(uint256 _baseFeeRate) public initializer {
         __Ownable_init();
         baseFeeRate = _baseFeeRate;
+        minFee = 0.0005 ether;
     }
 
     function changeBaseFeeRate(uint256 _newBaseFeeRate) external onlyOwner {
@@ -43,6 +46,11 @@ contract OmnuumMintManager is OwnableUpgradeable {
         require(_discountRate <= 100000, 'NE1');
         discountRate[_nftContract] = _discountRate;
         emit SetDiscountRate(_nftContract, _discountRate);
+    }
+
+    function setMinFee(uint256 _minFee) public onlyOwner {
+        minFee = _minFee;
+        emit SetMinFee(_minFee);
     }
 
     function setPublicMintSchedule(
@@ -89,7 +97,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         address nftContract,
         address[] calldata _tos,
         uint16[] calldata _quantitys
-    ) external {
+    ) public payable {
         OmnuumNFT1155 targetContract = OmnuumNFT1155(nftContract);
 
         uint256 len = _tos.length;
@@ -97,8 +105,15 @@ contract OmnuumMintManager is OwnableUpgradeable {
         require(targetContract.owner() == msg.sender, 'OO1');
         require(len == _quantitys.length, 'ARG1');
 
+        uint256 totalQuantity;
         for (uint256 i; i < len; i++) {
-            targetContract.mintDirect(_tos[i], _quantitys[i]);
+            totalQuantity += _quantitys[i];
+        }
+
+        require(msg.value >= totalQuantity * minFee, 'MT5');
+
+        for (uint256 i; i < len; i++) {
+            targetContract.mintDirect{ value: minFee * _quantitys[i] }(_tos[i], _quantitys[i]);
         }
         emit Airdrop(nftContract, _tos.length);
     }

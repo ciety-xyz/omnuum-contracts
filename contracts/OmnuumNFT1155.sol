@@ -9,6 +9,7 @@ import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
+import './OmnuumWallet.sol';
 
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
@@ -24,10 +25,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     bool public isRevealed;
 
-    string internal coverUri;
+    string public coverUri;
 
     event Uri(string uri);
-    event SendFee(uint256 amount);
+    event FeePaid(uint256 amount);
 
     function initialize(
         address _caManagerAddress,
@@ -51,16 +52,23 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         transferOwnership(_prjOwner);
     }
 
-    function sendFee() internal {
-        uint8 rateDecimal = OmnuumMintManager(mintManagerA).rateDecimal();
-        uint256 baseFeeRate = OmnuumMintManager(mintManagerA).baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - OmnuumMintManager(mintManagerA).discountRate(address(this)));
-        uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
-        if (amount > 0) {
-            address feeReceiver = caManager.getContract('WALLET');
-            payable(feeReceiver).sendValue(amount);
-        }
-        emit SendFee(amount);
+    function sendFee(uint32 quantity) internal {
+        OmnuumMintManager mintManager = OmnuumMintManager(mintManagerA);
+        uint8 rateDecimal = mintManager.rateDecimal();
+        uint256 baseFeeRate = mintManager.baseFeeRate();
+        uint256 minFee = mintManager.minFee();
+        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
+        uint256 calculatedFee = (msg.value * feeRate) / 10**(rateDecimal * 2);
+        uint256 minimumFee = quantity * minFee;
+
+        uint256 paidAmount = calculatedFee > minimumFee ? calculatedFee : minimumFee;
+
+        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: paidAmount }(
+            keccak256(abi.encodePacked('MINT_FEE')),
+            ''
+        );
+
+        emit FeePaid(paidAmount);
     }
 
     function publicMint(
@@ -74,7 +82,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         OmnuumMintManager(mintManagerA).publicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
-        sendFee();
+        sendFee(_quantity);
     }
 
     function ticketMint(
@@ -89,13 +97,18 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         TicketManager(caManager.getContract('TICKET')).useTicket(omA, msg.sender, _quantity, _ticket);
 
         mintLoop(msg.sender, _quantity);
-        sendFee();
+        sendFee(_quantity);
     }
 
     function mintDirect(address _to, uint32 _quantity) public payable {
         require(msg.sender == mintManagerA || msg.sender == owner(), 'OO2');
 
+        uint256 minFee = OmnuumMintManager(mintManagerA).minFee();
+        require(msg.value >= minFee * _quantity, 'MT5');
+
         mintLoop(_to, _quantity);
+
+        sendFee(_quantity);
     }
 
     function mintLoop(address _to, uint32 _quantity) internal {

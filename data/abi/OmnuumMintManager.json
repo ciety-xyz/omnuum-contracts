@@ -104,6 +104,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetMinFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "nft",
@@ -178,6 +191,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "minFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -197,7 +223,7 @@
     ],
     "name": "mintMultiple",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -319,6 +345,19 @@
       }
     ],
     "name": "setDiscountRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinFee",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

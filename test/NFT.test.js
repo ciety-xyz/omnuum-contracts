@@ -771,13 +771,15 @@ describe('OmnuumNFT', () => {
   });
 
   describe('[Method] mintDirect', () => {
-    it('Should direct mint without payload and ether', async () => {
+    it('Should direct mint without payload', async () => {
       const {
         accounts: [omnuumAC, , receiverAC],
         omnuumNFT1155,
       } = this;
 
-      const tx = await omnuumNFT1155.mintDirect(receiverAC.address, 2);
+      const quantity = 2;
+
+      const tx = await omnuumNFT1155.mintDirect(receiverAC.address, quantity, { value: Constants.testValues.minFee.mul(quantity) });
 
       await map(
         (idx) =>
@@ -814,12 +816,30 @@ describe('OmnuumNFT', () => {
         caManagerAddress: omnuumCAManager.address,
       });
 
-      await expect(omnuumNFT1155.mintDirect(receiverAC.address, initialTryAmount)).to.be.revertedWith(Constants.reasons.code.MT3);
+      await expect(
+        omnuumNFT1155.mintDirect(receiverAC.address, initialTryAmount, { value: Constants.testValues.minFee.mul(initialTryAmount) }),
+      ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       // mint 8 of 10
-      await (await omnuumNFT1155.mintDirect(receiverAC.address, usingAmount)).wait();
+      await (
+        await omnuumNFT1155.mintDirect(receiverAC.address, usingAmount, { value: Constants.testValues.minFee.mul(usingAmount) })
+      ).wait();
 
-      await expect(omnuumNFT1155.mintDirect(receiverAC.address, lastTryAmount)).to.be.revertedWith(Constants.reasons.code.MT3);
+      await expect(
+        omnuumNFT1155.mintDirect(receiverAC.address, lastTryAmount, { value: Constants.testValues.minFee.mul(lastTryAmount) }),
+      ).to.be.revertedWith(Constants.reasons.code.MT3);
+    });
+    it('[Revert] Should pay ether greater or equal to minimum fee', async () => {
+      const {
+        accounts: [, , receiverAC],
+        omnuumNFT1155,
+      } = this;
+
+      const quantity = 2;
+
+      await expect(
+        omnuumNFT1155.mintDirect(receiverAC.address, quantity, { value: Constants.testValues.minFee.mul(quantity - 1) }),
+      ).to.be.revertedWith(Constants.reasons.code.MT5);
     });
   });
 

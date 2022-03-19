@@ -27,7 +27,7 @@ contract TicketManager is EIP712 {
     string private constant SIGNATURE_VERSION = '1';
 
     event EndDate(address indexed nft, uint256 groupId, uint256 endDate);
-    event UseTicket(address indexed nft, address minter, uint32 quantity, Ticket ticket);
+    event UseTicket(address indexed nft, address minter, uint256 price, uint32 quantity, uint32 maxQuantity, uint256 groupId);
 
     function setEndDate(
         address _nft,
@@ -49,7 +49,7 @@ contract TicketManager is EIP712 {
         verify(_signer, msg.sender, _minter, _quantity, _ticket);
 
         ticketUsed[msg.sender][_ticket.groupId][_minter] += _quantity;
-        emit UseTicket(msg.sender, _minter, _quantity, _ticket);
+        emit UseTicket(msg.sender, _minter, _ticket.price, _quantity, _ticket.quantity, _ticket.groupId);
     }
 
     function verify(
