@@ -17,5 +17,6 @@ module.exports.deployNFTProject = async ({
     coverUri,
     projectOwnerAddr,
   ]);
-  return { beaconProxy: nftBeaconProxy, deployReceipt: await nftBeaconProxy.deployed() };
+  const deployReceipt = await nftBeaconProxy.deployed();
+  return { beaconProxy: nftBeaconProxy, deployReceipt };
 };

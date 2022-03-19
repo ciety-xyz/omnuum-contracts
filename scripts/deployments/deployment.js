@@ -9,11 +9,13 @@ const structurizeProxyData = (deployObj) => ({
   impl: deployObj.implAddress,
   admin: deployObj.adminAddress,
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
+  blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
 });
 
 const structurizeContractData = (deployObj) => ({
   contract: deployObj.contract.address,
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
+  blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
 });
 
 const getDateSuffix = () =>
