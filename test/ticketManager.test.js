@@ -226,8 +226,8 @@ describe('TicketManager', () => {
         value: price.mul(use_quantity),
       });
       await expect(tx1)
-        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
-        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.price, use_quantity, ticket.quantity, ticket.groupId);
+        .to.emit(ticketManager, Constants.events.TicketManager.TicketMint)
+        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.groupId, use_quantity, ticket.quantity, ticket.price);
     });
     it('[Revert] Cannot mint more than remaining quantity', async () => {
       const {
@@ -265,8 +265,8 @@ describe('TicketManager', () => {
       });
 
       await expect(tx1)
-        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
-        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.price, use_quantity1, ticket.quantity, ticket.groupId);
+        .to.emit(ticketManager, Constants.events.TicketManager.TicketMint)
+        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.groupId, use_quantity1, ticket.quantity, ticket.price);
 
       await expect(
         omnuumNFT1155.connect(minterAC).ticketMint(fail_quantity1, ticket, payload, {
@@ -279,8 +279,8 @@ describe('TicketManager', () => {
       });
 
       await expect(tx2)
-        .to.emit(ticketManager, Constants.events.TicketManager.UseTicket)
-        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.price, use_quantity2, ticket.quantity, ticket.groupId);
+        .to.emit(ticketManager, Constants.events.TicketManager.TicketMint)
+        .withArgs(omnuumNFT1155.address, minterAC.address, ticket.groupId, use_quantity2, ticket.quantity, ticket.price);
 
       await expect(
         omnuumNFT1155.connect(minterAC).ticketMint(fail_quantity2, ticket, payload, {

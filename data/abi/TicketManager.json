@@ -35,19 +35,19 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "nft",
+        "name": "nftContract",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "minter",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
-        "name": "price",
+        "name": "groupId",
         "type": "uint256"
       },
       {
@@ -65,11 +65,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "groupId",
+        "name": "price",
         "type": "uint256"
       }
     ],
-    "name": "UseTicket",
+    "name": "TicketMint",
     "type": "event"
   },
   {

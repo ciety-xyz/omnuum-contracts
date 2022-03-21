@@ -14,7 +14,7 @@ module.exports = {
       Airdrop: 'Airdrop',
       SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
-      SetMinFee: 'SetMinFee'
+      SetMinFee: 'SetMinFee',
     },
     CAManager: {
       ManagerContractRegistered: 'ManagerContractRegistered',
@@ -23,7 +23,7 @@ module.exports = {
     },
     TicketManager: {
       EndDate: 'EndDate',
-      UseTicket: 'UseTicket',
+      TicketMint: 'TicketMint',
     },
     VRFManager: {
       RequestVRF: 'RequestVRF',
@@ -89,6 +89,9 @@ module.exports = {
       MT8: 'MT8', // Minting period is ended
       MT9: 'MT9', // Mint subject cannot be CA
     },
+  },
+  feeTopic: {
+    deploy: 'DEPLOY',
   },
   payloadTopic: {
     mint: 'MINT',

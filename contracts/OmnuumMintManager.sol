@@ -15,7 +15,16 @@ contract OmnuumMintManager is OwnableUpgradeable {
     event SetDiscountRate(address nftContract, uint256 discountFeeRate);
     event Airdrop(address indexed Contract, uint256 count);
     event SetSchedule(address indexed nft, uint256 indexed groupId);
-    event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
+    event PublicMint(
+        address indexed nftContract,
+        address indexed minter,
+        uint256 indexed groupId,
+        uint32 quantity,
+        uint32 maxQuantity,
+        uint256 price
+    );
+
+    //    event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
     event SetMinFee(uint256 minFee);
 
     struct PublicMintSchedule {
@@ -89,7 +98,8 @@ contract OmnuumMintManager is OwnableUpgradeable {
         schedule.minted[_minter] += _quantity;
         schedule.mintedTotal += _quantity;
 
-        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
+        emit PublicMint(msg.sender, _minter, _groupId, _quantity, schedule.supply, schedule.basePrice);
+        //        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
     }
 
     // mint to multiple address ex) airdrop

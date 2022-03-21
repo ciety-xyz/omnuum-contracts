@@ -2,12 +2,12 @@ const { ethers, upgrades } = require('hardhat');
 
 const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, txHash, blockNumber) =>
   console.log(
-    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n`,
+    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n`
   );
 
 const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gasUsed, txHash, blockNumber) =>
   console.log(
-    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  ProxyContractAddress ${proxyAddr}\n  Impl ${ImplAddr}\n  Admin ${adminAddress}\n  GasUsed ${gasUsed}`,
+    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  ProxyContractAddress ${proxyAddr}\n  Impl ${ImplAddr}\n  Admin ${adminAddress}\n  GasUsed ${gasUsed}`
   );
 
 const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber) =>
@@ -24,7 +24,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
       beacon.address,
       implAddress,
       txResponse.deployTransaction.hash,
-      txResponse.deployTransaction.blockNumber,
+      txResponse.deployTransaction.blockNumber
     );
   return {
     beacon,
@@ -35,7 +35,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
 
 const deployProxy = async ({ contractName, deploySigner, args = [], log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
-  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { pollingInterval: 300000 });
+  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { pollingInterval: 600000 });
   const txResponse = await proxyContract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
@@ -49,7 +49,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       adminAddress,
       gasUsed,
       txResponse.deployTransaction.hash,
-      txResponse.deployTransaction.blockNumber,
+      txResponse.deployTransaction.blockNumber
     );
   return {
     proxyContract,
@@ -78,7 +78,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
 
 const isNotMainOrRinkeby = async (provider) => {
   const { chainId } = await provider.getNetwork();
-  return chainId != 1 && chainId != 4;
+  return Number(chainId) !== 1 && Number(chainId) !== 4;
 };
 
 module.exports = { deployNormal, deployProxy, deployBeacon, isNotMainOrRinkeby };

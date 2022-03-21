@@ -56,7 +56,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "nft",
+        "name": "nftContract",
         "type": "address"
       },
       {
@@ -76,6 +76,18 @@
         "internalType": "uint32",
         "name": "quantity",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "maxQuantity",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
       }
     ],
     "name": "PublicMint",

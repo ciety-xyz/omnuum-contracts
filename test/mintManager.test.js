@@ -163,7 +163,7 @@ describe('OmnuumMintManager', () => {
 
       await expect(tx)
         .to.emit(omnuumMintManager, Constants.events.MintManager.PublicMint)
-        .withArgs(mockNFT.address, ownerAC.address, group_id, quantity);
+        .withArgs(mockNFT.address, ownerAC.address, group_id, quantity, open_amount, base_price);
     });
     it('[Revert] cannot mint after end date passed ', async () => {
       const {

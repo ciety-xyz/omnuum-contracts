@@ -1,5 +1,6 @@
 const { ethers } = require('hardhat');
 const fs = require('fs');
+const { feeTopic } = require('../../utils/constants');
 
 const { deployManagers } = require('./deployManagers');
 const { deployNFTProject } = require('./deployNFTProject');
@@ -28,6 +29,17 @@ const getDateSuffix = () =>
   );
 
   const NFT_PRJ_OWNER = userA.address;
+
+  const deployPayment = {
+    topic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(feeTopic.deploy)),
+    description: '3', // collection_id for deployment
+    value: { value: ethers.utils.parseUnits('91911', 'gwei') },
+  };
+
+  await (await wallet.contract.connect(userA).makePayment(deployPayment.topic, deployPayment.description, deployPayment.value)).wait();
+
+  // send Fee to Wallet Contract
+
   const deployNFTProjectResult = await deployNFTProject({
     nftBeacon: nft.beacon,
     nftContractFactory: nft.contractFactory,
