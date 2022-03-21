@@ -78,6 +78,7 @@ const questions = [
 
     const provider = await getRPCProvider(ethers.provider);
     const deployerSigner = new ethers.Wallet(process.env.ACCOUNT_DEV_DEPLOYER, provider);
+    const deployerAddress = await deployerSigner.getAddress();
     const projectOwnerSigner = new ethers.Wallet(`${ans[inquirerParams.project_owner_private_key]}`, provider);
     const projectOwnerAddress = projectOwnerSigner.address;
 
@@ -98,12 +99,11 @@ const questions = [
         ans[inquirerParams.payment_value]
       }\n`
     );
-
     const deployNFTProjectResult = await deployNFTProject({
       nftBeacon: `${ans[inquirerParams.nft_beacon_address]}`,
       nftContractFactory,
-      caManageProxyAddr: caManagerAddress,
-      walletAddr: walletAddress,
+      caManageProxyAddr: ans[inquirerParams.ca_manager_proxy_address],
+      devDeployerAddr: deployerAddress,
       maxSupply: ans[inquirerParams.max_supply],
       coverUri: `${ans[inquirerParams.cover_uri]}`,
       projectOwnerAddr: projectOwnerAddress,
@@ -113,7 +113,9 @@ const questions = [
     // register NFT beacon proxy contract to CA manager
 
     const txRegister = await caManager.registerNftContract(deployNFTProjectResult.beaconProxy.address, projectOwnerAddress);
-    await txRegister.wait();
+    const deployReceipt = await txRegister.wait();
+
+    console.log(deployReceipt);
 
     fs.writeFileSync(
       `./scripts/deployments/deployNFTResults/chain-${ethers.provider.network.chainId}_deployedAt-${getDateSuffix()}.json`,

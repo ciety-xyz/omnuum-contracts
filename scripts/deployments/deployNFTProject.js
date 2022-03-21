@@ -4,7 +4,7 @@ module.exports.deployNFTProject = async ({
   nftBeacon,
   nftContractFactory,
   caManageProxyAddr,
-  walletAddr,
+  devDeployerAddr,
   maxSupply,
   coverUri,
   projectOwnerAddr,
@@ -12,7 +12,7 @@ module.exports.deployNFTProject = async ({
   /* Deploy NFT1155 Beacon Proxy */
   const nftBeaconProxy = await upgrades.deployBeaconProxy(nftBeacon, nftContractFactory, [
     caManageProxyAddr,
-    walletAddr,
+    devDeployerAddr,
     maxSupply,
     coverUri,
     projectOwnerAddr,
