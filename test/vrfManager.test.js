@@ -218,10 +218,11 @@ describe('OmnuumVRFManager', () => {
       const fee = ethers.utils.parseEther('2.5');
 
       const tx = await omnuumVRFManager.updateFee(fee);
+      const update_topic_hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('fee'));
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(fee, 'fee');
+      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(fee, update_topic_hash);
     });
     it('[Revert] only owner', async () => {
       const {
@@ -242,10 +243,11 @@ describe('OmnuumVRFManager', () => {
       const ratio = 120;
 
       const tx = await omnuumVRFManager.updateSafetyRatio(ratio);
+      const update_topic_hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('safetyRatio'));
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(ratio, 'safetyRatio');
+      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(ratio, update_topic_hash);
     });
     it('[Revert] only owner', async () => {
       const {

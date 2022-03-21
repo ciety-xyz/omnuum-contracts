@@ -9,11 +9,13 @@ contract OmnuumCAManager is OwnableUpgradeable {
         bool active;
     }
 
-    mapping(address => Contract) contracts;
+    mapping(address => bool) public nftContracts;
+    mapping(address => Contract) managerContracts;
     mapping(string => address) indexedContracts;
 
-    // actionType: register, remove
-    event Updated(address, Contract, string actionType);
+    event NftContractRegistered(address nftContract, address nftOwner);
+    event ManagerContractRegistered(address managerContract, bytes32 topic);
+    event ManagerContractRemoved(address managerContract, bytes32 topic);
 
     function initialize() public initializer {
         __Ownable_init();
@@ -26,25 +28,30 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
+    function registerNftContract(address _nftContract, address _initialOwner) public onlyOwner {
+        nftContracts[_nftContract] = true;
+        emit NftContractRegistered(_nftContract, _initialOwner);
+    }
+
     function registerContract(address CA, string calldata topic) public onlyOwner {
-        contracts[CA] = Contract(topic, true);
+        managerContracts[CA] = Contract(topic, true);
         indexedContracts[topic] = CA;
-        emit Updated(CA, contracts[CA], 'register');
+        emit ManagerContractRegistered(CA, keccak256(abi.encodePacked(topic)));
     }
 
     function removeContract(address CA) public onlyOwner {
-        emit Updated(CA, contracts[CA], 'remove');
-
-        string memory topic = contracts[CA].topic;
-        delete contracts[CA];
+        string memory topic = managerContracts[CA].topic;
+        delete managerContracts[CA];
 
         if (indexedContracts[topic] == CA) {
             delete indexedContracts[topic];
         }
+
+        emit ManagerContractRemoved(CA, keccak256(abi.encodePacked(topic)));
     }
 
-    function isRegistered(address CA) external view returns (bool) {
-        return contracts[CA].active;
+    function isRegistered(address CA) public view returns (bool) {
+        return managerContracts[CA].active;
     }
 
     function getContract(string calldata topic) public view returns (address) {

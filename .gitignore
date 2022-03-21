@@ -1,3 +1,5 @@
+/scripts/deployments/deployResults/
+/scripts/deployments/deployNFTResults/
 node_modules
 
 build

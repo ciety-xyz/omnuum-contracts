@@ -3,7 +3,18 @@
     "compile": "npx hardhat compile",
     "test:local": "npx hardhat test",
     "node": "npx hardhat node",
-    "run:local": "npx hardhat --network localhost run "
+    "run:local": "npx hardhat --network localhost run ",
+    "deploy:local": "npx hardhat run scripts/deployments/deployment.js",
+
+    "deploy:managers:rinkeby": "npx hardhat run scripts/deployments/deployment.js --network rinkeby",
+    "deploy:managers:ropsten": "npx hardhat run scripts/deployments/deployment.js --network ropsten",
+
+    "deploy:nft:local": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js",
+    "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js --network rinkeby",
+
+    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/wallet.js --network rinkeby",
+    "verify:mintManager": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/mintManager.js --network rinkeby"
+
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",
@@ -19,8 +30,10 @@
     "hardhat-abi-exporter": "^2.8.0",
     "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",
+    "solhint": "^3.3.6",
     "keccak256": "^1.0.6",
-    "solidity-coverage": "^0.7.18"
+    "solidity-coverage": "^0.7.18",
+    "inquirer": "^8.2.1"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.3.1",
@@ -47,7 +60,6 @@
     "prettier": "^2.5.1",
     "prettier-eslint": "^13.0.0",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
-    "solhint": "^3.3.6",
     "web3": "^1.6.1"
   }
 }
