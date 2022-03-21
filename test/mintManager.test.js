@@ -97,7 +97,9 @@ describe('OmnuumMintManager', () => {
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.SetPublicSchedule).withArgs(omnuumNFT1155.address, group_id);
+      await expect(tx)
+        .to.emit(omnuumMintManager, Constants.events.MintManager.SetPublicSchedule)
+        .withArgs(omnuumNFT1155.address, group_id, end_date);
     });
     it('[Revert] only owner of collection', async () => {
       const {
