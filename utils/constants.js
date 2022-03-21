@@ -91,7 +91,8 @@ module.exports = {
     },
   },
   feeTopic: {
-    deploy: 'DEPLOY',
+    deploy: 'DEPLOY_FEE',
+    mint: 'MINT_FEE',
   },
   payloadTopic: {
     mint: 'MINT',

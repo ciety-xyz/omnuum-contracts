@@ -106,24 +106,24 @@ contract OmnuumMintManager is OwnableUpgradeable {
     function mintMultiple(
         address nftContract,
         address[] calldata _tos,
-        uint16[] calldata _quantitys
+        uint16[] calldata _quantities
     ) public payable {
         OmnuumNFT1155 targetContract = OmnuumNFT1155(nftContract);
 
         uint256 len = _tos.length;
 
         require(targetContract.owner() == msg.sender, 'OO1');
-        require(len == _quantitys.length, 'ARG1');
+        require(len == _quantities.length, 'ARG1');
 
         uint256 totalQuantity;
         for (uint256 i; i < len; i++) {
-            totalQuantity += _quantitys[i];
+            totalQuantity += _quantities[i];
         }
 
         require(msg.value >= totalQuantity * minFee, 'MT5');
 
         for (uint256 i; i < len; i++) {
-            targetContract.mintDirect{ value: minFee * _quantitys[i] }(_tos[i], _quantitys[i]);
+            targetContract.mintDirect{ value: minFee * _quantities[i] }(_tos[i], _quantities[i]);
         }
         emit Airdrop(nftContract, _tos.length);
     }

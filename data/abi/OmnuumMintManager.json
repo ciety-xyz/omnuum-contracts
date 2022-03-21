@@ -235,7 +235,7 @@
       },
       {
         "internalType": "uint16[]",
-        "name": "_quantitys",
+        "name": "_quantities",
         "type": "uint16[]"
       }
     ],

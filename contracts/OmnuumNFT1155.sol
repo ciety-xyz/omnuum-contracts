@@ -32,7 +32,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     function initialize(
         address _caManagerAddress,
-        address _omA, // omnuum company wallet address
+        address _omA, // omnuum deployer
         uint32 _maxSupply,
         string calldata _coverUri,
         address _prjOwner
