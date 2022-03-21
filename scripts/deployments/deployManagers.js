@@ -1,4 +1,4 @@
-const { chainlink, ContractTopic } = require('../../utils/constants');
+const { chainlink, ContractTopic, testValues } = require('../../utils/constants');
 const { deployProxy, deployNormal, deployBeacon } = require('./deployHelper');
 
 module.exports.deployManagers = async ({ devDeployer, owners }) => {
@@ -15,7 +15,7 @@ module.exports.deployManagers = async ({ devDeployer, owners }) => {
   const mintManager = await deployProxy({
     contractName: 'OmnuumMintManager',
     deploySigner: devDeployer,
-    args: [5000], // _feeRate: 5.000 %
+    args: [testValues.baseFeeRate], // _feeRate: 5.000 %
   });
 
   /* Deploy Exchange */
@@ -84,7 +84,7 @@ module.exports.deployManagers = async ({ devDeployer, owners }) => {
         ContractTopic.VERIFIER,
         ContractTopic.VRF,
         ContractTopic.WALLET,
-      ],
+      ]
     )
   ).wait();
 

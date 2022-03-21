@@ -1,5 +1,37 @@
 const { ethers, upgrades } = require('hardhat');
 
+const structurizeProxyData = (deployObj) => ({
+  proxy: deployObj.proxyContract.address,
+  impl: deployObj.implAddress,
+  admin: deployObj.adminAddress,
+  gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
+  blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
+});
+
+const structurizeContractData = (deployObj) => ({
+  contract: deployObj.contract.address,
+  gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
+  blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
+});
+
+const isLocalNetwork = async (provider) => {
+  const { chainId } = await provider.getNetwork();
+  return Number(chainId) !== 1 && Number(chainId) !== 4;
+};
+
+const getRPCProvider = async (provider) =>
+  (await isLocalNetwork(provider)) ? new ethers.providers.JsonRpcProvider() : new ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
+
+const nullCheck = (val) => {
+  if (!(val === '')) {
+    return true;
+  }
+  return '🚨 Null is not allowed';
+};
+
+const getDateSuffix = () =>
+  `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
+
 const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, txHash, blockNumber) =>
   console.log(
     `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n`
@@ -24,7 +56,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
       beacon.address,
       implAddress,
       txResponse.deployTransaction.hash,
-      txResponse.deployTransaction.blockNumber
+      Number(txResponse.deployTransaction.blockNumber)
     );
   return {
     beacon,
@@ -49,7 +81,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       adminAddress,
       gasUsed,
       txResponse.deployTransaction.hash,
-      txResponse.deployTransaction.blockNumber
+      Number(txResponse.deployTransaction.blockNumber)
     );
   return {
     proxyContract,
@@ -68,7 +100,13 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const { gasUsed, blockNumber } = deployTxReceipt;
   log &&
-    deployConsole(contractName, contract.address, gasUsed, txResponse.deployTransaction.hash, txResponse.deployTransaction.blockNumber);
+    deployConsole(
+      contractName,
+      contract.address,
+      gasUsed,
+      txResponse.deployTransaction.hash,
+      Number(txResponse.deployTransaction.blockNumber)
+    );
   return {
     contract,
     gasUsed,
@@ -81,4 +119,15 @@ const isNotMainOrRinkeby = async (provider) => {
   return Number(chainId) !== 1 && Number(chainId) !== 4;
 };
 
-module.exports = { deployNormal, deployProxy, deployBeacon, isNotMainOrRinkeby };
+module.exports = {
+  structurizeProxyData,
+  structurizeContractData,
+  isLocalNetwork,
+  deployNormal,
+  deployProxy,
+  deployBeacon,
+  isNotMainOrRinkeby,
+  getDateSuffix,
+  nullCheck,
+  getRPCProvider,
+};
