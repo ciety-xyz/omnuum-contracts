@@ -12,7 +12,7 @@ module.exports = {
       SetDiscountRate: 'SetDiscountRate',
       ChangeBaseFeeRate: 'ChangeBaseFeeRate',
       Airdrop: 'Airdrop',
-      SetSchedule: 'SetSchedule',
+      SetPublicSchedule: 'SetPublicSchedule',
       PublicMint: 'PublicMint',
       SetMinFee: 'SetMinFee',
     },
@@ -22,7 +22,7 @@ module.exports = {
       ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
-      EndDate: 'EndDate',
+      SetTicketSchedule: 'SetTicketSchedule',
       TicketMint: 'TicketMint',
     },
     VRFManager: {

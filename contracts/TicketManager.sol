@@ -26,7 +26,7 @@ contract TicketManager is EIP712 {
     string private constant SIGNING_DOMAIN = 'OmnuumTicket';
     string private constant SIGNATURE_VERSION = '1';
 
-    event EndDate(address indexed nft, uint256 groupId, uint256 endDate);
+    event SetTicketSchedule(address indexed nft, uint256 groupId, uint256 endDate);
 
     event TicketMint(
         address indexed nftContract,
@@ -47,7 +47,7 @@ contract TicketManager is EIP712 {
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
         endDates[_nft][groupId] = endDate;
 
-        emit EndDate(_nft, groupId, endDate);
+        emit SetTicketSchedule(_nft, groupId, endDate);
     }
 
     function useTicket(
