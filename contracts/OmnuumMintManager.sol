@@ -31,7 +31,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 price
     );
 
-    event Airdrop(address indexed Contract, address indexed receiver, uint256 quantity);
+    event Airdrop(address indexed nftContract, address indexed receiver, uint256 quantity);
 
     event SetMinFee(uint256 minFee);
 

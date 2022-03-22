@@ -5,7 +5,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "Contract",
+        "name": "nftContract",
         "type": "address"
       },
       {
