@@ -1,7 +1,7 @@
 const { ethers } = require('hardhat');
 const fs = require('fs');
 
-const { deployManagers } = require('./deployManagers');
+const { deployManagers } = require('./deployments');
 const { getDateSuffix, structurizeProxyData, structurizeContractData } = require('./deployHelper');
 
 !(async () => {

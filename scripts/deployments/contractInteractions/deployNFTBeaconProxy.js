@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const fs = require('fs');
-const { deployNFTProject } = require('../deployNFTProject');
+const { deployNFTProject } = require('../deployManagers');
 const { getDateSuffix, nullCheck, getRPCProvider } = require('../deployHelper');
 
 const OmnuumCAManagerAbi = require('../../../data/abi/OmnuumCAManager.json');
