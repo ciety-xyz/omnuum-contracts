@@ -16,25 +16,25 @@ const questions = [
   {
     name: inquirerParams.nft_owner_private_key,
     type: 'input',
-    message: '🤔 nft_owner_private_key is ...',
+    message: "🤔 NFT project owner's private key is ...",
     validate: nullCheck,
   },
   {
     name: inquirerParams.nft_address,
     type: 'input',
-    message: '🤔 nft_address is...',
+    message: '🤔 NFT project contract address is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.ticket_manager_address,
     type: 'input',
-    message: '🤔 ticket_manager_address is...',
+    message: '🤔 Ticket manager address is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.group_id,
     type: 'input',
-    message: '🤔 Ticket schedule group_id is...',
+    message: '🤔 Ticket schedule group id is...',
     validate: nullCheck,
   },
   {

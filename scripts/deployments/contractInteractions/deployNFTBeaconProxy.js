@@ -113,15 +113,20 @@ const questions = [
     // register NFT beacon proxy contract to CA manager
 
     const txRegister = await caManager.registerNftContract(deployNFTProjectResult.beaconProxy.address, projectOwnerAddress);
-    const deployReceipt = await txRegister.wait();
+    const deployResponse = await txRegister.wait();
+    console.log(deployResponse);
 
-    console.log(deployReceipt);
-
+    const { blockNumber, timestamp } = deployResponse;
     fs.writeFileSync(
       `./scripts/deployments/deployNFTResults/chain-${ethers.provider.network.chainId}_deployedAt-${getDateSuffix()}.json`,
       Buffer.from(
         JSON.stringify({
-          nftProject: { beaconProxy: deployNFTProjectResult.beaconProxy.address, owner: projectOwnerAddress },
+          nftProject: {
+            beaconProxy: deployNFTProjectResult.beaconProxy.address,
+            owner: projectOwnerAddress,
+            blockNumber,
+            timestamp,
+          },
         })
       ),
       'utf-8'

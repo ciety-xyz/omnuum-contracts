@@ -9,8 +9,14 @@
     "deploy:managers:ropsten": "npx hardhat run scripts/deployments/deployment.js --network ropsten",
     "deploy:nft:local": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js",
     "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js --network rinkeby",
+
+    "verify:caManager": "npx hardhat verify $npm_config_address --network rinkeby",
+    "verify:mintManager": "npx hardhat verify $npm_config_address --network rinkeby",
     "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/wallet.js --network rinkeby",
-    "verify:mintManager": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/mintManager.js --network rinkeby"
+
+    "itx:setTicketSchedule": "npx hardhat run scripts/deployments/contractInteractions/ticketManager/setEndDate.js --network rinkeby",
+    "itx:setPublicSchedule": "npx hardhat run scripts/deployments/contractInteractions/mintManager/setPublicMintSchedule.js --network rinkeby",
+    "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",

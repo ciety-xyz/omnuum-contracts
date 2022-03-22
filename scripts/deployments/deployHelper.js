@@ -32,9 +32,9 @@ const nullCheck = (val) => {
 const getDateSuffix = () =>
   `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
-const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, txHash, blockNumber) =>
+const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash, blockNumber) =>
   console.log(
-    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n`
+    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n  GasUsed ${gasUsed}`
   );
 
 const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gasUsed, txHash, blockNumber) =>
@@ -49,15 +49,11 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
+  const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.beacon.getImplementationAddress(beacon.address);
-  log &&
-    deployBeaconConsole(
-      contractName,
-      beacon.address,
-      implAddress,
-      txResponse.deployTransaction.hash,
-      Number(txResponse.deployTransaction.blockNumber)
-    );
+  const { gasUsed, blockNumber } = deployTxReceipt;
+
+  log && deployBeaconConsole(contractName, beacon.address, implAddress, gasUsed, txResponse.deployTransaction.hash, blockNumber);
   return {
     beacon,
     implAddress,
@@ -81,7 +77,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       adminAddress,
       gasUsed,
       txResponse.deployTransaction.hash,
-      Number(txResponse.deployTransaction.blockNumber)
+      blockNumber
     );
   return {
     proxyContract,
@@ -99,14 +95,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
   const txResponse = await contract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const { gasUsed, blockNumber } = deployTxReceipt;
-  log &&
-    deployConsole(
-      contractName,
-      contract.address,
-      gasUsed,
-      txResponse.deployTransaction.hash,
-      Number(txResponse.deployTransaction.blockNumber)
-    );
+  log && deployConsole(contractName, contract.address, gasUsed, txResponse.deployTransaction.hash, blockNumber);
   return {
     contract,
     gasUsed,

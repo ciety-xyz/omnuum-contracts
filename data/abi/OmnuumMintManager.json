@@ -9,9 +9,15 @@
         "type": "address"
       },
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "uint256",
-        "name": "count",
+        "name": "quantity",
         "type": "uint256"
       }
     ],
@@ -145,6 +151,24 @@
         "internalType": "uint256",
         "name": "endDate",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "basePrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "supply",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "maxMintAtAddress",
+        "type": "uint32"
       }
     ],
     "name": "SetPublicSchedule",
