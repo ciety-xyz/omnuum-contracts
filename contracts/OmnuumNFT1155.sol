@@ -101,7 +101,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     function mintDirect(address _to, uint32 _quantity) public payable {
-        require(msg.sender == mintManagerA || msg.sender == owner(), 'OO2');
+        require(msg.sender == mintManagerA, 'OO2');
 
         uint256 minFee = OmnuumMintManager(mintManagerA).minFee();
         require(msg.value >= minFee * _quantity, 'MT5');

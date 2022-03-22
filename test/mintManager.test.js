@@ -92,14 +92,22 @@ describe('OmnuumMintManager', () => {
       const base_price = ethers.utils.parseEther('0.2');
 
       const open_amount = 2000;
+      const max_mint_per_address = 5;
 
-      const tx = await omnuumMintManager.setPublicMintSchedule(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, 5);
+      const tx = await omnuumMintManager.setPublicMintSchedule(
+        omnuumNFT1155.address,
+        group_id,
+        end_date,
+        base_price,
+        open_amount,
+        max_mint_per_address
+      );
 
       await tx.wait();
 
       await expect(tx)
         .to.emit(omnuumMintManager, Constants.events.MintManager.SetPublicSchedule)
-        .withArgs(omnuumNFT1155.address, group_id, end_date);
+        .withArgs(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, max_mint_per_address);
     });
     it('[Revert] only owner of collection', async () => {
       const {
@@ -318,10 +326,11 @@ describe('OmnuumMintManager', () => {
     it('Airdrop to multiple address', async () => {
       const { omnuumMintManager, omnuumNFT1155, accounts } = this;
       const count = 5;
+      const airDropToAddresses = pluck('address', accounts.slice(1, count + 1));
 
       const tx = await omnuumMintManager.connect(accounts[0]).mintMultiple(
         omnuumNFT1155.address,
-        pluck('address', accounts.slice(1, count + 1)),
+        airDropToAddresses,
         go(
           range(count),
           map(() => 1)
@@ -333,16 +342,33 @@ describe('OmnuumMintManager', () => {
 
       await tx.wait();
 
-      // TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
-      await mapC(
-        (idx) =>
+      // Note: token id is started from 1, not zero.
+      await go(
+        range(count),
+        // event TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
+        mapC(async (idx) =>
           expect(tx)
             .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
-            .withArgs(omnuumMintManager.address, nullAddress, accounts[idx].address, idx, 1),
-        range(1, count + 1)
+            .withArgs(omnuumMintManager.address, nullAddress, airDropToAddresses[idx], idx + 1, 1)
+        )
+      );
+      await go(
+        range(count),
+        // event Airdrop(address indexed Contract, address indexed receiver, uint256 quantity)
+        mapC(async (idx) =>
+          expect(tx)
+            .to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop)
+            .withArgs(omnuumNFT1155.address, airDropToAddresses[idx], 1)
+        )
       );
 
-      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop).withArgs(omnuumNFT1155.address, 5);
+      // await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop).withArgs(omnuumNFT1155.address, 5);
+    });
+    it('[Revert] owner', async () => {
+      const { omnuumNFT1155, accounts } = this;
+      await expect(
+        omnuumNFT1155.connect(accounts[0]).mintDirect(accounts[1].address, 3, { value: ethers.utils.parseEther('999') })
+      ).to.be.revertedWith(Constants.reasons.code.OO2);
     });
     it('[Revert] not owner', async () => {
       const { omnuumMintManager, omnuumNFT1155, accounts } = this;
