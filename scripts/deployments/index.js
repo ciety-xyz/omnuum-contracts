@@ -1,14 +1,16 @@
 const { ethers } = require('hardhat');
-const fs = require('fs');
+const { writeFile, mkdir } = require('fs/promises');
+const { identity } = require('fxjs');
 
 const { deployManagers } = require('./deployments');
 const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainName } = require('./deployHelper');
 
 !(async () => {
   try {
+    console.log('Start deploy');
     const [devDeployer, ownerA, ownerB, ownerC] = await ethers.getSigners();
     const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ devDeployer, owners: [ownerA, ownerB, ownerC] });
+      await deployManagers({ devDeployer, owners: [ownerA, ownerB, ownerC].filter(identity) });
 
     const resultData = {
       deployer: devDeployer.address,
@@ -49,8 +51,12 @@ const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainNa
     };
 
     const filename = `${chainName}_${getDateSuffix()}.json`;
-    fs.writeFileSync(`./scripts/deployments/deployResults/managers/${filename}`, Buffer.from(JSON.stringify(resultData)), 'utf-8');
-    fs.writeFileSync(
+
+    await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
+    await writeFile(`./scripts/deployments/deployResults/managers/${filename}`, Buffer.from(JSON.stringify(resultData)), 'utf8');
+
+    await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
+    await writeFile(
       `./scripts/deployments/deployResults/subgraphManifest/${filename}`,
       Buffer.from(JSON.stringify(subgraphManifestData)),
       'utf-8'
