@@ -136,9 +136,7 @@ const questions = [
         'utf-8'
       );
 
-      console.log(
-        `🌹 NFT Project is on the way.\nBlock: ${deployResponse.deployTransaction.blockNumber}\nTransaction: ${deployResponse.deployTransaction.hash}`
-      );
+      console.log(`🌹 NFT Project is on the way.\nBlock: ${deployResponse.blockNumber}\nTransaction: ${deployResponse.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

@@ -1,4 +1,12 @@
 {
+  "name": "omnuum-contracts",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "repository": "https://github.com/omnuum/omnuum-contracts",
+  "engines" : {
+    "npm" : ">=8.0.0",
+    "node" : ">=16.0.0"
+  },
   "scripts": {
     "compile": "npx hardhat compile",
     "test:local": "npx hardhat test",

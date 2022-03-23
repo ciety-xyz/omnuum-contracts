@@ -56,6 +56,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         address exchangeAddress = caManager.getContract('EXCHANGE');
         require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'Not enough LINK');
         require(caManager.isRegistered(msg.sender), 'OO3');
+
         uint256 required_amount = OmnuumExchange(exchangeAddress).getExchangeAmount(address(0), s_LINK, fee);
         require((required_amount * safetyRatio) / 100 <= msg.value, 'Not enough Ether');
 

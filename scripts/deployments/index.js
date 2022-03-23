@@ -15,11 +15,11 @@ const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainNa
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
       exchanger: structurizeProxyData(exchanger),
+      wallet: structurizeContractData(wallet),
       ticketManager: structurizeContractData(ticketManager),
       vrfManager: structurizeContractData(vrfManager),
       revealManager: structurizeContractData(revealManager),
       senderVerifier: structurizeContractData(senderVerifier),
-      wallet: structurizeContractData(wallet),
       nft1155: {
         Impl: nft.implAddress,
         beacon: nft.beacon.address,
