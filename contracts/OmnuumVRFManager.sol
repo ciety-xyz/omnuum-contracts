@@ -32,25 +32,27 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     mapping(address => bytes32) aToId;
     mapping(bytes32 => address) idToA;
+    mapping(bytes32 => bytes32) idToTopic;
 
     // actionType: fee, safetyRatio
     event Updated(uint256 value, bytes32 actionType);
-    event RequestVRF(address indexed roller, bytes32 indexed requestId);
-    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bool success, string reason);
+    event RequestVRF(address indexed roller, bytes32 indexed requestId, bytes32 topic);
+    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bytes32 topic, bool success, string reason);
 
     // Only for allowed CA (Omnuum contracts except NFT contract)
-    function requestVRF() external {
+    function requestVRF(string calldata topic) external {
         address exchangeAddress = caManager.getContract('EXCHANGE');
         require(LINK.balanceOf(exchangeAddress) > 2 ether, 'Not enough LINK');
         require(caManager.isRegistered(msg.sender), 'OO3');
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = msg.sender;
+        idToTopic[requestId] = keccak256(abi.encodePacked(topic));
 
-        emit RequestVRF(msg.sender, requestId);
+        emit RequestVRF(msg.sender, requestId, idToTopic[requestId]);
     }
 
-    function requestVRFOnce(address targetAddress) external payable {
+    function requestVRFOnce(address targetAddress, string calldata topic) external payable {
         require(caManager.isRegistered(msg.sender), 'OO3');
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
@@ -67,8 +69,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = targetAddress;
+        idToTopic[requestId] = keccak256(abi.encodePacked(topic));
 
-        emit RequestVRF(targetAddress, requestId);
+        emit RequestVRF(targetAddress, requestId, idToTopic[requestId]);
     }
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
@@ -82,7 +85,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         aToId[requestAddress] = requestId;
         delete idToA[requestId];
 
-        emit ResponseVRF(requestId, randomness, success, reason);
+        emit ResponseVRF(requestId, randomness, idToTopic[requestId], success, reason);
     }
 
     function updateFee(uint256 _fee) external onlyOwner {

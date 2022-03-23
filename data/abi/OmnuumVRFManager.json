@@ -63,6 +63,12 @@
         "internalType": "bytes32",
         "name": "requestId",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "topic",
+        "type": "bytes32"
       }
     ],
     "name": "RequestVRF",
@@ -82,6 +88,12 @@
         "internalType": "uint256",
         "name": "randomness",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "topic",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -157,7 +169,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "topic",
+        "type": "string"
+      }
+    ],
     "name": "requestVRF",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -169,6 +187,11 @@
         "internalType": "address",
         "name": "targetAddress",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "topic",
+        "type": "string"
       }
     ],
     "name": "requestVRFOnce",
