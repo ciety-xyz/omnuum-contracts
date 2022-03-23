@@ -35,9 +35,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     mapping(bytes32 => bytes32) idToTopic;
 
     // actionType: fee, safetyRatio
-    event Updated(uint256 value, bytes32 actionType);
-    event RequestVRF(address indexed roller, bytes32 indexed requestId, bytes32 topic);
-    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bytes32 topic, bool success, string reason);
+    event Updated(uint256 value, bytes32 indexed actionType);
+    event RequestVRF(address indexed roller, bytes32 indexed requestId, bytes32 indexed topic);
+    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bytes32 indexed topic, bool success, string reason);
 
     // Only for allowed CA (Omnuum contracts except NFT contract)
     function requestVRF(string calldata topic) external {
