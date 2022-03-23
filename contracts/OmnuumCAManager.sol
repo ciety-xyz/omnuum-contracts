@@ -27,6 +27,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     function registerContract(address CA, string calldata topic) public onlyOwner {
+        require(CA != address(0));
         contracts[CA] = Contract(topic, true);
         indexedContracts[topic] = CA;
         emit Updated(CA, contracts[CA], 'register');
