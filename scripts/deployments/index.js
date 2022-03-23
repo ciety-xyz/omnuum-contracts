@@ -42,6 +42,10 @@ const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainNa
         address: ticketManager.contract.address,
         startBlock: `${ticketManager.blockNumber}`,
       },
+      vrfManager: {
+        address: vrfManager.contract.address,
+        startBlock: `${vrfManager.blockNumber}`,
+      },
       wallet: {
         address: wallet.contract.address,
         startBlock: `${wallet.blockNumber}`,
