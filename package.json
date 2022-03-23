@@ -28,7 +28,8 @@
     "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby",
     "itx:publicMint": "npx hardhat run scripts/deployments/contractInteractions/nft/publicMint.js --network rinkeby",
     "itx:airdrop": "npx hardhat run scripts/deployments/contractInteractions/mintManager/airDrop.js --network rinkeby",
-    "itx:vrfRequest": "npx hardhat run scripts/deployments/contractInteractions/revealManager/vrfRequest.js --network rinkeby"
+    "itx:vrfRequest": "npx hardhat run scripts/deployments/contractInteractions/revealManager/vrfRequest.js --network rinkeby",
+    "itx:setUri": "npx hardhat run scripts/deployments/contractInteractions/nft/setURI.js --network rinkeby"
 
   },
   "dependencies": {
