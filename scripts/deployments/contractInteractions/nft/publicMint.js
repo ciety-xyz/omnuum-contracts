@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
-const { getTicketWithSignature, getPayloadWithSignature } = require('../interactionHelpers');
+const { getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../../utils/constants');
 const { nullCheck, getRPCProvider } = require('../../deployHelper');
 
@@ -68,30 +68,34 @@ const questions = [
 
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
-    const provider = await getRPCProvider(ethers.provider);
+    try {
+      const provider = await getRPCProvider(ethers.provider);
 
-    const payload = await getPayloadWithSignature({
-      senderVerifierAddress: ans.senderVerifierAddress,
-      minterAddress: ans.minterAddress,
-      payloadTopic: payloadTopic.mint,
-      groupId: ans.groupId,
-      signerPrivateKey: ans.OmSignerPrivateKey,
-    });
+      const payload = await getPayloadWithSignature({
+        senderVerifierAddress: ans.senderVerifierAddress,
+        minterAddress: ans.minterAddress,
+        payloadTopic: payloadTopic.mint,
+        groupId: ans.groupId,
+        signerPrivateKey: ans.OmSignerPrivateKey,
+      });
 
-    const sendValue = ethers.utils.parseEther(ans.publicPrice).mul(Number(ans.mintQuantity));
+      const sendValue = ethers.utils.parseEther(ans.publicPrice).mul(Number(ans.mintQuantity));
 
-    const nftContract = (await ethers.getContractFactory('OmnuumNFT1155')).attach(ans.nftContractAddress);
+      const nftContract = (await ethers.getContractFactory('OmnuumNFT1155')).attach(ans.nftContractAddress);
 
-    const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
+      const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
 
-    const txResponse = await nftContract
-      .connect(minterSigner)
-      .publicMint(ans.mintQuantity, ans.groupId, payload, { value: sendValue, gasLimit: 10000000 });
+      const txResponse = await nftContract
+        .connect(minterSigner)
+        .publicMint(ans.mintQuantity, ans.groupId, payload, { value: sendValue, gasLimit: 10000000 });
 
-    console.log('txRseponse', txResponse);
-    const txReceipt = await txResponse.wait();
+      console.log('txRseponse', txResponse);
+      const txReceipt = await txResponse.wait();
 
-    console.log('Public Mint is on the way.');
-    console.log(txReceipt);
+      console.log(txReceipt);
+      console.log(`☀️ Public mint is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+    } catch (e) {
+      console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
+    }
   });
 })();

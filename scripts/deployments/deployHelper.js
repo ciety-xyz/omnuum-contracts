@@ -1,5 +1,21 @@
 const { ethers, upgrades } = require('hardhat');
 
+const getChainName = async () => {
+  const { chainId } = await ethers.provider.getNetwork();
+  switch (chainId) {
+    case 1:
+      return 'mainnet';
+    case 3:
+      return 'ropsten';
+    case 4:
+      return 'rinkeby';
+    case 31337:
+      return 'local';
+    default:
+      return 'unrecognized network';
+  }
+};
+
 const structurizeProxyData = (deployObj) => ({
   proxy: deployObj.proxyContract.address,
   impl: deployObj.implAddress,
@@ -119,4 +135,5 @@ module.exports = {
   getDateSuffix,
   nullCheck,
   getRPCProvider,
+  getChainName,
 };

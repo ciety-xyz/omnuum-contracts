@@ -4,9 +4,9 @@
     "test:local": "npx hardhat test",
     "node": "npx hardhat node",
     "run:local": "npx hardhat --network localhost run ",
-    "deploy:local": "npx hardhat run scripts/deployments/deployment.js",
-    "deploy:managers:rinkeby": "npx hardhat run scripts/deployments/deployment.js --network rinkeby",
-    "deploy:managers:ropsten": "npx hardhat run scripts/deployments/deployment.js --network ropsten",
+    "deploy:managers:local": "npx hardhat run scripts/deployments/index.js",
+    "deploy:managers:rinkeby": "npx hardhat run scripts/deployments/index.js --network rinkeby",
+    "deploy:managers:ropsten": "npx hardhat run scripts/deployments/index.js --network ropsten",
     "deploy:nft:local": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js",
     "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js --network rinkeby",
 
@@ -16,7 +16,9 @@
 
     "itx:setTicketSchedule": "npx hardhat run scripts/deployments/contractInteractions/ticketManager/setEndDate.js --network rinkeby",
     "itx:setPublicSchedule": "npx hardhat run scripts/deployments/contractInteractions/mintManager/setPublicMintSchedule.js --network rinkeby",
-    "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby"
+    "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby",
+    "itx:publicMint": "npx hardhat run scripts/deployments/contractInteractions/nft/publicMint.js --network rinkeby",
+    "itx:airdrop": "npx hardhat run scripts/deployments/contractInteractions/mintManager/airDrop.js --network rinkeby"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
