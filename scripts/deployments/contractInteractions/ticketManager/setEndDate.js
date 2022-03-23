@@ -16,7 +16,7 @@ const questions = [
   {
     name: inquirerParams.nft_owner_private_key,
     type: 'input',
-    message: "🤔 NFT project owner's private key is ...",
+    message: '🤔 NFT project owners private key is ...',
     validate: nullCheck,
   },
   {
@@ -47,18 +47,22 @@ const questions = [
 
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
-    const provider = await getRPCProvider(ethers.provider);
-    const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
+    try {
+      const provider = await getRPCProvider(ethers.provider);
+      const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
-    const ticketManager = (await ethers.getContractFactory('TicketManager')).attach(ans.ticket_manager_address);
+      const ticketManager = (await ethers.getContractFactory('TicketManager')).attach(ans.ticket_manager_address);
 
-    const txResponse = await ticketManager
-      .connect(nftOwnerSigner)
-      .setEndDate(ans.nft_address, ans.group_id, toSolDate(addHours(new Date(), Number(ans.end_day_from_now))));
+      const txResponse = await ticketManager
+        .connect(nftOwnerSigner)
+        .setEndDate(ans.nft_address, ans.group_id, toSolDate(addHours(new Date(), Number(ans.end_day_from_now))));
 
-    const txReceipt = await txResponse.wait();
+      const txReceipt = await txResponse.wait();
 
-    console.log('Ticket schedule is set.');
-    console.log(txReceipt);
+      console.log(txReceipt);
+      console.log(`☀️ Ticket schedule is set..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+    } catch (e) {
+      console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
+    }
   });
 })();

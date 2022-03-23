@@ -16,7 +16,9 @@
 
     "itx:setTicketSchedule": "npx hardhat run scripts/deployments/contractInteractions/ticketManager/setEndDate.js --network rinkeby",
     "itx:setPublicSchedule": "npx hardhat run scripts/deployments/contractInteractions/mintManager/setPublicMintSchedule.js --network rinkeby",
-    "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby"
+    "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby",
+    "itx:publicMint": "npx hardhat run scripts/deployments/contractInteractions/nft/publicMint.js --network rinkeby",
+    "itx:airdrop": "npx hardhat run scripts/deployments/contractInteractions/mintManager/airDrop.js --network rinkeby"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
