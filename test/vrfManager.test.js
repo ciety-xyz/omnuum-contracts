@@ -70,8 +70,8 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // change link balance -> 1 LINK, VRF requires 2 LINK
-      await mockLink.changeBalance(ethers.utils.parseEther('1'));
+      // change link balance -> 0.05 LINK, test VRF requires 0.1 LINK
+      await mockLink.changeBalance(ethers.utils.parseEther('0.05'));
 
       await expect(omnuumVRFManager.requestVRF(Constants.vrfTopic.REVEAL_PFP)).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
     });
@@ -150,8 +150,8 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // change link balance -> 1 LINK, VRF requires 2 LINK
-      await mockLink.changeBalance(ethers.utils.parseEther('1'));
+      // change link balance -> 0.05 LINK, VRF requires 0.1 LINK
+      await mockLink.changeBalance(ethers.utils.parseEther('0.05'));
 
       await expect(omnuumVRFManager.requestVRFOnce(anyAC.address, 'TEST')).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
     });
