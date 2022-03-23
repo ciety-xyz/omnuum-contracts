@@ -17,11 +17,9 @@
     "deploy:managers:ropsten": "npx hardhat run scripts/deployments/index.js --network ropsten",
     "deploy:nft:local": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js",
     "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/contractInteractions/deployNFTBeaconProxy.js --network rinkeby",
-
     "verify:caManager": "npx hardhat verify $npm_config_address --network rinkeby",
     "verify:mintManager": "npx hardhat verify $npm_config_address --network rinkeby",
     "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/wallet.js --network rinkeby",
-
     "itx:setTicketSchedule": "npx hardhat run scripts/deployments/contractInteractions/ticketManager/setEndDate.js --network rinkeby",
     "itx:setPublicSchedule": "npx hardhat run scripts/deployments/contractInteractions/mintManager/setPublicMintSchedule.js --network rinkeby",
     "itx:ticketMint": "npx hardhat run scripts/deployments/contractInteractions/nft/ticketMint.js --network rinkeby",
@@ -72,7 +70,6 @@
     "mocha": "^9.2.0",
     "prettier": "^2.5.1",
     "prettier-eslint": "^13.0.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.13",
-    "web3": "^1.6.1"
+    "prettier-plugin-solidity": "^1.0.0-beta.13"
   }
 }

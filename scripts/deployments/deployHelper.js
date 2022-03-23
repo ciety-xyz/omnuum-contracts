@@ -1,4 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
+const chalk = require('chalk');
 
 const getChainName = async () => {
   const { chainId } = await ethers.provider.getNetwork();
@@ -48,18 +49,40 @@ const nullCheck = (val) => {
 const getDateSuffix = () =>
   `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
+const deployConsoleRow = (title, data) => `  ${chalk.blue(title)} ${data}\n`;
+
 const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash, blockNumber) =>
   console.log(
-    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  BeaconContractAddress ${beaconAddr}\n  Impl ${ImplAddr}\n  GasUsed ${gasUsed}`
+    `\n${chalk.green(`<${contractName}>`)}\n${[
+      deployConsoleRow('Block', blockNumber),
+      deployConsoleRow('TxHash', txHash),
+      deployConsoleRow('BeaconContractAddress', beaconAddr),
+      deployConsoleRow('Impl', ImplAddr),
+      deployConsoleRow('GasUsed', gasUsed),
+    ].join('')}`
   );
 
 const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gasUsed, txHash, blockNumber) =>
   console.log(
-    `\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  ProxyContractAddress ${proxyAddr}\n  Impl ${ImplAddr}\n  Admin ${adminAddress}\n  GasUsed ${gasUsed}`
+    `\n${chalk.green(`<${contractName}>`)}\n${[
+      deployConsoleRow('Block', blockNumber),
+      deployConsoleRow('TxHash', txHash),
+      deployConsoleRow('ProxyContractAddress', proxyAddr),
+      deployConsoleRow('Impl', ImplAddr),
+      deployConsoleRow('Admin', adminAddress),
+      deployConsoleRow('GasUsed', gasUsed),
+    ].join('')}`
   );
 
 const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber) =>
-  console.log(`\n<${contractName}>\n  Block ${blockNumber}\n  TxHash ${txHash}\n  contractAddress ${deployAddress}\n  GasUsed ${gasUsed}`);
+  console.log(
+    `\n${chalk.green(`<${contractName}>`)}\n${[
+      deployConsoleRow('Block', blockNumber),
+      deployConsoleRow('TxHash', txHash),
+      deployConsoleRow('contractAddress', deployAddress),
+      deployConsoleRow('GasUsed', gasUsed),
+    ].join('')}`
+  );
 
 const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
@@ -78,8 +101,10 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
 };
 
 const deployProxy = async ({ contractName, deploySigner, args = [], log = true }) => {
+  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+
   const contractFactory = await ethers.getContractFactory(contractName);
-  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { pollingInterval: 600000 });
+  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
   const txResponse = await proxyContract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
@@ -106,6 +131,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 };
 
 const deployNormal = async ({ contractName, deploySigner, args = [], log = true }) => {
+  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
   const contractFactory = await ethers.getContractFactory(contractName);
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
