@@ -42,7 +42,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     // Only for allowed CA (Omnuum contracts except NFT contract)
     function requestVRF(string calldata topic) external {
         address exchangeAddress = caManager.getContract('EXCHANGE');
-        require(LINK.balanceOf(exchangeAddress) > 2 ether, 'Not enough LINK');
+        require(LINK.balanceOf(exchangeAddress) > fee, 'Not enough LINK');
         require(caManager.isRegistered(msg.sender), 'OO3');
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
@@ -57,7 +57,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
-        require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'Not enough LINK');
+        require(LINK.balanceOf(exchangeAddress) >= fee, 'Not enough LINK');
 
         uint256 required_amount = OmnuumExchange(exchangeAddress).getExchangeAmount(address(0), s_LINK, fee);
         require((required_amount * safetyRatio) / 100 <= msg.value, 'Not enough Ether');
@@ -65,7 +65,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         require(aToId[targetAddress] == '', 'Already used');
 
         // receive 2 link from exchange
-        OmnuumExchange(exchangeAddress).exchangeToken{ value: msg.value }(s_LINK, 2 ether, address(this));
+        OmnuumExchange(exchangeAddress).exchangeToken{ value: msg.value }(s_LINK, fee, address(this));
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = targetAddress;
@@ -94,6 +94,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     }
 
     function updateSafetyRatio(uint16 _safetyRatio) external onlyOwner {
+        require(_safetyRatio >= 100, 'should above 100');
         safetyRatio = _safetyRatio;
         emit Updated(_safetyRatio, keccak256(abi.encodePacked('safetyRatio')));
     }
