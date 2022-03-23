@@ -60,7 +60,7 @@ const questions = [
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`☀️ Ticket schedule is set..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(`💋 Ticket schedule is set..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

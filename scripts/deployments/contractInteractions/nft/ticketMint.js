@@ -116,7 +116,7 @@ const questions = [
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`☀️ Ticket Mint is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(`💋 Ticket Mint is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
