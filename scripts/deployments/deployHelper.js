@@ -1,5 +1,18 @@
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
+const { writeFile, readFile } = require('fs/promises');
+const { go } = require('fxjs');
+const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
+
+const prev_history_file_path = './scripts/deployments/deployResults/tmp_history.json';
+
+const tryCatch = async (f, catchFn) => {
+  try {
+    return await f();
+  } catch (err) {
+    return catchFn(err);
+  }
+};
 
 const getChainName = async () => {
   const { chainId } = await ethers.provider.getNetwork();
@@ -14,6 +27,16 @@ const getChainName = async () => {
       return 'local';
     default:
       return 'unrecognized network';
+  }
+};
+
+const readDeployTmpHistory = () => go(readFile(prev_history_file_path, 'utf8'), JSON.parse);
+
+const writeDeployTmpHistory = async (history) => {
+  try {
+    await writeFile(prev_history_file_path, JSON.stringify(history));
+  } catch (err) {
+    console.log(chalk.yellow(`\nWrite tmp deploy history failed: ${err.message}`));
   }
 };
 
@@ -52,6 +75,10 @@ const getDateSuffix = () =>
 
 const deployConsoleRow = (title, data) => `  ${chalk.blue(title)} ${data}\n`;
 
+const alreadyDeployedConsole = (contractName, addr) => {
+  console.log(`\n${chalk.yellow(`<${contractName}>`)} - Skip for deployed contract (${addr})`);
+};
+
 const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash, blockNumber) =>
   console.log(
     `\n${chalk.green(`<${contractName}>`)}\n${[
@@ -86,9 +113,26 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
   );
 
 const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
+  const contractFactory = await ethers.getContractFactory(contractName);
+  const history = await readDeployTmpHistory();
+
+  // restore deploy result
+  if (history[contractName]) {
+    log && alreadyDeployedConsole(contractName, history[contractName].beaconAddress);
+
+    const beacon = (await ethers.getContractFactory(UpgradeableBeacon.abi, UpgradeableBeacon.bytecode)).attach(
+      history[contractName].beaconAddress
+    );
+
+    return {
+      beacon,
+      contractFactory,
+      ...history[contractName],
+    };
+  }
+
   log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
 
-  const contractFactory = await ethers.getContractFactory(contractName);
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
@@ -96,23 +140,50 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
   const { gasUsed, blockNumber } = deployTxReceipt;
 
   log && deployBeaconConsole(contractName, beacon.address, implAddress, gasUsed, txResponse.deployTransaction.hash, blockNumber);
+
+  await writeDeployTmpHistory({
+    ...history,
+    [contractName]: {
+      beaconAddress: beacon.address,
+      implAddress,
+      gasUsed: gasUsed.toString(),
+      blockNumber: blockNumber.toString(),
+    },
+  });
+
   return {
     beacon,
     implAddress,
     contractFactory,
+    gasUsed,
+    blockNumber,
   };
 };
 
 const deployProxy = async ({ contractName, deploySigner, args = [], log = true }) => {
+  const history = await readDeployTmpHistory();
+  const contractFactory = await ethers.getContractFactory(contractName);
+
+  // restore deploy result
+  if (history[contractName]) {
+    log && alreadyDeployedConsole(contractName, history[contractName].proxyAddress);
+
+    return {
+      proxyContract: contractFactory.attach(history[contractName].proxyAddress),
+      contractFactory,
+      ...history[contractName],
+    };
+  }
+
   log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
 
-  const contractFactory = await ethers.getContractFactory(contractName);
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
   const txResponse = await proxyContract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
   const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
   const { gasUsed, blockNumber } = deployTxReceipt;
+
   log &&
     deployProxyConsole(
       contractName,
@@ -123,6 +194,18 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       txResponse.deployTransaction.hash,
       blockNumber
     );
+
+  await writeDeployTmpHistory({
+    ...history,
+    [contractName]: {
+      proxyAddress: proxyContract.address,
+      implAddress,
+      adminAddress,
+      gasUsed: gasUsed.toString(),
+      blockNumber: blockNumber.toString(),
+    },
+  });
+
   return {
     proxyContract,
     implAddress,
@@ -134,13 +217,38 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 };
 
 const deployNormal = async ({ contractName, deploySigner, args = [], log = true }) => {
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
   const contractFactory = await ethers.getContractFactory(contractName);
+  const history = await readDeployTmpHistory();
+
+  // restore deploy result
+  if (history[contractName]) {
+    log && alreadyDeployedConsole(contractName, history[contractName].address);
+
+    return {
+      contract: contractFactory.attach(history[contractName].address),
+      ...history[contractName],
+    };
+  }
+
+  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait();
   const { gasUsed, blockNumber } = deployTxReceipt;
+
   log && deployConsole(contractName, contract.address, gasUsed, txResponse.deployTransaction.hash, blockNumber);
+
+  await writeDeployTmpHistory({
+    ...history,
+    [contractName]: {
+      address: contract.address,
+      gasUsed: gasUsed.toString(),
+      blockNumber: blockNumber.toString(),
+      args,
+    },
+  });
+
   return {
     contract,
     gasUsed,
@@ -166,4 +274,7 @@ module.exports = {
   nullCheck,
   getRPCProvider,
   getChainName,
+  tryCatch,
+  prev_history_file_path,
+  writeDeployTmpHistory,
 };
