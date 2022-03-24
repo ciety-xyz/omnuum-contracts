@@ -37,7 +37,7 @@ const questions = [
   {
     name: inquirerParams.group_id,
     type: 'input',
-    message: '🤔 Mint schedule group id is...',
+    message: '🤔 Public mint schedule group id is you want to be set...',
     validate: nullCheck,
   },
   {

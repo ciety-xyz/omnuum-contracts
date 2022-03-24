@@ -53,13 +53,13 @@ const questions = [
   {
     name: inquirerParams.groupId,
     type: 'input',
-    message: '🤔 Ticket schedule group id is...',
+    message: '🤔 Ticket schedule group id is...(uint: dec)',
     validate: nullCheck,
   },
   {
     name: inquirerParams.OmSignerPrivateKey,
     type: 'input',
-    message: '🤔 Omnuum Signer PrivateKey is...',
+    message: '🤔 Omnuum Dev Deployer Signer PrivateKey is...',
     validate: nullCheck,
   },
   {

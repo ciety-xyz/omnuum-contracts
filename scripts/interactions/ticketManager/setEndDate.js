@@ -34,7 +34,7 @@ const questions = [
   {
     name: inquirerParams.group_id,
     type: 'input',
-    message: '🤔 Ticket schedule group id is...',
+    message: '🤔 Ticket schedule group id is... (uint: dec)',
     validate: nullCheck,
   },
   {
