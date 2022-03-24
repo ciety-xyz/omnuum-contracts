@@ -19,9 +19,9 @@
     "deploy:nft:local": "npx hardhat run scripts/deployments/deployNFTBeaconProxy.js",
     "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/deployNFTBeaconProxy.js --network rinkeby",
 
-    "verify:caManager": "npx hardhat verify $npm_config_address --network rinkeby",
-    "verify:mintManager": "npx hardhat verify $npm_config_address --network rinkeby",
-    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args ./scripts/deployments/constructorArgs/wallet.js --network rinkeby",
+    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/wallet.js --network rinkeby",
+    "verify:vrfManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/vrfManager.js --network rinkeby",
+    "verify:revealManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/revealManager.js --network rinkeby",
 
     "itx:registerManager": "npx hardhat run scripts/interactions/caManager/registerManager.js --network rinkeby",
     "itx:setTicketSchedule": "npx hardhat run scripts/interactions/ticketManager/setEndDate.js --network rinkeby",
