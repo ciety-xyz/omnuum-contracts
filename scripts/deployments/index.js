@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat');
+const { ethers, config } = require('hardhat');
 const { writeFile, mkdir } = require('fs/promises');
 const { identity } = require('fxjs');
 
@@ -14,6 +14,9 @@ const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainNa
 
     const resultData = {
       deployer: devDeployer.address,
+      solidity: {
+        version: config.solidity.compilers[0].version,
+      },
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
       exchanger: structurizeProxyData(exchanger),
@@ -23,7 +26,7 @@ const { getDateSuffix, structurizeProxyData, structurizeContractData, getChainNa
       revealManager: structurizeContractData(revealManager),
       senderVerifier: structurizeContractData(senderVerifier),
       nft1155: {
-        Impl: nft.implAddress,
+        impl: nft.implAddress,
         beacon: nft.beacon.address,
       },
     };

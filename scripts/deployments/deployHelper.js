@@ -29,6 +29,7 @@ const structurizeContractData = (deployObj) => ({
   contract: deployObj.contract.address,
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
   blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
+  args: deployObj.args || [],
 });
 
 const isLocalNetwork = async (provider) => {
@@ -85,6 +86,8 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
   );
 
 const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
+  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+
   const contractFactory = await ethers.getContractFactory(contractName);
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
@@ -142,6 +145,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
     contract,
     gasUsed,
     blockNumber,
+    args,
   };
 };
 
