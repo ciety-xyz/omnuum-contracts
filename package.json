@@ -24,6 +24,7 @@
     "verify:revealManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/revealManager.js --network rinkeby",
 
     "itx:registerManager": "npx hardhat run scripts/interactions/caManager/registerManager.js --network rinkeby",
+    "itx:registerNFT": "npx hardhat run scripts/interactions/caManager/registerNFT.js --network rinkeby",
     "itx:setTicketSchedule": "npx hardhat run scripts/interactions/ticketManager/setEndDate.js --network rinkeby",
     "itx:setPublicSchedule": "npx hardhat run scripts/interactions/mintManager/setPublicMintSchedule.js --network rinkeby",
     "itx:ticketMint": "npx hardhat run scripts/interactions/nft/ticketMint.js --network rinkeby",

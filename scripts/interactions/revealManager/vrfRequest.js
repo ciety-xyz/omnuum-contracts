@@ -57,7 +57,7 @@ const questions = [
     try {
       const chainName = await getChainName();
       const provider = await getRPCProvider(ethers.provider);
-      const devDeployetSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
+      const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
 
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
       const revealManager = (await ethers.getContractFactory('RevealManager')).attach(ans.reveal_manager_address);
@@ -66,7 +66,7 @@ const questions = [
       const linkContract = new ethers.Contract(
         chainlink[chainName].LINK,
         ['function transfer(address _to, uint256 _value) returns (bool)'],
-        devDeployetSigner
+        devDeployerSigner
       );
       const txTransfer = await linkContract.transfer(ans.exchange_manager_address, chainlink[chainName].fee);
 
