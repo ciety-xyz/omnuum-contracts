@@ -1,8 +1,8 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 
-const { nullCheck, getRPCProvider, getChainName } = require('../../deployHelper');
-const { testValues, chainlink } = require('../../../../utils/constants');
+const { nullCheck, getRPCProvider, getChainName } = require('../../deployments/deployHelper');
+const { testValues, chainlink } = require('../../../utils/constants');
 
 const inquirerParams = {
   dev_deployer_private_key: 'dev_deployer_private_key',

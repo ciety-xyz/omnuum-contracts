@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { nullCheck, getRPCProvider } = require('../../deployHelper');
-const { testValues } = require('../../../../utils/constants');
+const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { testValues } = require('../../../utils/constants');
 
 const inquirerParams = {
   nft_owner_private_key: 'nft_owner_private_key',

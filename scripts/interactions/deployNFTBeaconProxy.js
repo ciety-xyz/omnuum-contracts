@@ -1,12 +1,12 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const fs = require('fs');
-const { deployNFT } = require('../deployments');
-const { getDateSuffix, nullCheck, getRPCProvider, getChainName } = require('../deployHelper');
+const { deployNFT } = require('../deployments/deployments');
+const { getDateSuffix, nullCheck, getRPCProvider, getChainName } = require('../deployments/deployHelper');
 
-const OmnuumCAManagerAbi = require('../../../data/abi/OmnuumCAManager.json');
-const OmnuumWalletAbi = require('../../../data/abi/OmnuumWallet.json');
-const { feeTopic } = require('../../../utils/constants');
+const OmnuumCAManagerAbi = require('../../data/abi/OmnuumCAManager.json');
+const OmnuumWalletAbi = require('../../data/abi/OmnuumWallet.json');
+const { feeTopic } = require('../../utils/constants');
 
 const inquirerParams = {
   nft_beacon_address: 'nft_beacon_address',

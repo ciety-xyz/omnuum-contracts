@@ -1,8 +1,8 @@
 const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getTicketWithSignature, getPayloadWithSignature } = require('../interactionHelpers');
-const { payloadTopic } = require('../../../../utils/constants');
-const { nullCheck, getRPCProvider } = require('../../deployHelper');
+const { payloadTopic } = require('../../../utils/constants');
+const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
 
 require('dotenv').config();
 

@@ -1,8 +1,8 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const { addHours } = require('date-fns');
-const { nullCheck, getRPCProvider } = require('../../deployHelper');
-const { toSolDate } = require('../../../../test/etc/util.js');
+const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { toSolDate } = require('../../../test/etc/util.js');
 
 const inquirerParams = {
   nft_owner_private_key: 'nft_owner_private_key',
