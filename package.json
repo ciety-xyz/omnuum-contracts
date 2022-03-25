@@ -33,7 +33,11 @@
     "itx:publicMint": "npx hardhat run scripts/interactions/nft/publicMint.js --network rinkeby",
     "itx:airdrop": "npx hardhat run scripts/interactions/mintManager/airDrop.js --network rinkeby",
     "itx:vrfRequest": "npx hardhat run scripts/interactions/revealManager/vrfRequest.js --network rinkeby",
-    "itx:setUri": "npx hardhat run scripts/interactions/nft/setURI.js --network rinkeby"
+    "itx:setUri": "npx hardhat run scripts/interactions/nft/setURI.js --network rinkeby",
+
+    "itx:approvalRequest": "npx hardhat run scripts/interactions/wallet/approvalRequest.js --network rinkeby",
+    "itx:approve": "npx hardhat run scripts/interactions/wallet/approve.js --network rinkeby",
+    "itx:revoke": "npx hardhat run scripts/interactions/wallet/revoke.js --network rinkeby"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
