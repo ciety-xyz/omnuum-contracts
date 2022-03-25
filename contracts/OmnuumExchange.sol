@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import './OmnuumCAManager.sol';
 
 // in future, this contract will act like internal token exchange for business
-contract OmnuumExchange is Initializable {
+contract OmnuumExchange is OwnableUpgradeable {
     OmnuumCAManager caManager;
 
     uint256 tmpLinkExRate;
@@ -14,10 +14,11 @@ contract OmnuumExchange is Initializable {
     event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
 
     function initialize(address _caManagerA) public initializer {
+        __Ownable_init();
+
         caManager = OmnuumCAManager(_caManagerA);
 
-        // https://www.binance.com/en/trade/LINK_ETH?layout=basic
-        tmpLinkExRate = 0.0053 ether; // TODO: should change before deploy
+        tmpLinkExRate = 0.0055 ether; // TODO: should change before deploy
     }
 
     // temporary function for fixed link exchange rate -

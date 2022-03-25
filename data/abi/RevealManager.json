@@ -1,26 +1,4 @@
 [
-  {
-    "inputs": [
-      {
-        "internalType": "contract OmnuumCAManager",
-        "name": "_caManager",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract OmnuumNFT1155",
-        "name": "_nftContract",
-        "type": "address"
-      }
-    ],
-    "name": "vrfRequest",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  }
+  "constructor(address)",
+  "function vrfRequest(address) payable"
 ]

@@ -15,6 +15,6 @@ contract RevealManager {
         require(_nftContract.owner() == msg.sender, 'OO1');
         require(!_nftContract.isRevealed(), 'ARG2');
 
-        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(address(_nftContract), 'REVEAL_PFP');
+        OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(address(_nftContract));
     }
 }

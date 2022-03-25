@@ -12,18 +12,15 @@ module.exports = {
       SetDiscountRate: 'SetDiscountRate',
       ChangeBaseFeeRate: 'ChangeBaseFeeRate',
       Airdrop: 'Airdrop',
-      SetPublicSchedule: 'SetPublicSchedule',
+      SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
-      SetMinFee: 'SetMinFee',
     },
     CAManager: {
-      ManagerContractRegistered: 'ManagerContractRegistered',
-      NftContractRegistered: 'NftContractRegistered',
-      ManagerContractRemoved: 'ManagerContractRemoved',
+      Updated: 'Updated',
     },
     TicketManager: {
-      SetTicketSchedule: 'SetTicketSchedule',
-      TicketMint: 'TicketMint',
+      EndDate: 'EndDate',
+      UseTicket: 'UseTicket',
     },
     VRFManager: {
       RequestVRF: 'RequestVRF',
@@ -31,8 +28,7 @@ module.exports = {
       Updated: 'Updated',
     },
     Wallet: {
-      EtherReceived: 'EtherReceived',
-      PaymentReceived: 'PaymentReceived',
+      FeeReceived: 'FeeReceived',
       Requested: 'Requested',
       Approved: 'Approved',
       Revoked: 'Revoked',
@@ -71,8 +67,7 @@ module.exports = {
       alreadyWithdrawn: 'already withdrawn',
       consensusNotReached: 'consensus not reached',
       notEnoughBalance: 'request value exceeds balance',
-      notRequester: 'withdrawer must be the requester',
-      useless: 'Useless payment',
+      notRequester: 'withdrawer and requester must be equal',
     },
     code: {
       ARG1: 'ARG1',
@@ -90,17 +85,12 @@ module.exports = {
       MT9: 'MT9', // Mint subject cannot be CA
     },
   },
-  feeTopic: {
-    deploy: 'DEPLOY_FEE',
-    mint: 'MINT_FEE',
-  },
   payloadTopic: {
     mint: 'MINT',
     vrf: 'VRF',
     ticket: 'TICKET',
   },
   ContractTopic: {
-    CAMANAGER: 'CAMANAGER',
     DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
@@ -111,9 +101,6 @@ module.exports = {
     WALLET: 'WALLET',
     TEST: 'TEST',
     REVEAL: 'REVEAL',
-  },
-  vrfTopic: {
-    REVEAL_PFP: 'REVEAL_PFP',
   },
   chainlink: {
     mainnet: {
@@ -135,8 +122,7 @@ module.exports = {
     walletOwnersLen: 3,
     sendEthValue: '10',
     mintFee: 2500, // 0.025 == 2.5%
-    minFee: ethers.utils.parseEther('0.0005'),
     coverUri: 'https://testCover.com',
-    tmpExchangeRate: ethers.utils.parseEther('0.0053'),
+    tmpExchangeRate: ethers.utils.parseEther('0.0055'),
   },
 };
