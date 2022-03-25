@@ -8,9 +8,8 @@ contract OmnuumWallet {
     using Address for address payable;
 
     // =========== EVENTs =========== //
-    event EtherReceived();
-    event PaymentReceived(bytes32 topic, string description);
-    event Requested(uint256 indexed reqId, address indexed requester, uint256 withdrawalValue);
+    event FeeReceived(address indexed nftContract, address indexed sender, uint256 value);
+    event Requested(uint256 indexed reqId, address indexed requester);
     event Approved(uint256 indexed reqId, address indexed owner);
     event Revoked(uint256 indexed reqId, address indexed owner);
     event Withdrawn(uint256 indexed reqId, address indexed receiver, uint256 value);
@@ -55,13 +54,13 @@ contract OmnuumWallet {
     // =========== CONSTRUCTOR =========== //
     constructor(address[] memory _owners) {
         //minimum 2 owners are required for multi sig wallet
-        require(_owners.length > 1, 'Single owner');
+        require(_owners.length > 1, 'single owner');
 
         //Register owners
         for (uint256 i; i < _owners.length; i++) {
             address owner = _owners[i];
             require(!isOwner[owner], 'Owner exists');
-            require(!owner.isContract(), 'Not EOA');
+            require(!owner.isContract(), 'not EOA');
             require(owner != address(0), 'Invalid address');
 
             isOwner[owner] = true;
@@ -69,15 +68,15 @@ contract OmnuumWallet {
         }
     }
 
-    // =========== Ether RECEIVER =========== //
-
-    function makePayment(bytes32 _topic, string calldata _description) external payable {
-        require(msg.value > 0, 'Useless payment');
-        emit PaymentReceived(_topic, _description);
-    }
-
-    receive() external payable {
-        emit EtherReceived();
+    // =========== FEE RECEIVER =========== //
+    fallback() external payable {
+        // msg.data will be address for NFT proxy contract
+        address nftContract;
+        bytes memory _data = msg.data;
+        assembly {
+            nftContract := mload(add(_data, 20))
+        }
+        emit FeeReceived(nftContract, msg.sender, msg.value);
     }
 
     // =========== WALLET LOGICs =========== //
@@ -90,7 +89,7 @@ contract OmnuumWallet {
 
         approve(reqId);
 
-        emit Requested(reqId, msg.sender, _withdrawalValue);
+        emit Requested(reqId, msg.sender);
         return (reqId);
     }
 

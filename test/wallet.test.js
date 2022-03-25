@@ -5,16 +5,17 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
 
-const { mapL, mapC, zip, range, go, takeAll, reduce } = require('fxjs');
+const { mapL, mapC, zip, zipWithIndexL, range, go, takeAll, reduce } = require('fxjs');
 
 const { testDeploy, prepareDeploy, prepareMockDeploy } = require('./etc/mock.js');
 const { testValues, events, reasons } = require('../utils/constants');
 
 upgrades.silenceWarnings();
 
-const sendEtherToWallet = async ({ sender, sendEthValue }) => {
+const sendEtherToWallet = async ({ sender, sendData, sendEthValue }) => {
   const send_tx = await sender.sendTransaction({
     to: this.omnuumWallet.address,
+    data: sendData,
     value: ethers.utils.parseEther(sendEthValue),
   });
   await send_tx.wait();
@@ -53,17 +54,46 @@ describe('Wallet', () => {
     });
   });
 
-  describe('[Method] receive', () => {
-    it('Can receive ETH', async () => {
+  describe('[Method] Fallback fee receiver', () => {
+    it('Can receive ETH correctly with or without data and emit FeeReceived event', async () => {
+      const nftAddress = this.omnuumNFT1155.address;
       const projectOwner = await this.omnuumNFT1155.owner();
       const sendTxWithData = await sendEtherToWallet({
+        sender: ethers.provider.getSigner(projectOwner),
+        sendData: nftAddress,
+        sendEthValue: testValues.sendEthValue,
+      });
+
+      await expect(sendTxWithData)
+        .to.emit(this.omnuumWallet, events.Wallet.FeeReceived)
+        .withArgs(nftAddress, projectOwner, ethers.utils.parseEther(testValues.sendEthValue));
+
+      const sendTxWithoutData = await sendEtherToWallet({
         sender: ethers.provider.getSigner(projectOwner),
         sendEthValue: testValues.sendEthValue,
       });
 
-      await expect(sendTxWithData).to.emit(this.omnuumWallet, events.Wallet.EtherReceived);
+      await expect(sendTxWithoutData)
+        .to.emit(this.omnuumWallet, events.Wallet.FeeReceived)
+        .withArgs(ethers.constants.AddressZero, projectOwner, ethers.utils.parseEther(testValues.sendEthValue));
     });
-    it('Receive Fee correctly', async () => {
+    it('Receive Fee correctly with data', async () => {
+      const nftAddress = this.omnuumNFT1155.address;
+      const walletAddress = this.omnuumWallet.address;
+      const projectOwner = await this.omnuumNFT1155.owner();
+      const beforeWalletBalance = await ethers.provider.getBalance(walletAddress);
+      const sendTx = await sendEtherToWallet({
+        sender: ethers.provider.getSigner(projectOwner),
+        sendData: nftAddress,
+        sendEthValue: testValues.sendEthValue,
+      });
+
+      await sendTx.wait();
+
+      const afterWalletBalance = await ethers.provider.getBalance(walletAddress);
+      expect(afterWalletBalance.sub(beforeWalletBalance).toString()).to.equal(ethers.utils.parseEther(testValues.sendEthValue));
+    });
+    it('Receive Fee correctly without data', async () => {
       const projectOwner = await this.omnuumNFT1155.owner();
       const walletAddress = this.omnuumWallet.address;
       const beforeWalletBalance = await ethers.provider.getBalance(walletAddress);
@@ -100,8 +130,11 @@ describe('Wallet', () => {
 
       await go(
         sendTxs,
-        mapC(async (sendTx) => {
-          await expect(sendTx).to.emit(this.omnuumWallet, events.Wallet.EtherReceived);
+        zipWithIndexL,
+        mapC(async ([idx, sendTx]) => {
+          await expect(sendTx)
+            .to.emit(this.omnuumWallet, events.Wallet.FeeReceived)
+            .withArgs(ethers.constants.AddressZero, charitySigners[idx].address, ethers.utils.parseEther(charityValues[idx]));
         }),
       );
 
@@ -119,45 +152,13 @@ describe('Wallet', () => {
     });
   });
 
-  describe('[Method] makePayment', () => {
-    it('Receive payment and emit event', async () => {
-      const { omnuumWallet } = this;
-      const walletAddress = this.omnuumWallet.address;
+  describe('[Method] Approval request', () => {
 
-      const value = ethers.utils.parseEther('13');
-
-      const beforeWalletBalance = await ethers.provider.getBalance(walletAddress);
-      const topic_byte32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST'));
-      const description = 'test for payment';
-
-      const tx = await omnuumWallet.makePayment(topic_byte32, description, { value });
-
-      await tx.wait();
-
-      await expect(tx).to.emit(omnuumWallet, events.Wallet.PaymentReceived).withArgs(topic_byte32, description);
-
-      const afterWalletBalance = await ethers.provider.getBalance(walletAddress);
-
-      expect(afterWalletBalance.sub(beforeWalletBalance)).to.equal(value);
-    });
-
-    it('[Revert] Cannot send zero amount', async () => {
-      const { omnuumWallet } = this;
-
-      const topic_byte32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST'));
-      const description = 'test for payment';
-
-      await expect(omnuumWallet.makePayment(topic_byte32, description, { value: 0 })).to.be.revertedWith(reasons.wallet.useless);
-    });
-  });
-
-  describe('[Method] approvalRequest', () => {
     it('Can request approval and emit requested and approval Events when owner requests', async () => {
       const requester = this.walletOwners[0];
-      const withdrawalValue = '0';
-      const reqTx = await requestWithdrawal({ signer: requester, reqValue: withdrawalValue });
+      const reqTx = await requestWithdrawal({ signer: requester, reqValue: '0' });
       const reqId = '0';
-      await expect(reqTx).to.emit(this.omnuumWallet, events.Wallet.Requested).withArgs(reqId, requester.address, withdrawalValue);
+      await expect(reqTx).to.emit(this.omnuumWallet, events.Wallet.Requested).withArgs(reqId, requester.address);
       await expect(reqTx).to.emit(this.omnuumWallet, events.Wallet.Approved).withArgs(reqId, requester.address);
 
       expect(await this.omnuumWallet.checkApproval(reqId, requester.address)).to.be.true;
@@ -188,7 +189,7 @@ describe('Wallet', () => {
     });
   });
 
-  describe('[Method] approve', () => {
+  describe('[Method] Approve', () => {
     it('Can approve event and emit Approved event', async () => {
       const projectOwner = await this.omnuumNFT1155.owner();
       const [requester, approver] = this.walletOwners;
@@ -371,6 +372,7 @@ describe('Wallet', () => {
         mapC((approver) => wallet.connect(approver).approve(reqId)),
         mapC((tx) => tx.wait()),
       );
+
 
       await expect(wallet.connect(this.accounts[0]).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.onlyOwner);
     });
