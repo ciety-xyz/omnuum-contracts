@@ -8,3 +8,6 @@ build
 artifacts/
 .openzeppelin/
 cache
+
+.npmrc
+scripts/
