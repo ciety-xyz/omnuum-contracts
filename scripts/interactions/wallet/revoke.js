@@ -24,7 +24,7 @@ const questions = [
   {
     name: inquirerParams.request_id,
     type: 'input',
-    message: '🤔 Request id you want to approve ...',
+    message: '🤔 Request id you want to revoke ...',
     validate: nullCheck,
   },
 ];
@@ -37,11 +37,11 @@ const questions = [
 
       const wallet = (await ethers.getContractFactory('OmnuumWallet')).attach(ans.wallet_address);
 
-      const txResponse = await wallet.connect(approverSigner).approve(ans.request_id, { gasLimit: 10000000 });
+      const txResponse = await wallet.connect(approverSigner).revokeApproval(ans.request_id, { gasLimit: 10000000 });
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`💋 Approve is on the way..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(`💋 Revoke is on the way..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
