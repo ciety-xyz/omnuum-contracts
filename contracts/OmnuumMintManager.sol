@@ -8,13 +8,32 @@ import './OmnuumNFT1155.sol';
 contract OmnuumMintManager is OwnableUpgradeable {
     uint8 public constant rateDecimal = 5;
     uint256 public baseFeeRate;
+    uint256 public minFee;
     mapping(address => uint256) public discountRate;
 
     event ChangeBaseFeeRate(uint256 baseFeeRate);
     event SetDiscountRate(address nftContract, uint256 discountFeeRate);
-    event Airdrop(address indexed Contract, uint256 count);
-    event SetSchedule(address indexed nft, uint256 indexed groupId);
-    event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
+
+    event SetPublicSchedule(
+        address indexed nft,
+        uint256 indexed groupId,
+        uint256 endDate,
+        uint256 basePrice,
+        uint32 supply,
+        uint32 maxMintAtAddress
+    );
+    event PublicMint(
+        address indexed nftContract,
+        address indexed minter,
+        uint256 indexed groupId,
+        uint32 quantity,
+        uint32 maxQuantity,
+        uint256 price
+    );
+
+    event Airdrop(address indexed nftContract, address indexed receiver, uint256 quantity);
+
+    event SetMinFee(uint256 minFee);
 
     struct PublicMintSchedule {
         uint32 supply;
@@ -31,6 +50,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     function initialize(uint256 _baseFeeRate) public initializer {
         __Ownable_init();
         baseFeeRate = _baseFeeRate;
+        minFee = 0.0005 ether;
     }
 
     function changeBaseFeeRate(uint256 _newBaseFeeRate) external onlyOwner {
@@ -43,6 +63,11 @@ contract OmnuumMintManager is OwnableUpgradeable {
         require(_discountRate <= 100000, 'NE1');
         discountRate[_nftContract] = _discountRate;
         emit SetDiscountRate(_nftContract, _discountRate);
+    }
+
+    function setMinFee(uint256 _minFee) public onlyOwner {
+        minFee = _minFee;
+        emit SetMinFee(_minFee);
     }
 
     function setPublicMintSchedule(
@@ -62,7 +87,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         schedule.basePrice = _basePrice;
         schedule.maxMintAtAddress = _maxMintAtAddress;
 
-        emit SetSchedule(_nft, _groupId);
+        emit SetPublicSchedule(_nft, _groupId, _endDate, _basePrice, _supply, _maxMintAtAddress);
     }
 
     function publicMint(
@@ -81,25 +106,35 @@ contract OmnuumMintManager is OwnableUpgradeable {
         schedule.minted[_minter] += _quantity;
         schedule.mintedTotal += _quantity;
 
-        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
+        emit PublicMint(msg.sender, _minter, _groupId, _quantity, schedule.supply, schedule.basePrice);
+        //        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
     }
 
     // mint to multiple address ex) airdrop
     function mintMultiple(
         address nftContract,
         address[] calldata _tos,
-        uint16[] calldata _quantitys
-    ) external {
+        uint16[] calldata _quantities
+    ) public payable {
         OmnuumNFT1155 targetContract = OmnuumNFT1155(nftContract);
 
         uint256 len = _tos.length;
 
         require(targetContract.owner() == msg.sender, 'OO1');
-        require(len == _quantitys.length, 'ARG1');
+        require(len == _quantities.length, 'ARG1');
+
+        uint256 totalQuantity;
+        for (uint256 i; i < len; i++) {
+            totalQuantity += _quantities[i];
+        }
+
+        require(msg.value >= totalQuantity * minFee, 'MT5');
 
         for (uint256 i; i < len; i++) {
-            targetContract.mintDirect(_tos[i], _quantitys[i]);
+            address to = _tos[i];
+            uint16 quantity = _quantities[i];
+            targetContract.mintDirect{ value: minFee * _quantities[i] }(to, quantity);
+            emit Airdrop(nftContract, to, quantity);
         }
-        emit Airdrop(nftContract, _tos.length);
     }
 }

@@ -1,11 +1,47 @@
 {
+  "name": "omnuum-contracts",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "repository": "https://github.com/omnuum/omnuum-contracts",
+  "engines" : {
+    "npm" : ">=8.0.0",
+    "node" : ">=16.0.0"
+  },
   "scripts": {
     "compile": "npx hardhat compile",
     "test:local": "npx hardhat test",
     "node": "npx hardhat node",
-    "run:local": "npx hardhat --network localhost run "
+    "run:local": "npx hardhat --network localhost run ",
+
+    "deploy:managers:local": "npx hardhat run scripts/deployments/index.js",
+    "deploy:managers:rinkeby": "npx hardhat run scripts/deployments/index.js --network rinkeby",
+    "deploy:managers:ropsten": "npx hardhat run scripts/deployments/index.js --network ropsten",
+    "deploy:nft:local": "npx hardhat run scripts/deployments/deployNFTBeaconProxy.js",
+    "deploy:nft:rinkeby": "npx hardhat run scripts/deployments/deployNFTBeaconProxy.js --network rinkeby",
+
+    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/wallet.js --network rinkeby",
+    "verify:vrfManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/vrfManager.js --network rinkeby",
+    "verify:revealManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/revealManager.js --network rinkeby",
+
+    "itx:registerManager": "npx hardhat run scripts/interactions/caManager/registerManager.js --network rinkeby",
+    "itx:removeManager": "npx hardhat run scripts/interactions/caManager/removeManager.js --network rinkeby",
+    "itx:registerNFT": "npx hardhat run scripts/interactions/caManager/registerNFT.js --network rinkeby",
+
+
+    "itx:setTicketSchedule": "npx hardhat run scripts/interactions/ticketManager/setEndDate.js --network rinkeby",
+    "itx:setPublicSchedule": "npx hardhat run scripts/interactions/mintManager/setPublicMintSchedule.js --network rinkeby",
+    "itx:ticketMint": "npx hardhat run scripts/interactions/nft/ticketMint.js --network rinkeby",
+    "itx:publicMint": "npx hardhat run scripts/interactions/nft/publicMint.js --network rinkeby",
+    "itx:airdrop": "npx hardhat run scripts/interactions/mintManager/airDrop.js --network rinkeby",
+    "itx:vrfRequest": "npx hardhat run scripts/interactions/revealManager/vrfRequest.js --network rinkeby",
+    "itx:setUri": "npx hardhat run scripts/interactions/nft/setURI.js --network rinkeby",
+
+    "itx:approvalRequest": "npx hardhat run scripts/interactions/wallet/approvalRequest.js --network rinkeby",
+    "itx:approve": "npx hardhat run scripts/interactions/wallet/approve.js --network rinkeby",
+    "itx:revoke": "npx hardhat run scripts/interactions/wallet/revoke.js --network rinkeby"
   },
   "dependencies": {
+    "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-waffle": "^2.0.2",
@@ -19,7 +55,9 @@
     "hardhat-abi-exporter": "^2.8.0",
     "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",
+    "inquirer": "^8.2.1",
     "keccak256": "^1.0.6",
+    "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.18"
   },
   "devDependencies": {
@@ -46,8 +84,6 @@
     "mocha": "^9.2.0",
     "prettier": "^2.5.1",
     "prettier-eslint": "^13.0.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.13",
-    "solhint": "^3.3.6",
-    "web3": "^1.6.1"
+    "prettier-plugin-solidity": "^1.0.0-beta.13"
   }
 }

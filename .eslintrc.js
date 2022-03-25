@@ -20,6 +20,7 @@ module.exports = {
     artifacts: true,
   },
   rules: {
+    'no-console': 'off',
     quotes: ['error', 'single'],
     'no-restricted-syntax': 0,
     'import/extensions': 0,
