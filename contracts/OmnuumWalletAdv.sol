@@ -21,10 +21,11 @@ contract OmnuumWalletAdv {
         C // = 2,  C-level: 2 votes
     }
 
-    enum OwnerChangeType {
+    enum RequestType {
         Add,
         Remove,
-        Change
+        Change,
+        Withdraw
     }
 
     struct OwnerAccount {
@@ -32,17 +33,18 @@ contract OmnuumWalletAdv {
         Level level;
     }
 
-    struct ReqOwnerChange {
+    struct Request {
         address requester;
-        OwnerChangeType requestType;
+        RequestType requestType;
         address currentOwner;
         address newOwner;
+        uint256 withdrawalAmount;
         mapping(address => bool) voters;
-        uint256 voteCount;
+        uint256 votes;
         bool isExecute;
     }
 
-    ReqOwnerChange[] public reqOwnerChanges;
+    Request[] requests;
 
     mapping(Level => uint8) public levelCounters;
     mapping(address => Level) owners;
@@ -73,49 +75,78 @@ contract OmnuumWalletAdv {
         _;
     }
 
+    modifier reqExists(uint256 _reqId) {
+        require(_reqId < requests.length, 'request not exists');
+        _;
+    }
+
+    modifier notExecuted(uint256 _reqId) {
+        require(!requests[_reqId].isExecute, 'already executed');
+        _;
+    }
+
+    modifier notVoted(uint256 _reqId) {
+        require(!amIVoted(_reqId), 'already voted');
+        _;
+    }
+
+    modifier voted(uint256 _reqId) {
+        require(amIVoted(_reqId), 'already voted');
+        _;
+    }
+
     /* *****************************************************************************
      * Functions - public, external
      * *****************************************************************************/
 
-    function requestForOwnerChange(
-        OwnerChangeType _requestType,
+    function request(
+        RequestType _requestType,
         address _currentOwner,
-        address _newOwner
+        address _newOwner,
+        uint256 _withdrawalAmount
     ) public onlyOwner returns (uint256 reqId) {
         address _requester = msg.sender;
         Level _level = owners[_requester];
 
-        ReqOwnerChange storage _newReq = reqOwnerChanges.push();
+        Request storage _newReq = requests.push();
         _newReq.requester = msg.sender;
         _newReq.requestType = _requestType;
-        _newReq.currentOwner = _requestType == OwnerChangeType.Add ? address(0) : _currentOwner;
-        _newReq.newOwner = _requestType == OwnerChangeType.Remove ? address(0) : _newOwner;
+        _newReq.currentOwner = _requestType == RequestType.Add ? address(0) : _currentOwner;
+        _newReq.newOwner = _requestType == RequestType.Remove ? address(0) : _newOwner;
+        _newReq.withdrawalAmount = _withdrawalAmount;
         _newReq.voters[msg.sender] = true;
-        _newReq.voteCount = uint8(_level);
+        _newReq.votes = uint8(_level);
 
         // emit
-        reqId = reqOwnerChanges.length - 1;
+        reqId = requests.length - 1;
     }
 
-    function approveForOwnerChange(uint256 reqId) public onlyOwner {
-        require(_reqId < reqOwnerChanges.length, 'request not exists');
-        require(!reqOwnerChanges[_reqId].isExecute, 'already executed');
-        require(!reqOwnerChanges[_reqId].voters[msg.sender], 'already voted');
-
+    function approve(uint256 _reqId) public onlyOwner reqExists(_reqId) notExecuted(_reqId) notVoted(_reqId) {
         Level _level = owners[msg.sender];
-        ReqOwnerChange storage _request = reqOwnerChanges[reqId];
+        Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
-        _request.voteCount += uint256(_level);
+        _request.votes += uint256(_level);
 
         //emit
+    }
+
+    function revoke(uint256 _reqId) public onlyOwner reqExists(_reqId) notExecuted(_reqId) voted(_reqId) {
+        Level _level = owners[msg.sender];
+        Request storage _request = requests[_reqId];
+        delete _request.voters[msg.sender];
+        _request.votes -= uint256(_level);
     }
 
     function getTotalVotes(Level _deduction) public view returns (uint256 totalVotes) {
         totalVotes = levelCounters[Level.D] + 2 * levelCounters[Level.C] - uint8(_deduction);
     }
 
-    function isOwner(address _owner) public view returns (bool isOwner) {
-        isOwner = owners[_owner] > 0;
+    function isOwner(address _owner) public view returns (bool valid) {
+        valid = uint8(owners[_owner]) > 0;
+    }
+
+    function amIVoted(uint256 _reqId) public view returns (bool valid) {
+        valid = requests[_reqId].voters[msg.sender];
     }
 
     /* *****************************************************************************
@@ -123,7 +154,7 @@ contract OmnuumWalletAdv {
      * *****************************************************************************/
 
     // internal 로 변경
-    function _removeOwner(address _owner) public onlyOwner minConsensus(owners[_owner]) {
+    function _removeOwner(address _owner) internal onlyOwner minConsensus(owners[_owner]) {
         levelCounters[owners[_owner]]--;
         owners[_owner] = Level.F;
     }
