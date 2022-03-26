@@ -44,7 +44,7 @@ contract OmnuumWalletAdv {
         bool isExecute;
     }
 
-    Request[] requests;
+    Request[] public requests;
 
     mapping(Level => uint8) public levelCounters;
     mapping(address => Level) owners;
@@ -66,12 +66,22 @@ contract OmnuumWalletAdv {
         _;
     }
 
+    modifier onlyRequester(uint256 _reqId) {
+        require(requests[_reqId].requester == msg.sender, 'only requester');
+        _;
+    }
+
     modifier minConsensus(Level _deduction) {
-        console.log('total_votes', getTotalVotes(_deduction));
-        uint256 votesForConsensus = (getTotalVotes(_deduction) * consensusRatio) / 100;
-        console.log('votesForConsensus', votesForConsensus);
+        console.log('total_votes', getMaxVotes(_deduction));
+        uint256 minVotesForConsensus = (getMaxVotes(_deduction) * consensusRatio) / 100;
+        console.log('votesForConsensus', minVotesForConsensus);
         console.log('Level.C', uint256(Level.C));
-        require(votesForConsensus > uint256(Level.C), 'violate the minimum consensus voters');
+        require(minVotesForConsensus > uint256(Level.C), 'violate the minimum consensus voters');
+        _;
+    }
+
+    modifier reachConsensus(uint256 _reqId) {
+        require(requests[_reqId].votes >= getMinVotesForConsensus(), 'not reach consensus');
         _;
     }
 
@@ -137,7 +147,21 @@ contract OmnuumWalletAdv {
         _request.votes -= uint256(_level);
     }
 
-    function getTotalVotes(Level _deduction) public view returns (uint256 totalVotes) {
+    function execute(uint256 _reqId) public reqExists(_reqId) notExecuted(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
+        Request storage _request = requests[_reqId];
+        uint8 _type = uint8(_request.requestType);
+        if (_type == uint8(RequestType.Add)) {
+            console.log('Add');
+        } else if (_type == uint8(RequestType.Change)) {
+            console.log('Change');
+        } else if (_type == uint8(RequestType.Remove)) {
+            console.log('Remove');
+        } else if (_type == uint8(RequestType.Withdraw)) {
+            console.log('Withdraw');
+        }
+    }
+
+    function getMaxVotes(Level _deduction) public view returns (uint256 totalVotes) {
         totalVotes = levelCounters[Level.D] + 2 * levelCounters[Level.C] - uint8(_deduction);
     }
 
@@ -147,6 +171,10 @@ contract OmnuumWalletAdv {
 
     function amIVoted(uint256 _reqId) public view returns (bool valid) {
         valid = requests[_reqId].voters[msg.sender];
+    }
+
+    function getMinVotesForConsensus() public view returns (uint256 minVotesForConsensus) {
+        minVotesForConsensus = (getMaxVotes(Level.F) * consensusRatio) / 100;
     }
 
     /* *****************************************************************************
