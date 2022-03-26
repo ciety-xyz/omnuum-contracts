@@ -22,10 +22,10 @@ contract OmnuumWalletAdv {
     }
 
     enum RequestType {
+        Withdraw,
         Add,
         Remove,
-        Change,
-        Withdraw
+        Change
     }
 
     struct OwnerAccount {
@@ -150,14 +150,18 @@ contract OmnuumWalletAdv {
     function execute(uint256 _reqId) public reqExists(_reqId) notExecuted(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
         uint8 _type = uint8(_request.requestType);
-        if (_type == uint8(RequestType.Add)) {
+        if (_type == uint8(RequestType.Withdraw)) {
+            require(_request.withdrawalAmount <= address(this).balance, 'insufficient balance');
+            _request.isExecute = true;
+            (bool withdrawn, ) = payable(_request.requester).call{ value: _request.withdrawalAmount }('');
+            require(withdrawn, 'Address: unable to send value, recipient may have reverted');
+            console.log('Withdraw');
+        } else if (_type == uint8(RequestType.Add)) {
             console.log('Add');
-        } else if (_type == uint8(RequestType.Change)) {
-            console.log('Change');
         } else if (_type == uint8(RequestType.Remove)) {
             console.log('Remove');
-        } else if (_type == uint8(RequestType.Withdraw)) {
-            console.log('Withdraw');
+        } else if (_type == uint8(RequestType.Change)) {
+            console.log('Change');
         }
     }
 
