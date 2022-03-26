@@ -11,6 +11,7 @@ import 'hardhat/console.sol';
 
 contract OmnuumWalletAdv {
     uint256 constant consensusRatio = 66; // 2 of 3 Multi-sig Wallet
+    uint8 constant minLimitForConsensus = 3;
 
     uint8 cLevelOwners;
     uint8 dLevelOwners;
@@ -22,22 +23,23 @@ contract OmnuumWalletAdv {
     }
 
     enum RequestType {
-        Withdraw,
-        Add,
-        Remove,
-        Change
+        Withdraw, // =0,
+        Add, // =1,
+        Remove, // =2,
+        Change, // =3
+        Cancel // =4
     }
 
     struct OwnerAccount {
-        address owner;
+        address addr;
         Level level;
     }
 
     struct Request {
         address requester;
         RequestType requestType;
-        address currentOwner;
-        address newOwner;
+        OwnerAccount currentOwner;
+        OwnerAccount newOwner;
         uint256 withdrawalAmount;
         mapping(address => bool) voters;
         uint256 votes;
@@ -51,7 +53,7 @@ contract OmnuumWalletAdv {
 
     constructor(OwnerAccount[] memory _initialOwners) {
         for (uint256 i; i < _initialOwners.length; i++) {
-            address _owner = _initialOwners[i].owner;
+            address _owner = _initialOwners[i].addr;
             Level _level = _initialOwners[i].level;
             owners[_owner] = _level;
             levelCounters[_level]++;
@@ -59,10 +61,27 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
+     * Events
+     * *****************************************************************************/
+    event PaymentReceived(bytes32 indexed topic, string description);
+    event EtherReceived();
+
+    /* *****************************************************************************
      * Modifiers
      * *****************************************************************************/
-    modifier onlyOwner() {
-        require(isOwner(msg.sender), 'not owner');
+    modifier onlyOwner(address _address) {
+        require(isOwner(_address), 'not owner');
+        _;
+    }
+
+    modifier notOwner(address _address) {
+        require(!isOwner(_address), 'already owner');
+        _;
+    }
+
+    modifier isOwnerAccount(OwnerAccount memory _ownerAccount) {
+        address _addr = _ownerAccount.addr;
+        require(isOwner(_addr) && uint8(owners[_addr]) == uint8(_ownerAccount.level), 'account not exist');
         _;
     }
 
@@ -71,17 +90,8 @@ contract OmnuumWalletAdv {
         _;
     }
 
-    modifier minConsensus(Level _deduction) {
-        console.log('total_votes', getMaxVotes(_deduction));
-        uint256 minVotesForConsensus = (getMaxVotes(_deduction) * consensusRatio) / 100;
-        console.log('votesForConsensus', minVotesForConsensus);
-        console.log('Level.C', uint256(Level.C));
-        require(minVotesForConsensus > uint256(Level.C), 'violate the minimum consensus voters');
-        _;
-    }
-
     modifier reachConsensus(uint256 _reqId) {
-        require(requests[_reqId].votes >= getMinVotesForConsensus(), 'not reach consensus');
+        require(requests[_reqId].votes >= getRequiredVotesForConsensus(0), 'not reach consensus');
         _;
     }
 
@@ -90,8 +100,9 @@ contract OmnuumWalletAdv {
         _;
     }
 
-    modifier notExecuted(uint256 _reqId) {
+    modifier notExecutedOrCanceled(uint256 _reqId) {
         require(!requests[_reqId].isExecute, 'already executed');
+        require(requests[_reqId].requestType != RequestType.Cancel, 'request canceled');
         _;
     }
 
@@ -105,24 +116,46 @@ contract OmnuumWalletAdv {
         _;
     }
 
+    modifier isValidAddress(address _address) {
+        require(_address != address(0), 'zero address not acceptable');
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(_address)
+        }
+        require(codeSize == 0, 'CA address not acceptable'); // know that it's not perfect to protect, but can handle by the owners
+        _;
+    }
+
     /* *****************************************************************************
      * Functions - public, external
      * *****************************************************************************/
 
+    function makePayment(bytes32 _topic, string calldata _description) external payable {
+        require(msg.value > 0, 'Useless payment');
+        emit PaymentReceived(_topic, _description);
+    }
+
+    receive() external payable {
+        emit EtherReceived();
+    }
+
     function request(
         RequestType _requestType,
-        address _currentOwner,
-        address _newOwner,
+        OwnerAccount memory _currentOwnerAccount,
+        OwnerAccount memory _newOwnerAccount,
         uint256 _withdrawalAmount
-    ) public onlyOwner returns (uint256 reqId) {
+    ) public onlyOwner(msg.sender) returns (uint256 reqId) {
+        require(_requestType != RequestType.Cancel, 'canceled request not acceptable');
         address _requester = msg.sender;
         Level _level = owners[_requester];
 
         Request storage _newReq = requests.push();
         _newReq.requester = msg.sender;
         _newReq.requestType = _requestType;
-        _newReq.currentOwner = _requestType == RequestType.Add ? address(0) : _currentOwner;
-        _newReq.newOwner = _requestType == RequestType.Remove ? address(0) : _newOwner;
+
+        _newReq.currentOwner = OwnerAccount({ addr: _currentOwnerAccount.addr, level: _currentOwnerAccount.level });
+        _newReq.newOwner = OwnerAccount({ addr: _newOwnerAccount.addr, level: _newOwnerAccount.level });
+
         _newReq.withdrawalAmount = _withdrawalAmount;
         _newReq.voters[msg.sender] = true;
         _newReq.votes = uint8(_level);
@@ -131,7 +164,11 @@ contract OmnuumWalletAdv {
         reqId = requests.length - 1;
     }
 
-    function approve(uint256 _reqId) public onlyOwner reqExists(_reqId) notExecuted(_reqId) notVoted(_reqId) {
+    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
+        requests[_reqId].requestType = RequestType.Cancel;
+    }
+
+    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) notVoted(_reqId) {
         Level _level = owners[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
@@ -140,61 +177,106 @@ contract OmnuumWalletAdv {
         //emit
     }
 
-    function revoke(uint256 _reqId) public onlyOwner reqExists(_reqId) notExecuted(_reqId) voted(_reqId) {
+    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(_reqId) {
         Level _level = owners[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
         _request.votes -= uint256(_level);
     }
 
-    function execute(uint256 _reqId) public reqExists(_reqId) notExecuted(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
+    function execute(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
         uint8 _type = uint8(_request.requestType);
+        _request.isExecute = true;
+
         if (_type == uint8(RequestType.Withdraw)) {
-            require(_request.withdrawalAmount <= address(this).balance, 'insufficient balance');
-            _request.isExecute = true;
-            (bool withdrawn, ) = payable(_request.requester).call{ value: _request.withdrawalAmount }('');
-            require(withdrawn, 'Address: unable to send value, recipient may have reverted');
-            console.log('Withdraw');
+            _withdraw(_request.withdrawalAmount, _request.requester);
         } else if (_type == uint8(RequestType.Add)) {
-            console.log('Add');
+            _addOwner(_request.newOwner);
         } else if (_type == uint8(RequestType.Remove)) {
-            console.log('Remove');
+            _removeOwner(_request.currentOwner);
         } else if (_type == uint8(RequestType.Change)) {
-            console.log('Change');
+            _changeOwner(_request.currentOwner, _request.newOwner);
+        } else {
+            revert('unrecognized request');
         }
     }
 
-    function getMaxVotes(Level _deduction) public view returns (uint256 totalVotes) {
-        totalVotes = levelCounters[Level.D] + 2 * levelCounters[Level.C] - uint8(_deduction);
+    function totalVotes() public view returns (uint256 votes) {
+        votes = levelCounters[Level.D] + 2 * levelCounters[Level.C];
     }
 
-    function isOwner(address _owner) public view returns (bool valid) {
-        valid = uint8(owners[_owner]) > 0;
+    function isOwner(address _owner) public view returns (bool isValid) {
+        isValid = uint8(owners[_owner]) > 0;
     }
 
-    function amIVoted(uint256 _reqId) public view returns (bool valid) {
-        valid = requests[_reqId].voters[msg.sender];
+    function getVoteCounts(address _owner) public view returns (uint256 votes) {
+        votes = uint8(owners[_owner]);
     }
 
-    function getMinVotesForConsensus() public view returns (uint256 minVotesForConsensus) {
-        minVotesForConsensus = (getMaxVotes(Level.F) * consensusRatio) / 100;
+    function amIVoted(uint256 _reqId) public view reqExists(_reqId) returns (bool isValid) {
+        isValid = requests[_reqId].voters[msg.sender];
+    }
+
+    function getRequiredVotesForConsensus(uint8 _deduction) public view returns (uint256 votesForConsensus) {
+        votesForConsensus = ((totalVotes() - _deduction) * consensusRatio) / 100;
     }
 
     /* *****************************************************************************
      * Functions - internal, private
      * *****************************************************************************/
 
-    // internal 로 변경
-    function _removeOwner(address _owner) internal onlyOwner minConsensus(owners[_owner]) {
-        levelCounters[owners[_owner]]--;
-        owners[_owner] = Level.F;
+    function _withdraw(uint256 _withdrawalAmount, address _to) private {
+        require(_withdrawalAmount <= address(this).balance, 'insufficient balance');
+        (bool withdrawn, ) = payable(_to).call{ value: _withdrawalAmount }('');
+        require(withdrawn, 'Address: unable to send value, recipient may have reverted');
     }
 
-    function test(Level _level) public minConsensus(_level) {}
+    function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
+        Level _level = _newAccount.level;
+        owners[_newAccount.addr] = _level;
+        levelCounters[_level]++;
+    }
+
+    function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
+        _checkMinConsensus(uint8(owners[_removalAccount.addr]));
+        levelCounters[_removalAccount.level]--;
+        delete owners[_removalAccount.addr];
+    }
+
+    function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
+        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
+        Level _currentLevel = _currentAccount.level;
+        Level _newLevel = _newAccount.level;
+
+        require(_newLevel != Level.F, 'F level not acceptable');
+        if (_currentLevel > _newLevel) {
+            _checkMinConsensus(uint8(_currentLevel) - uint8(_newLevel));
+        }
+        if (_currentAccount.addr != _newAccount.addr) {
+            delete owners[_currentAccount.addr];
+        }
+        levelCounters[_currentLevel]--;
+        levelCounters[_newLevel]++;
+        owners[_newAccount.addr] = _newLevel;
+    }
+
+    function _isMatchAccount(OwnerAccount memory _A, OwnerAccount memory _B) private pure returns (bool isMatch) {
+        isMatch = (_A.addr == _B.addr && _A.level == _B.level);
+    }
+
+    function _checkMinConsensus(uint8 _deduction) private view {
+        require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'violate min limit for consensus');
+    }
+
+    function test(OwnerAccount memory _ownerAccount) public {}
 }
 
 // [["0xF891E5556686b588269762d59466451FD7cE49B9", 2],["0xE8B67856F9f9Fc97b135139759ce575dB19dA5b1", 2],["0x8D1907Df4f7a2B740604b83Bc17b26C17ec3b299", 1], ["0xe36E03aCcA573DE10994a8c483427c659dE79bAd", 1], ["0x3cdc1AbE8D70B7A1f3Cc8c974706e8924C6AC349", 1]]
 // notOwner 0x4f8AE33355e0FC889d1A034D636870C6F302812b
 
 // [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1], ["0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", 1], ["0x617F2E2fD72FD9D5503197092aC168c91465E7f2", 1]]
+// [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1]]
+
+// Dummy bytes: 0x1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8
+// Zero address: 0x0000000000000000000000000000000000000000
