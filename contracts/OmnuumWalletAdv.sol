@@ -10,25 +10,25 @@ contract OmnuumWalletAdv {
     uint256 immutable consensusRatio;
     uint8 immutable minLimitForConsensus;
 
-    enum RequestType {
+    enum RequestTypes {
         Withdraw, // =0,
         Add, // =1,
         Remove, // =2,
         Change, // =3
         Cancel // =4
     }
-    enum OwnerLevel {
-        F, // =0,  F-level: 0 vote
-        D, // =1,  D-level: 1 vote
-        C // =2,  C-level: 2 votes
+    enum OwnerVotes {
+        F, // =0,  F-Level: 0 vote
+        D, // =1,  D-Level: 1 vote
+        C // =2,  C-Level: 2 votes
     }
     struct OwnerAccount {
         address addr;
-        OwnerLevel level;
+        OwnerVotes vote;
     }
     struct Request {
         address requester;
-        RequestType requestType;
+        RequestTypes requestType;
         OwnerAccount currentOwner;
         OwnerAccount newOwner;
         uint256 withdrawalAmount;
@@ -38,8 +38,8 @@ contract OmnuumWalletAdv {
     }
     Request[] public requests;
 
-    mapping(OwnerLevel => uint8) public ownerCounter;
-    mapping(address => OwnerLevel) ownerLevel;
+    mapping(OwnerVotes => uint8) public ownerCounter;
+    mapping(address => OwnerVotes) ownerVote;
 
     /* *****************************************************************************
      *   Constructor
@@ -54,9 +54,9 @@ contract OmnuumWalletAdv {
         minLimitForConsensus = _minLimitForConsensus;
 
         for (uint256 i; i < _initialOwnerAccounts.length; i++) {
-            OwnerLevel _level = _initialOwnerAccounts[i].level;
-            ownerLevel[_initialOwnerAccounts[i].addr] = _level;
-            ownerCounter[_level]++;
+            OwnerVotes _vote = _initialOwnerAccounts[i].vote;
+            ownerVote[_initialOwnerAccounts[i].addr] = _vote;
+            ownerCounter[_vote]++;
         }
     }
 
@@ -81,7 +81,7 @@ contract OmnuumWalletAdv {
 
     modifier isOwnerAccount(OwnerAccount memory _ownerAccount) {
         address _addr = _ownerAccount.addr;
-        require(isOwner(_addr) && uint8(ownerLevel[_addr]) == uint8(_ownerAccount.level), 'Account not exist');
+        require(isOwner(_addr) && uint8(ownerVote[_addr]) == uint8(_ownerAccount.vote), 'Account not exist');
         _;
     }
 
@@ -102,7 +102,7 @@ contract OmnuumWalletAdv {
 
     modifier notExecuteOrCanceled(uint256 _reqId) {
         require(!requests[_reqId].isExecute, 'Already executed');
-        require(requests[_reqId].requestType != RequestType.Cancel, 'Request canceled');
+        require(requests[_reqId].requestType != RequestTypes.Cancel, 'Request canceled');
         _;
     }
 
@@ -144,28 +144,28 @@ contract OmnuumWalletAdv {
     // @function request
     // @dev Allows an owner to request for an agenda that wants to proceed
     // @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
-    // @param _currentAccount - Tuple[address, Level] for current exist owner account (use for Request Type as Remove or Change)
-    // @param _newAccount - Tuple[address, Level] for new owner account (use for Request Type as Add or Change)
+    // @param _currentAccount - Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
+    // @param _newAccount - Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
     // @param _withdrawalAmount - amount of Ether to be withdrawal (use for Request Type as Withdrawal)
 
     function request(
-        RequestType _requestType,
+        RequestTypes _requestType,
         OwnerAccount calldata _currentAccount,
         OwnerAccount calldata _newAccount,
         uint256 _withdrawalAmount
     ) public onlyOwner(msg.sender) returns (uint256 reqId) {
-        require(_requestType != RequestType.Cancel, 'Canceled request not acceptable');
+        require(_requestType != RequestTypes.Cancel, 'Canceled request not acceptable');
 
         address _requester = msg.sender;
 
         Request storage _request = requests.push();
         _request.requester = _requester;
         _request.requestType = _requestType;
-        _request.currentOwner = OwnerAccount({ addr: _currentAccount.addr, level: _currentAccount.level });
-        _request.newOwner = OwnerAccount({ addr: _newAccount.addr, level: _newAccount.level });
+        _request.currentOwner = OwnerAccount({ addr: _currentAccount.addr, vote: _currentAccount.vote });
+        _request.newOwner = OwnerAccount({ addr: _newAccount.addr, vote: _newAccount.vote });
         _request.withdrawalAmount = _withdrawalAmount;
         _request.voters[_requester] = true;
-        _request.votes = uint8(ownerLevel[_requester]);
+        _request.votes = uint8(ownerVote[_requester]);
 
         reqId = requests.length - 1;
         // emit Requested(indexed address owner, indexed uint256 requestId, indexed uint256 requestType)
@@ -176,10 +176,10 @@ contract OmnuumWalletAdv {
     // @param _reqId - Request id that the owner wants to approve
 
     function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
-        OwnerLevel _level = ownerLevel[msg.sender];
+        OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
-        _request.votes += uint8(_level);
+        _request.votes += uint8(_vote);
 
         // emit Approved(indexed address owner, indexed uint256 requestId, uint256 votes)
     }
@@ -189,10 +189,10 @@ contract OmnuumWalletAdv {
     // @param _reqId - Request id that the owner wants to revoke
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
-        OwnerLevel _level = ownerLevel[msg.sender];
+        OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
-        _request.votes -= uint8(_level);
+        _request.votes -= uint8(_vote);
 
         // emit Revoked(indexed address owner, indexed requestId, uint256 votes)
     }
@@ -202,13 +202,13 @@ contract OmnuumWalletAdv {
         uint8 _type = uint8(_request.requestType);
         _request.isExecute = true;
 
-        if (_type == uint8(RequestType.Withdraw)) {
+        if (_type == uint8(RequestTypes.Withdraw)) {
             _withdraw(_request.withdrawalAmount, _request.requester);
-        } else if (_type == uint8(RequestType.Add)) {
+        } else if (_type == uint8(RequestTypes.Add)) {
             _addOwner(_request.newOwner);
-        } else if (_type == uint8(RequestType.Remove)) {
+        } else if (_type == uint8(RequestTypes.Remove)) {
             _removeOwner(_request.currentOwner);
-        } else if (_type == uint8(RequestType.Change)) {
+        } else if (_type == uint8(RequestTypes.Change)) {
             _changeOwner(_request.currentOwner, _request.newOwner);
         } else {
             revert('Unrecognized request');
@@ -220,19 +220,19 @@ contract OmnuumWalletAdv {
     // @param _reqId - Request id requested by the requester
 
     function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
-        requests[_reqId].requestType = RequestType.Cancel;
+        requests[_reqId].requestType = RequestTypes.Cancel;
     }
 
     function totalVotes() public view returns (uint256 votes) {
-        votes = ownerCounter[OwnerLevel.D] + 2 * ownerCounter[OwnerLevel.C];
+        votes = ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
     }
 
     function isOwner(address _owner) public view returns (bool isValid) {
-        isValid = uint8(ownerLevel[_owner]) > 0;
+        isValid = uint8(ownerVote[_owner]) > 0;
     }
 
     function getVoteCounts(address _owner) public view returns (uint256 votes) {
-        votes = uint8(ownerLevel[_owner]);
+        votes = uint8(ownerVote[_owner]);
     }
 
     function amIVoted(uint256 _reqId) public view reqExists(_reqId) returns (bool isValid) {
@@ -254,32 +254,32 @@ contract OmnuumWalletAdv {
     }
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
-        OwnerLevel _level = _newAccount.level;
-        ownerLevel[_newAccount.addr] = _level;
-        ownerCounter[_level]++;
+        OwnerVotes _vote = _newAccount.vote;
+        ownerVote[_newAccount.addr] = _vote;
+        ownerCounter[_vote]++;
     }
 
     function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
-        _checkMinConsensus(uint8(ownerLevel[_removalAccount.addr]));
-        ownerCounter[_removalAccount.level]--;
-        delete ownerLevel[_removalAccount.addr];
+        _checkMinConsensus(uint8(ownerVote[_removalAccount.addr]));
+        ownerCounter[_removalAccount.vote]--;
+        delete ownerVote[_removalAccount.addr];
     }
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
-        OwnerLevel _currentLevel = _currentAccount.level;
-        OwnerLevel _newLevel = _newAccount.level;
+        OwnerVotes _currentVote = _currentAccount.vote;
+        OwnerVotes _newVote = _newAccount.vote;
 
-        require(_newLevel != OwnerLevel.F, 'F level not acceptable');
-        if (_currentLevel > _newLevel) {
-            _checkMinConsensus(uint8(_currentLevel) - uint8(_newLevel));
+        require(_newVote != OwnerVotes.F, 'F level votes not acceptable');
+        if (_currentVote > _newVote) {
+            _checkMinConsensus(uint8(_currentVote) - uint8(_newVote));
         }
         if (_currentAccount.addr != _newAccount.addr) {
-            delete ownerLevel[_currentAccount.addr];
+            delete ownerVote[_currentAccount.addr];
         }
-        ownerCounter[_currentLevel]--;
-        ownerCounter[_newLevel]++;
-        ownerLevel[_newAccount.addr] = _newLevel;
+        ownerCounter[_currentVote]--;
+        ownerCounter[_newVote]++;
+        ownerVote[_newAccount.addr] = _newVote;
     }
 
     function _checkMinConsensus(uint8 _deduction) private view {
