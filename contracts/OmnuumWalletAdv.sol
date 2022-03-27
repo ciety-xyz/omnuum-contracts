@@ -132,36 +132,43 @@ contract OmnuumWalletAdv {
 
     function makePayment(bytes32 _topic, string calldata _description) external payable {
         require(msg.value > 0, 'Useless payment');
+        // emit with msg.sender?
         emit PaymentReceived(_topic, _description);
     }
 
     receive() external payable {
+        // emit with msg.sender?
         emit EtherReceived();
     }
 
+    // @function request
+    // @dev Allows an owner to request for an agenda that wants to proceed
+    // @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
+    // @param _currentAccount - Tuple[address, Level] for current exist owner account (use for Request Type as Remove or Change)
+    // @param _newAccount - Tuple[address, Level] for new owner account (use for Request Type as Add or Change)
+    // @param _withdrawalAmount - amount of Ether to be withdrawal (use for Request Type as Withdrawal)
+
     function request(
         RequestType _requestType,
-        OwnerAccount memory _currentOwnerAccount,
-        OwnerAccount memory _newOwnerAccount,
+        OwnerAccount calldata _currentAccount,
+        OwnerAccount calldata _newAccount,
         uint256 _withdrawalAmount
     ) public onlyOwner(msg.sender) returns (uint256 reqId) {
         require(_requestType != RequestType.Cancel, 'Canceled request not acceptable');
+
         address _requester = msg.sender;
-        OwnerLevel _level = ownerLevel[_requester];
 
-        Request storage _newReq = requests.push();
-        _newReq.requester = msg.sender;
-        _newReq.requestType = _requestType;
+        Request storage _request = requests.push();
+        _request.requester = _requester;
+        _request.requestType = _requestType;
+        _request.currentOwner = OwnerAccount({ addr: _currentAccount.addr, level: _currentAccount.level });
+        _request.newOwner = OwnerAccount({ addr: _newAccount.addr, level: _newAccount.level });
+        _request.withdrawalAmount = _withdrawalAmount;
+        _request.voters[_requester] = true;
+        _request.votes = uint8(ownerLevel[_requester]);
 
-        _newReq.currentOwner = OwnerAccount({ addr: _currentOwnerAccount.addr, level: _currentOwnerAccount.level });
-        _newReq.newOwner = OwnerAccount({ addr: _newOwnerAccount.addr, level: _newOwnerAccount.level });
-
-        _newReq.withdrawalAmount = _withdrawalAmount;
-        _newReq.voters[msg.sender] = true;
-        _newReq.votes = uint8(_level);
-
-        // emit
         reqId = requests.length - 1;
+        // emit Requested(indexed requester, indexed requestType)
     }
 
     function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
