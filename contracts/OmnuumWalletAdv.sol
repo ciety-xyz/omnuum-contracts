@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
-
-//import '@openzeppelin/contracts/utils/Address.sol';
-import 'hardhat/console.sol';
+pragma solidity 0.8.4;
 
 // @title OmnuumWallet - Allows multiple owners to agree on withdraw money before execution
 // @notice This contract is managed by Omnuum admin

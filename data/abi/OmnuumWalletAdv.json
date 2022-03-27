@@ -1,5 +1,5 @@
 [
-  "constructor(tuple(address,uint8)[])",
+  "constructor(uint256,uint8,tuple(address,uint8)[])",
   "event EtherReceived()",
   "event PaymentReceived(bytes32 indexed,string)",
   "function amIVoted(uint256) view returns (bool)",
