@@ -1,20 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// @title OmnuumWallet - Allows multiple owners to agree on withdraw money before execution
-// @notice This contract is managed by Omnuum admin
+// @title OmnuumWalletAdv - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution.
+// @notice This contract is not managed by Omnuum admin, but for owners.
 // @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 // @version V1
 
 contract OmnuumWalletAdv {
     uint256 immutable consensusRatio;
     uint8 immutable minLimitForConsensus;
-
-    enum VoterLevel {
-        F, // = 0,  F-level: 0 vote
-        D, // = 1,  D-level: 1 vote
-        C // = 2,  C-level: 2 votes
-    }
 
     enum RequestType {
         Withdraw, // =0,
@@ -23,12 +17,15 @@ contract OmnuumWalletAdv {
         Change, // =3
         Cancel // =4
     }
-
+    enum OwnerLevel {
+        F, // =0,  F-level: 0 vote
+        D, // =1,  D-level: 1 vote
+        C // =2,  C-level: 2 votes
+    }
     struct OwnerAccount {
         address addr;
-        VoterLevel level;
+        OwnerLevel level;
     }
-
     struct Request {
         address requester;
         RequestType requestType;
@@ -39,36 +36,38 @@ contract OmnuumWalletAdv {
         uint256 votes;
         bool isExecute;
     }
-
     Request[] public requests;
 
-    mapping(VoterLevel => uint8) public levelCounters;
-    mapping(address => VoterLevel) owners;
+    mapping(OwnerLevel => uint8) public ownerCounter;
+    mapping(address => OwnerLevel) ownerLevel;
 
+    /* *****************************************************************************
+     *   Constructor
+     * - set consensus ratio, minimum votes limit for consensus and initial owners
+     * *****************************************************************************/
     constructor(
         uint256 _consensusRatio,
         uint8 _minLimitForConsensus,
-        OwnerAccount[] memory _initialOwners
+        OwnerAccount[] memory _initialOwnerAccounts
     ) {
         consensusRatio = _consensusRatio;
         minLimitForConsensus = _minLimitForConsensus;
 
-        for (uint256 i; i < _initialOwners.length; i++) {
-            address _owner = _initialOwners[i].addr;
-            VoterLevel _level = _initialOwners[i].level;
-            owners[_owner] = _level;
-            levelCounters[_level]++;
+        for (uint256 i; i < _initialOwnerAccounts.length; i++) {
+            OwnerLevel _level = _initialOwnerAccounts[i].level;
+            ownerLevel[_initialOwnerAccounts[i].addr] = _level;
+            ownerCounter[_level]++;
         }
     }
 
     /* *****************************************************************************
-     * Events
+     *   Events
      * *****************************************************************************/
     event PaymentReceived(bytes32 indexed topic, string description);
     event EtherReceived();
 
     /* *****************************************************************************
-     * Modifiers
+     *   Modifiers
      * *****************************************************************************/
     modifier onlyOwner(address _address) {
         require(isOwner(_address), 'not owner');
@@ -82,7 +81,7 @@ contract OmnuumWalletAdv {
 
     modifier isOwnerAccount(OwnerAccount memory _ownerAccount) {
         address _addr = _ownerAccount.addr;
-        require(isOwner(_addr) && uint8(owners[_addr]) == uint8(_ownerAccount.level), 'account not exist');
+        require(isOwner(_addr) && uint8(ownerLevel[_addr]) == uint8(_ownerAccount.level), 'account not exist');
         _;
     }
 
@@ -128,7 +127,7 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     * Functions - public, external
+     *   Functions - public, external
      * *****************************************************************************/
 
     function makePayment(bytes32 _topic, string calldata _description) external payable {
@@ -148,7 +147,7 @@ contract OmnuumWalletAdv {
     ) public onlyOwner(msg.sender) returns (uint256 reqId) {
         require(_requestType != RequestType.Cancel, 'canceled request not acceptable');
         address _requester = msg.sender;
-        VoterLevel _level = owners[_requester];
+        OwnerLevel _level = ownerLevel[_requester];
 
         Request storage _newReq = requests.push();
         _newReq.requester = msg.sender;
@@ -170,7 +169,7 @@ contract OmnuumWalletAdv {
     }
 
     function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
-        VoterLevel _level = owners[msg.sender];
+        OwnerLevel _level = ownerLevel[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
         _request.votes += uint256(_level);
@@ -179,7 +178,7 @@ contract OmnuumWalletAdv {
     }
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
-        VoterLevel _level = owners[msg.sender];
+        OwnerLevel _level = ownerLevel[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
         _request.votes -= uint256(_level);
@@ -204,15 +203,15 @@ contract OmnuumWalletAdv {
     }
 
     function totalVotes() public view returns (uint256 votes) {
-        votes = levelCounters[VoterLevel.D] + 2 * levelCounters[VoterLevel.C];
+        votes = ownerCounter[OwnerLevel.D] + 2 * ownerCounter[OwnerLevel.C];
     }
 
     function isOwner(address _owner) public view returns (bool isValid) {
-        isValid = uint8(owners[_owner]) > 0;
+        isValid = uint8(ownerLevel[_owner]) > 0;
     }
 
     function getVoteCounts(address _owner) public view returns (uint256 votes) {
-        votes = uint8(owners[_owner]);
+        votes = uint8(ownerLevel[_owner]);
     }
 
     function amIVoted(uint256 _reqId) public view reqExists(_reqId) returns (bool isValid) {
@@ -224,7 +223,7 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     * Functions - internal, private
+     *   Functions - internal, private
      * *****************************************************************************/
 
     function _withdraw(uint256 _withdrawalAmount, address _to) private {
@@ -234,43 +233,37 @@ contract OmnuumWalletAdv {
     }
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
-        VoterLevel _level = _newAccount.level;
-        owners[_newAccount.addr] = _level;
-        levelCounters[_level]++;
+        OwnerLevel _level = _newAccount.level;
+        ownerLevel[_newAccount.addr] = _level;
+        ownerCounter[_level]++;
     }
 
     function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
-        _checkMinConsensus(uint8(owners[_removalAccount.addr]));
-        levelCounters[_removalAccount.level]--;
-        delete owners[_removalAccount.addr];
+        _checkMinConsensus(uint8(ownerLevel[_removalAccount.addr]));
+        ownerCounter[_removalAccount.level]--;
+        delete ownerLevel[_removalAccount.addr];
     }
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
-        VoterLevel _currentLevel = _currentAccount.level;
-        VoterLevel _newLevel = _newAccount.level;
+        OwnerLevel _currentLevel = _currentAccount.level;
+        OwnerLevel _newLevel = _newAccount.level;
 
-        require(_newLevel != VoterLevel.F, 'F level not acceptable');
+        require(_newLevel != OwnerLevel.F, 'F level not acceptable');
         if (_currentLevel > _newLevel) {
             _checkMinConsensus(uint8(_currentLevel) - uint8(_newLevel));
         }
         if (_currentAccount.addr != _newAccount.addr) {
-            delete owners[_currentAccount.addr];
+            delete ownerLevel[_currentAccount.addr];
         }
-        levelCounters[_currentLevel]--;
-        levelCounters[_newLevel]++;
-        owners[_newAccount.addr] = _newLevel;
+        ownerCounter[_currentLevel]--;
+        ownerCounter[_newLevel]++;
+        ownerLevel[_newAccount.addr] = _newLevel;
     }
-
-    //    function _isMatchAccount(OwnerAccount memory _A, OwnerAccount memory _B) private pure returns (bool isMatch) {
-    //        isMatch = (_A.addr == _B.addr && _A.level == _B.level);
-    //    }
 
     function _checkMinConsensus(uint8 _deduction) private view {
         require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'violate min limit for consensus');
     }
-
-    function test(OwnerAccount memory _ownerAccount) public {}
 }
 
 // notOwner address - 0x4f8AE33355e0FC889d1A034D636870C6F302812b
