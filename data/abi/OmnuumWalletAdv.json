@@ -9,11 +9,10 @@
   "function getRequiredVotesForConsensus(uint8) view returns (uint256)",
   "function getVoteCounts(address) view returns (uint256)",
   "function isOwner(address) view returns (bool)",
-  "function levelCounters(uint8) view returns (uint8)",
   "function makePayment(bytes32,string) payable",
+  "function ownerCounter(uint8) view returns (uint8)",
   "function request(uint8,tuple(address,uint8),tuple(address,uint8),uint256) returns (uint256)",
   "function requests(uint256) view returns (address, uint8, tuple(address,uint8), tuple(address,uint8), uint256, uint256, bool)",
   "function revoke(uint256)",
-  "function test(tuple(address,uint8))",
   "function totalVotes() view returns (uint256)"
 ]

@@ -143,6 +143,7 @@ contract OmnuumWalletAdv {
 
     // @function request
     // @dev Allows an owner to request for an agenda that wants to proceed
+    // @dev The owner can make multiple requests even if the previous one is unresolved.
     // @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
     // @param _currentAccount - Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
     // @param _newAccount - Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
@@ -168,11 +169,13 @@ contract OmnuumWalletAdv {
         _request.votes = uint8(ownerVote[_requester]);
 
         reqId = requests.length - 1;
+
         // emit Requested(indexed address owner, indexed uint256 requestId, indexed uint256 requestType)
     }
 
     // @function approve
-    // @dev Allows owners to approve the request
+    // @dev Allows owners to approve the request.
+    // @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled).
     // @param _reqId - Request id that the owner wants to approve
 
     function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
@@ -185,7 +188,7 @@ contract OmnuumWalletAdv {
     }
 
     // @function revoke
-    // @dev Allow an owner to revoke the approval.
+    // @dev Allow an approver(owner) to revoke the approval.
     // @param _reqId - Request id that the owner wants to revoke
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
@@ -196,6 +199,11 @@ contract OmnuumWalletAdv {
 
         // emit Revoked(indexed address owner, indexed requestId, uint256 votes)
     }
+
+    // @function execute
+    // @dev Allow an requester(owner) to execute the request
+    // @dev After proceeding, it cannot revert the execution. Be cautious.
+    // @parma _reqId - Request id that the requester wants to execute.
 
     function execute(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
@@ -210,13 +218,12 @@ contract OmnuumWalletAdv {
             _removeOwner(_request.currentOwner);
         } else if (_type == uint8(RequestTypes.Change)) {
             _changeOwner(_request.currentOwner, _request.newOwner);
-        } else {
-            revert('Unrecognized request');
         }
     }
 
     // @function cancelRequest
-    // @dev Allows a requester(owner) to cancel the own request. After proceeding, it cannot revert cancel. Be cautious.
+    // @dev Allows a requester(owner) to cancel the own request.
+    // @dev After proceeding, it cannot revert the cancellation. Be cautious.
     // @param _reqId - Request id requested by the requester
 
     function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
