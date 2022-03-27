@@ -94,7 +94,7 @@ contract OmnuumWalletAdv {
     }
 
     modifier reachConsensus(uint256 _reqId) {
-        require(requests[_reqId].votes >= requiredVotesForConsensus(0), 'Not reach consensus');
+        require(requests[_reqId].votes >= requiredVotesForConsensus(), 'Not reach consensus');
         _;
     }
 
@@ -272,22 +272,30 @@ contract OmnuumWalletAdv {
 
     // @function requiredVotesForConsensus
     // @dev - Allows users to see how many votes are needed to reach consensus.
-    // @param _deduction - The number of votes to deduct if when owner removal will occur from the total number of votes for calculation
     // @votesForConsensus the number of votes required to reach a consensus
 
-    function requiredVotesForConsensus(uint8 _deduction) public view returns (uint256 votesForConsensus) {
-        votesForConsensus = ((totalVotes() - _deduction) * consensusRatio) / 100;
+    function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
+        votesForConsensus = (totalVotes() * consensusRatio) / 100;
     }
 
     /* *****************************************************************************
      *   Functions - Internal, Private
      * *****************************************************************************/
 
-    function _withdraw(uint256 _withdrawalAmount, address _to) private {
-        require(_withdrawalAmount <= address(this).balance, 'Insufficient balance');
-        (bool withdrawn, ) = payable(_to).call{ value: _withdrawalAmount }('');
+    // @function _withdraw
+    // @dev - Withdraw Ethers from the wallet
+    // @param _value
+    // @param _to
+
+    function _withdraw(uint256 _value, address _to) private {
+        require(_value <= address(this).balance, 'Insufficient balance');
+        (bool withdrawn, ) = payable(_to).call{ value: _value }('');
         require(withdrawn, 'Address: unable to send value, recipient may have reverted');
     }
+
+    // @function _addOwner
+    // @dev - Add a new Owner to the wallet
+    // @param _newAccount
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
         OwnerVotes _vote = _newAccount.vote;
@@ -295,31 +303,40 @@ contract OmnuumWalletAdv {
         ownerCounter[_vote]++;
     }
 
+    // @function _removeOwner
+    // @dev - Remove existing owner form the wallet
+    // @param _removalAccount
+
     function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
-        _checkMinConsensus(uint8(ownerVote[_removalAccount.addr]));
         ownerCounter[_removalAccount.vote]--;
+        _checkMinConsensus();
         delete ownerVote[_removalAccount.addr];
     }
+
+    // @function _changeOwner
+    // @dev - Change owner
+    // @param _currentAccount
+    // @param _netAccount
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
         OwnerVotes _currentVote = _currentAccount.vote;
         OwnerVotes _newVote = _newAccount.vote;
+        ownerCounter[_currentVote]--;
+        ownerCounter[_newVote]++;
+        _checkMinConsensus();
 
-        require(_newVote != OwnerVotes.F, 'F level votes not acceptable');
-        if (_currentVote > _newVote) {
-            _checkMinConsensus(uint8(_currentVote) - uint8(_newVote));
-        }
         if (_currentAccount.addr != _newAccount.addr) {
             delete ownerVote[_currentAccount.addr];
         }
-        ownerCounter[_currentVote]--;
-        ownerCounter[_newVote]++;
         ownerVote[_newAccount.addr] = _newVote;
     }
 
-    function _checkMinConsensus(uint8 _deduction) private view {
-        require(requiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'Violate min limit for consensus');
+    // @function _checkMinConsensus
+    // @dev -
+
+    function _checkMinConsensus() private view {
+        require(requiredVotesForConsensus() >= minLimitForConsensus, 'Violate min limit for consensus');
     }
 }
 
