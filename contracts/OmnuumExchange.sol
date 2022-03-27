@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
+import './utils/OwnableUpgradeable.sol';
 import './OmnuumCAManager.sol';
 
 // in future, this contract will act like internal token exchange for business

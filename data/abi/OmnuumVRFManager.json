@@ -6,7 +6,6 @@
   "event Updated(uint256,string)",
   "function owner() view returns (address)",
   "function rawFulfillRandomness(bytes32,uint256)",
-  "function renounceOwnership()",
   "function requestVRF()",
   "function requestVRFOnce(address) payable",
   "function safetyRatio() view returns (uint16)",

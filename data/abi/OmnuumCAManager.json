@@ -8,6 +8,5 @@
   "function registerContract(address,string)",
   "function registerContractMultiple(address[],string[])",
   "function removeContract(address)",
-  "function renounceOwnership()",
   "function transferOwnership(address)"
 ]

@@ -14,7 +14,6 @@
   "function publicMint(uint16,uint32,uint256,address)",
   "function publicMintSchedules(address,uint256) view returns (uint32, uint32, uint32, uint256, uint256)",
   "function rateDecimal() view returns (uint8)",
-  "function renounceOwnership()",
   "function setDiscountRate(address,uint256)",
   "function setPublicMintSchedule(address,uint256,uint256,uint256,uint32,uint32)",
   "function transferOwnership(address)"

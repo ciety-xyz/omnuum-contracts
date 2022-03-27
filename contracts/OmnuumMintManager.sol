@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import './utils/OwnableUpgradeable.sol';
 import './OmnuumNFT1155.sol';
 
 contract OmnuumMintManager is OwnableUpgradeable {

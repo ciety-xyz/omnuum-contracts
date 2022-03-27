@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import '@chainlink/contracts/src/v0.8/VRFConsumerBase.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import './utils/Ownable.sol';
 import './OmnuumCAManager.sol';
 import './OmnuumExchange.sol';
 import './library/RevertMessage.sol';

@@ -15,7 +15,6 @@
   "function mintDirect(address,uint32)",
   "function owner() view returns (address)",
   "function publicMint(uint32,uint16,tuple(address,string,uint256,bytes)) payable",
-  "function renounceOwnership()",
   "function safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)",
   "function safeTransferFrom(address,address,uint256,uint256,bytes)",
   "function setApprovalForAll(address,bool)",
