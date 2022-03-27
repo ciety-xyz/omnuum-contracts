@@ -13,9 +13,6 @@ contract OmnuumWalletAdv {
     uint256 immutable consensusRatio;
     uint8 immutable minLimitForConsensus;
 
-    uint8 cLevelOwners;
-    uint8 dLevelOwners;
-
     enum Level {
         F, // = 0,  F-level: 0 vote
         D, // = 1,  D-level: 1 vote
