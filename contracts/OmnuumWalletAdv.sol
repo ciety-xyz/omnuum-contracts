@@ -109,13 +109,13 @@ contract OmnuumWalletAdv {
         _;
     }
 
-    modifier notVoted(uint256 _reqId) {
-        require(!amIVoted(_reqId), 'Already voted');
+    modifier notVoted(address _owner, uint256 _reqId) {
+        require(!isOwnerVoted(_owner, _reqId), 'Already voted');
         _;
     }
 
-    modifier voted(uint256 _reqId) {
-        require(amIVoted(_reqId), 'Not voted');
+    modifier voted(address _owner, uint256 _reqId) {
+        require(isOwnerVoted(_owner, _reqId), 'Not voted');
         _;
     }
 
@@ -181,7 +181,13 @@ contract OmnuumWalletAdv {
     // @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled).
     // @param _reqId - Request id that the owner wants to approve
 
-    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) notVoted(_reqId) {
+    function approve(uint256 _reqId)
+        public
+        onlyOwner(msg.sender)
+        reqExists(_reqId)
+        notExecutedOrCanceled(_reqId)
+        notVoted(msg.sender, _reqId)
+    {
         OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
@@ -194,7 +200,7 @@ contract OmnuumWalletAdv {
     // @dev Allow an approver(owner) to revoke the approval.
     // @param _reqId - Request id that the owner wants to revoke
 
-    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(_reqId) {
+    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(msg.sender, _reqId) {
         OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
@@ -249,14 +255,14 @@ contract OmnuumWalletAdv {
     }
 
     // @function isOwner
-    // @dev return whether the owner is
+    // @dev return whether the owner is.
 
     function isOwner(address _owner) public view returns (bool isValid) {
         isValid = uint8(ownerVote[_owner]) > 0;
     }
 
-    function amIVoted(uint256 _reqId) public view reqExists(_reqId) returns (bool isValid) {
-        isValid = requests[_reqId].voters[msg.sender];
+    function isOwnerVoted(address _owner, uint256 _reqId) public view returns (bool isVoted) {
+        isVoted = requests[_reqId].voters[_owner];
     }
 
     function getRequiredVotesForConsensus(uint8 _deduction) public view returns (uint256 votesForConsensus) {
