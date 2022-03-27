@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '../utils/OwnableUpgradeable.sol';
 import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
