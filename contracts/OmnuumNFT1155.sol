@@ -52,9 +52,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     function sendFee() internal {
         uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 baseFeeRate = mintManager.baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
-        uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
+        uint256 feeRate = mintManager.getFeeRate(address(this));
+        uint256 amount = (msg.value * feeRate) / 10**rateDecimal;
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
             payable(feeReceiver).sendValue(amount);
