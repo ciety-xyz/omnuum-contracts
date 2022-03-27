@@ -36,8 +36,11 @@ contract OmnuumWalletAdv {
         uint256 votes;
         bool isExecute;
     }
-    Request[] public requests;
 
+    /* *****************************************************************************
+     *   Storages
+     * *****************************************************************************/
+    Request[] public requests;
     mapping(OwnerVotes => uint8) public ownerCounter;
     mapping(address => OwnerVotes) public ownerVote;
 
