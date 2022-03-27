@@ -8,7 +8,7 @@ require('chai').should();
 const { createNftContractArgs, prepareDeploy, testDeploy, deployNFT, prepareMockDeploy } = require('./etc/mock.js');
 const { signPayload, nullAddress, toSolDate, calcGasFeeInEther, createTicket } = require('./etc/util.js');
 
-const nounce = 1;
+const nonce = 1;
 const end_date = toSolDate(addDays(new Date(), 2));
 const group_id = 0;
 
@@ -564,7 +564,7 @@ describe('OmnuumNFT', () => {
       const anonymousSignedPayload = await signPayload(
         minterAC.address,
         Constants.payloadTopic.ticket, // not mint topic payload
-        nounce,
+        nonce,
         anonymousAC, // anonymous signer
         senderVerifier.address,
       );

@@ -5,7 +5,7 @@ module.exports = {
     return sign.then((tx) => tx.wait());
   },
   nullAddress: '0x0000000000000000000000000000000000000000',
-  async signPayload(sender, topic, nounce, signer, verifierAddress) {
+  async signPayload(sender, topic, nonce, signer, verifierAddress) {
     const SIGNING_DOMAIN_NAME = 'Omnuum';
     const SIGNING_DOMAIN_VERSION = '1';
 
@@ -13,7 +13,7 @@ module.exports = {
       Payload: [
         { name: 'sender', type: 'address' },
         { name: 'topic', type: 'string' },
-        { name: 'nounce', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
       ],
     };
 
@@ -24,7 +24,7 @@ module.exports = {
       chainId: (await ethers.provider.getNetwork()).chainId,
     };
 
-    const data = { sender, topic, nounce };
+    const data = { sender, topic, nonce };
 
     const signature = await signer._signTypedData(domain, types, data);
 
