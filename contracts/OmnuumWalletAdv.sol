@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.4;
+pragma solidity ^0.8.0;
 
 // @title OmnuumWallet - Allows multiple owners to agree on withdraw money before execution
 // @notice This contract is managed by Omnuum admin
@@ -10,7 +10,7 @@ contract OmnuumWalletAdv {
     uint256 immutable consensusRatio;
     uint8 immutable minLimitForConsensus;
 
-    enum Level {
+    enum VoterLevel {
         F, // = 0,  F-level: 0 vote
         D, // = 1,  D-level: 1 vote
         C // = 2,  C-level: 2 votes
@@ -26,7 +26,7 @@ contract OmnuumWalletAdv {
 
     struct OwnerAccount {
         address addr;
-        Level level;
+        VoterLevel level;
     }
 
     struct Request {
@@ -42,8 +42,8 @@ contract OmnuumWalletAdv {
 
     Request[] public requests;
 
-    mapping(Level => uint8) public levelCounters;
-    mapping(address => Level) owners;
+    mapping(VoterLevel => uint8) public levelCounters;
+    mapping(address => VoterLevel) owners;
 
     constructor(
         uint256 _consensusRatio,
@@ -55,7 +55,7 @@ contract OmnuumWalletAdv {
 
         for (uint256 i; i < _initialOwners.length; i++) {
             address _owner = _initialOwners[i].addr;
-            Level _level = _initialOwners[i].level;
+            VoterLevel _level = _initialOwners[i].level;
             owners[_owner] = _level;
             levelCounters[_level]++;
         }
@@ -101,7 +101,7 @@ contract OmnuumWalletAdv {
         _;
     }
 
-    modifier notExecutedOrCanceled(uint256 _reqId) {
+    modifier notExecuteOrCanceled(uint256 _reqId) {
         require(!requests[_reqId].isExecute, 'already executed');
         require(requests[_reqId].requestType != RequestType.Cancel, 'request canceled');
         _;
@@ -148,7 +148,7 @@ contract OmnuumWalletAdv {
     ) public onlyOwner(msg.sender) returns (uint256 reqId) {
         require(_requestType != RequestType.Cancel, 'canceled request not acceptable');
         address _requester = msg.sender;
-        Level _level = owners[_requester];
+        VoterLevel _level = owners[_requester];
 
         Request storage _newReq = requests.push();
         _newReq.requester = msg.sender;
@@ -165,12 +165,12 @@ contract OmnuumWalletAdv {
         reqId = requests.length - 1;
     }
 
-    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
+    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
         requests[_reqId].requestType = RequestType.Cancel;
     }
 
-    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) notVoted(_reqId) {
-        Level _level = owners[msg.sender];
+    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
+        VoterLevel _level = owners[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
         _request.votes += uint256(_level);
@@ -178,14 +178,14 @@ contract OmnuumWalletAdv {
         //emit
     }
 
-    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(_reqId) {
-        Level _level = owners[msg.sender];
+    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
+        VoterLevel _level = owners[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
         _request.votes -= uint256(_level);
     }
 
-    function execute(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
+    function execute(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
         uint8 _type = uint8(_request.requestType);
         _request.isExecute = true;
@@ -204,7 +204,7 @@ contract OmnuumWalletAdv {
     }
 
     function totalVotes() public view returns (uint256 votes) {
-        votes = levelCounters[Level.D] + 2 * levelCounters[Level.C];
+        votes = levelCounters[VoterLevel.D] + 2 * levelCounters[VoterLevel.C];
     }
 
     function isOwner(address _owner) public view returns (bool isValid) {
@@ -234,7 +234,7 @@ contract OmnuumWalletAdv {
     }
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
-        Level _level = _newAccount.level;
+        VoterLevel _level = _newAccount.level;
         owners[_newAccount.addr] = _level;
         levelCounters[_level]++;
     }
@@ -247,10 +247,10 @@ contract OmnuumWalletAdv {
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
-        Level _currentLevel = _currentAccount.level;
-        Level _newLevel = _newAccount.level;
+        VoterLevel _currentLevel = _currentAccount.level;
+        VoterLevel _newLevel = _newAccount.level;
 
-        require(_newLevel != Level.F, 'F level not acceptable');
+        require(_newLevel != VoterLevel.F, 'F level not acceptable');
         if (_currentLevel > _newLevel) {
             _checkMinConsensus(uint8(_currentLevel) - uint8(_newLevel));
         }
@@ -273,10 +273,12 @@ contract OmnuumWalletAdv {
     function test(OwnerAccount memory _ownerAccount) public {}
 }
 
-// notOwner address: 0x4f8AE33355e0FC889d1A034D636870C6F302812b
+// notOwner address - 0x4f8AE33355e0FC889d1A034D636870C6F302812b
 
-// two CEOs, thress Devs: [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1], ["0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", 1], ["0x617F2E2fD72FD9D5503197092aC168c91465E7f2", 1]]
-// two CEOs, one Dev: [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1]]
+// Consensus Ratio - 66
+// Min Limit for Consensus - 3
+// Initial Owners(two CEOs, thress Devs) - [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1], ["0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", 1], ["0x617F2E2fD72FD9D5503197092aC168c91465E7f2", 1]]
+// Initial Owners(two CEOs, one Dev) - [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1]]
 
-// Dummy byte32: 0x0000000000000000000000000000000000000000000000000000000000000000
-// Dummy Account Tuple: ["0x0000000000000000000000000000000000000000", 0]
+// Dummy byte32 - 0x0000000000000000000000000000000000000000000000000000000000000000
+// Dummy Account Tuple - ["0x0000000000000000000000000000000000000000", 0]
