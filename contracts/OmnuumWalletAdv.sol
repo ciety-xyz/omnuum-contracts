@@ -61,7 +61,7 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     *   Events
+     *   Events - TBD
      * *****************************************************************************/
     event PaymentReceived(bytes32 indexed topic, string description);
     event EtherReceived();
@@ -70,59 +70,59 @@ contract OmnuumWalletAdv {
      *   Modifiers
      * *****************************************************************************/
     modifier onlyOwner(address _address) {
-        require(isOwner(_address), 'not owner');
+        require(isOwner(_address), 'Not owner');
         _;
     }
 
     modifier notOwner(address _address) {
-        require(!isOwner(_address), 'already owner');
+        require(!isOwner(_address), 'Already owner');
         _;
     }
 
     modifier isOwnerAccount(OwnerAccount memory _ownerAccount) {
         address _addr = _ownerAccount.addr;
-        require(isOwner(_addr) && uint8(ownerLevel[_addr]) == uint8(_ownerAccount.level), 'account not exist');
+        require(isOwner(_addr) && uint8(ownerLevel[_addr]) == uint8(_ownerAccount.level), 'Account not exist');
         _;
     }
 
     modifier onlyRequester(uint256 _reqId) {
-        require(requests[_reqId].requester == msg.sender, 'only requester');
+        require(requests[_reqId].requester == msg.sender, 'Only requester');
         _;
     }
 
     modifier reachConsensus(uint256 _reqId) {
-        require(requests[_reqId].votes >= getRequiredVotesForConsensus(0), 'not reach consensus');
+        require(requests[_reqId].votes >= getRequiredVotesForConsensus(0), 'Not reach consensus');
         _;
     }
 
     modifier reqExists(uint256 _reqId) {
-        require(_reqId < requests.length, 'request not exists');
+        require(_reqId < requests.length, 'Request not exists');
         _;
     }
 
     modifier notExecuteOrCanceled(uint256 _reqId) {
-        require(!requests[_reqId].isExecute, 'already executed');
-        require(requests[_reqId].requestType != RequestType.Cancel, 'request canceled');
+        require(!requests[_reqId].isExecute, 'Already executed');
+        require(requests[_reqId].requestType != RequestType.Cancel, 'Request canceled');
         _;
     }
 
     modifier notVoted(uint256 _reqId) {
-        require(!amIVoted(_reqId), 'already voted');
+        require(!amIVoted(_reqId), 'Already voted');
         _;
     }
 
     modifier voted(uint256 _reqId) {
-        require(amIVoted(_reqId), 'already voted');
+        require(amIVoted(_reqId), 'Not voted');
         _;
     }
 
     modifier isValidAddress(address _address) {
-        require(_address != address(0), 'zero address not acceptable');
+        require(_address != address(0), 'Zero address not acceptable');
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(_address)
         }
-        require(codeSize == 0, 'CA address not acceptable'); // know that it's not perfect to protect, but can handle by the owners
+        require(codeSize == 0, 'Contract address not acceptable'); // know that it's not perfect to protect, but can handle by the owners
         _;
     }
 
@@ -145,7 +145,7 @@ contract OmnuumWalletAdv {
         OwnerAccount memory _newOwnerAccount,
         uint256 _withdrawalAmount
     ) public onlyOwner(msg.sender) returns (uint256 reqId) {
-        require(_requestType != RequestType.Cancel, 'canceled request not acceptable');
+        require(_requestType != RequestType.Cancel, 'Canceled request not acceptable');
         address _requester = msg.sender;
         OwnerLevel _level = ownerLevel[_requester];
 
@@ -198,7 +198,7 @@ contract OmnuumWalletAdv {
         } else if (_type == uint8(RequestType.Change)) {
             _changeOwner(_request.currentOwner, _request.newOwner);
         } else {
-            revert('unrecognized request');
+            revert('Unrecognized request');
         }
     }
 
@@ -227,7 +227,7 @@ contract OmnuumWalletAdv {
      * *****************************************************************************/
 
     function _withdraw(uint256 _withdrawalAmount, address _to) private {
-        require(_withdrawalAmount <= address(this).balance, 'insufficient balance');
+        require(_withdrawalAmount <= address(this).balance, 'Insufficient balance');
         (bool withdrawn, ) = payable(_to).call{ value: _withdrawalAmount }('');
         require(withdrawn, 'Address: unable to send value, recipient may have reverted');
     }
@@ -262,7 +262,7 @@ contract OmnuumWalletAdv {
     }
 
     function _checkMinConsensus(uint8 _deduction) private view {
-        require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'violate min limit for consensus');
+        require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'Violate min limit for consensus');
     }
 }
 
