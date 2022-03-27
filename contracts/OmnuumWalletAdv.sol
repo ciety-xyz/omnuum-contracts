@@ -10,8 +10,8 @@ import 'hardhat/console.sol';
 // @version V1
 
 contract OmnuumWalletAdv {
-    uint256 constant consensusRatio = 66; // 2 of 3 Multi-sig Wallet
-    uint8 constant minLimitForConsensus = 3;
+    uint256 immutable consensusRatio;
+    uint8 immutable minLimitForConsensus;
 
     uint8 cLevelOwners;
     uint8 dLevelOwners;
@@ -51,7 +51,14 @@ contract OmnuumWalletAdv {
     mapping(Level => uint8) public levelCounters;
     mapping(address => Level) owners;
 
-    constructor(OwnerAccount[] memory _initialOwners) {
+    constructor(
+        uint256 _consensusRatio,
+        uint8 _minLimitForConsensus,
+        OwnerAccount[] memory _initialOwners
+    ) {
+        consensusRatio = _consensusRatio;
+        minLimitForConsensus = _minLimitForConsensus;
+
         for (uint256 i; i < _initialOwners.length; i++) {
             address _owner = _initialOwners[i].addr;
             Level _level = _initialOwners[i].level;
@@ -245,7 +252,7 @@ contract OmnuumWalletAdv {
     }
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
-        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
+        //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
         Level _currentLevel = _currentAccount.level;
         Level _newLevel = _newAccount.level;
 
@@ -261,9 +268,9 @@ contract OmnuumWalletAdv {
         owners[_newAccount.addr] = _newLevel;
     }
 
-    function _isMatchAccount(OwnerAccount memory _A, OwnerAccount memory _B) private pure returns (bool isMatch) {
-        isMatch = (_A.addr == _B.addr && _A.level == _B.level);
-    }
+    //    function _isMatchAccount(OwnerAccount memory _A, OwnerAccount memory _B) private pure returns (bool isMatch) {
+    //        isMatch = (_A.addr == _B.addr && _A.level == _B.level);
+    //    }
 
     function _checkMinConsensus(uint8 _deduction) private view {
         require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'violate min limit for consensus');
@@ -272,11 +279,10 @@ contract OmnuumWalletAdv {
     function test(OwnerAccount memory _ownerAccount) public {}
 }
 
-// [["0xF891E5556686b588269762d59466451FD7cE49B9", 2],["0xE8B67856F9f9Fc97b135139759ce575dB19dA5b1", 2],["0x8D1907Df4f7a2B740604b83Bc17b26C17ec3b299", 1], ["0xe36E03aCcA573DE10994a8c483427c659dE79bAd", 1], ["0x3cdc1AbE8D70B7A1f3Cc8c974706e8924C6AC349", 1]]
-// notOwner 0x4f8AE33355e0FC889d1A034D636870C6F302812b
+// notOwner address: 0x4f8AE33355e0FC889d1A034D636870C6F302812b
 
-// [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1], ["0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", 1], ["0x617F2E2fD72FD9D5503197092aC168c91465E7f2", 1]]
-// [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1]]
+// two CEOs, thress Devs: [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1], ["0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", 1], ["0x617F2E2fD72FD9D5503197092aC168c91465E7f2", 1]]
+// two CEOs, one Dev: [["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 2],["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", 2],["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", 1]]
 
-// Dummy bytes: 0x1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8
-// Zero address: 0x0000000000000000000000000000000000000000
+// Dummy byte32: 0x0000000000000000000000000000000000000000000000000000000000000000
+// Dummy Account Tuple: ["0x0000000000000000000000000000000000000000", 0]
