@@ -69,6 +69,9 @@ module.exports = {
       notEnoughBalance: 'request value exceeds balance',
       notRequester: 'withdrawer must be the requester',
     },
+    caManager: {
+      notCA: 'Not CA',
+    },
     code: {
       ARG1: 'ARG1',
       ARG2: 'ARG2',
@@ -91,7 +94,6 @@ module.exports = {
     ticket: 'TICKET',
   },
   ContractTopic: {
-    DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
