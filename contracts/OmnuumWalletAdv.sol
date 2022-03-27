@@ -168,31 +168,27 @@ contract OmnuumWalletAdv {
         _request.votes = uint8(ownerLevel[_requester]);
 
         reqId = requests.length - 1;
-        // emit Requested(indexed requester, indexed requestType)
+        // emit Requested(indexed address requester, indexed uint256 requestId, indexed uint256 requestType)
     }
 
-    // @function cancelRequest
-    // @dev Allows a requester(owner) to cancel the own request. After proceeding, it cannot revert cancel. Be cautious.
-    // @param _reqId - The id requested by the requester
-
-    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
-        requests[_reqId].requestType = RequestType.Cancel;
-    }
+    // @function approve
+    // @dev Allows owners to approve the request
+    // @param _reqId - Request id that the owner wants to approve
 
     function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
         OwnerLevel _level = ownerLevel[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
-        _request.votes += uint256(_level);
+        _request.votes += uint8(_level);
 
-        //emit
+        // emit Approved(indexed address approver, indexed uint256 requestId, uint256 votes)
     }
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
         OwnerLevel _level = ownerLevel[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
-        _request.votes -= uint256(_level);
+        _request.votes -= uint8(_level);
     }
 
     function execute(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
@@ -211,6 +207,14 @@ contract OmnuumWalletAdv {
         } else {
             revert('Unrecognized request');
         }
+    }
+
+    // @function cancelRequest
+    // @dev Allows a requester(owner) to cancel the own request. After proceeding, it cannot revert cancel. Be cautious.
+    // @param _reqId - Request id requested by the requester
+
+    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
+        requests[_reqId].requestType = RequestType.Cancel;
     }
 
     function totalVotes() public view returns (uint256 votes) {
