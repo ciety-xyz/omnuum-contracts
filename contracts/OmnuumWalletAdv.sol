@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// @title OmnuumWalletAdv - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution.
-// @notice This contract is not managed by Omnuum admin, but for owners.
+// @title OmnuumWalletAdv - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution
+// @notice This contract is not managed by Omnuum admin, but for owners
 // @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 // @version V1
 
@@ -94,7 +94,7 @@ contract OmnuumWalletAdv {
     }
 
     modifier reachConsensus(uint256 _reqId) {
-        require(requests[_reqId].votes >= getRequiredVotesForConsensus(0), 'Not reach consensus');
+        require(requests[_reqId].votes >= requiredVotesForConsensus(0), 'Not reach consensus');
         _;
     }
 
@@ -146,7 +146,7 @@ contract OmnuumWalletAdv {
 
     // @function request
     // @dev Allows an owner to request for an agenda that wants to proceed
-    // @dev The owner can make multiple requests even if the previous one is unresolved.
+    // @dev The owner can make multiple requests even if the previous one is unresolved
     // @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
     // @param _currentAccount - Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
     // @param _newAccount - Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
@@ -177,8 +177,8 @@ contract OmnuumWalletAdv {
     }
 
     // @function approve
-    // @dev Allows owners to approve the request.
-    // @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled).
+    // @dev Allows owners to approve the request
+    // @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled)
     // @param _reqId - Request id that the owner wants to approve
 
     function approve(uint256 _reqId)
@@ -197,7 +197,7 @@ contract OmnuumWalletAdv {
     }
 
     // @function revoke
-    // @dev Allow an approver(owner) to revoke the approval.
+    // @dev Allow an approver(owner) to revoke the approval
     // @param _reqId - Request id that the owner wants to revoke
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(msg.sender, _reqId) {
@@ -211,8 +211,8 @@ contract OmnuumWalletAdv {
 
     // @function execute
     // @dev Allow an requester(owner) to execute the request
-    // @dev After proceeding, it cannot revert the execution. Be cautious.
-    // @parma _reqId - Request id that the requester wants to execute.
+    // @dev After proceeding, it cannot revert the execution. Be cautious
+    // @parma _reqId - Request id that the requester wants to execute
 
     function execute(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
@@ -233,8 +233,8 @@ contract OmnuumWalletAdv {
     }
 
     // @function cancelRequest
-    // @dev Allows a requester(owner) to cancel the own request.
-    // @dev After proceeding, it cannot revert the cancellation. Be cautious.
+    // @dev Allows a requester(owner) to cancel the own request
+    // @dev After proceeding, it cannot revert the cancellation. Be cautious
     // @param _reqId - Request id requested by the requester
 
     function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
@@ -243,29 +243,39 @@ contract OmnuumWalletAdv {
         // emit Canceled(indexed address owner, indexed requestId)
     }
 
-    /* *****************************************************************************
-     *   Methods - View
-     * *****************************************************************************/
-
     // @function totalVotes
-    // @dev return the total number of voting rights the owners have
+    // @dev Allows users to see how many total votes the wallet currently have
+    // @return votes - the total number of voting rights the owners have
 
     function totalVotes() public view returns (uint256 votes) {
         votes = ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
     }
 
     // @function isOwner
-    // @dev return whether the owner is.
+    // @dev Allows users to verify registered owners in the wallet
+    // @param _owner - Address of the owner that you want to verify
+    // @return _isVerified - Verification result of whether the owner is correct
 
-    function isOwner(address _owner) public view returns (bool isValid) {
-        isValid = uint8(ownerVote[_owner]) > 0;
+    function isOwner(address _owner) public view returns (bool isVerified) {
+        isVerified = uint8(ownerVote[_owner]) > 0;
     }
+
+    // @function isOwnerVoted
+    // @dev Allows users to check which owner voted
+    // @param _owner - Address of the owner
+    // @param _reqId - Request id that you want to check
+    // @return isVoted -  whether the owner voted
 
     function isOwnerVoted(address _owner, uint256 _reqId) public view returns (bool isVoted) {
         isVoted = requests[_reqId].voters[_owner];
     }
 
-    function getRequiredVotesForConsensus(uint8 _deduction) public view returns (uint256 votesForConsensus) {
+    // @function requiredVotesForConsensus
+    // @dev - Allows users to see how many votes are needed to reach consensus.
+    // @param _deduction - The number of votes to deduct if when owner removal will occur from the total number of votes for calculation
+    // @votesForConsensus the number of votes required to reach a consensus
+
+    function requiredVotesForConsensus(uint8 _deduction) public view returns (uint256 votesForConsensus) {
         votesForConsensus = ((totalVotes() - _deduction) * consensusRatio) / 100;
     }
 
@@ -309,7 +319,7 @@ contract OmnuumWalletAdv {
     }
 
     function _checkMinConsensus(uint8 _deduction) private view {
-        require(getRequiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'Violate min limit for consensus');
+        require(requiredVotesForConsensus(_deduction) >= minLimitForConsensus, 'Violate min limit for consensus');
     }
 }
 
