@@ -2,8 +2,11 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 
 contract OmnuumCAManager is OwnableUpgradeable {
+    using AddressUpgradeable for address;
+
     struct Contract {
         string topic;
         bool active;
@@ -27,6 +30,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     function registerContract(address CA, string calldata topic) public onlyOwner {
+        require(CA.isContract(), 'Not CA');
+
         contracts[CA] = Contract(topic, true);
         indexedContracts[topic] = CA;
         emit Updated(CA, contracts[CA], 'register');

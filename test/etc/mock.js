@@ -39,6 +39,7 @@ module.exports = {
     this.MockLink = await ethers.getContractFactory('MockLink');
     this.MockVrfCoords = await ethers.getContractFactory('MockVrfCoords');
     this.MockNFT = await ethers.getContractFactory('MockNFT');
+    this.MockVrfRequester = await ethers.getContractFactory('MockVrfRequester');
   },
   async testDeploy(accounts, overrides) {
     /* Deploy Upgradeable Proxies */
@@ -50,8 +51,8 @@ module.exports = {
     this.walletOwners = accounts.slice(-testValues.walletOwnersLen);
     this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwners.map((account) => account.address));
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
-    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords] = await go(
-      [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords],
+    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester] = await go(
+      [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords, this.MockVrfRequester],
       mapC(async (conFactory) => {
         const contract = await conFactory.deploy();
         await contract.deployed();
@@ -79,7 +80,7 @@ module.exports = {
           this.senderVerifier.address,
           this.revealManager.address,
           this.omnuumWallet.address,
-          this.accounts[0].address,
+          this.mockVrfRequester.address,
         ],
         [
           ContractTopic.VRF,
@@ -89,7 +90,7 @@ module.exports = {
           ContractTopic.VERIFIER,
           ContractTopic.REVEAL,
           ContractTopic.WALLET,
-          ContractTopic.DEV,
+          ContractTopic.TEST,
         ],
       )
     ).wait();
