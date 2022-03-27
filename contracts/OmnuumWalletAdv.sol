@@ -168,7 +168,7 @@ contract OmnuumWalletAdv {
         _request.votes = uint8(ownerLevel[_requester]);
 
         reqId = requests.length - 1;
-        // emit Requested(indexed address requester, indexed uint256 requestId, indexed uint256 requestType)
+        // emit Requested(indexed address owner, indexed uint256 requestId, indexed uint256 requestType)
     }
 
     // @function approve
@@ -181,14 +181,20 @@ contract OmnuumWalletAdv {
         _request.voters[msg.sender] = true;
         _request.votes += uint8(_level);
 
-        // emit Approved(indexed address approver, indexed uint256 requestId, uint256 votes)
+        // emit Approved(indexed address owner, indexed uint256 requestId, uint256 votes)
     }
+
+    // @function revoke
+    // @dev Allow an owner to revoke the approval.
+    // @param _reqId - Request id that the owner wants to revoke
 
     function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
         OwnerLevel _level = ownerLevel[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
         _request.votes -= uint8(_level);
+
+        // emit Revoked(indexed address owner, indexed requestId, uint256 votes)
     }
 
     function execute(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
