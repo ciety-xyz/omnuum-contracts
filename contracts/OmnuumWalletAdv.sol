@@ -18,7 +18,7 @@ contract OmnuumWalletAdv {
         Cancel // =4
     }
     enum OwnerVotes {
-        F, // =0,  F-Level: 0 vote
+        F, // =0,  F-Level: not owner
         D, // =1,  D-Level: 1 vote
         C // =2,  C-Level: 2 votes
     }
@@ -39,7 +39,7 @@ contract OmnuumWalletAdv {
     Request[] public requests;
 
     mapping(OwnerVotes => uint8) public ownerCounter;
-    mapping(address => OwnerVotes) ownerVote;
+    mapping(address => OwnerVotes) public ownerVote;
 
     /* *****************************************************************************
      *   Constructor
@@ -100,7 +100,7 @@ contract OmnuumWalletAdv {
         _;
     }
 
-    modifier notExecuteOrCanceled(uint256 _reqId) {
+    modifier notExecutedOrCanceled(uint256 _reqId) {
         require(!requests[_reqId].isExecute, 'Already executed');
         require(requests[_reqId].requestType != RequestTypes.Cancel, 'Request canceled');
         _;
@@ -127,7 +127,7 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     *   Functions - public, external
+     *   Methods - Public, External
      * *****************************************************************************/
 
     function makePayment(bytes32 _topic, string calldata _description) external payable {
@@ -178,7 +178,7 @@ contract OmnuumWalletAdv {
     // @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled).
     // @param _reqId - Request id that the owner wants to approve
 
-    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) notVoted(_reqId) {
+    function approve(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) notVoted(_reqId) {
         OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
@@ -191,7 +191,7 @@ contract OmnuumWalletAdv {
     // @dev Allow an approver(owner) to revoke the approval.
     // @param _reqId - Request id that the owner wants to revoke
 
-    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecuteOrCanceled(_reqId) voted(_reqId) {
+    function revoke(uint256 _reqId) public onlyOwner(msg.sender) reqExists(_reqId) notExecutedOrCanceled(_reqId) voted(_reqId) {
         OwnerVotes _vote = ownerVote[msg.sender];
         Request storage _request = requests[_reqId];
         delete _request.voters[msg.sender];
@@ -205,7 +205,7 @@ contract OmnuumWalletAdv {
     // @dev After proceeding, it cannot revert the execution. Be cautious.
     // @parma _reqId - Request id that the requester wants to execute.
 
-    function execute(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
+    function execute(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
         uint8 _type = uint8(_request.requestType);
         _request.isExecute = true;
@@ -219,6 +219,8 @@ contract OmnuumWalletAdv {
         } else if (_type == uint8(RequestTypes.Change)) {
             _changeOwner(_request.currentOwner, _request.newOwner);
         }
+
+        // emit Executed(indexed address owner, indexed requestId, indexed requestType)
     }
 
     // @function cancelRequest
@@ -226,20 +228,28 @@ contract OmnuumWalletAdv {
     // @dev After proceeding, it cannot revert the cancellation. Be cautious.
     // @param _reqId - Request id requested by the requester
 
-    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecuteOrCanceled(_reqId) onlyRequester(_reqId) {
+    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
         requests[_reqId].requestType = RequestTypes.Cancel;
+
+        // emit Canceled(indexed address owner, indexed requestId)
     }
+
+    /* *****************************************************************************
+     *   Methods - View
+     * *****************************************************************************/
+
+    // @function totalVotes
+    // @dev return the total number of voting rights the owners have
 
     function totalVotes() public view returns (uint256 votes) {
         votes = ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
     }
 
+    // @function isOwner
+    // @dev return whether the owner is
+
     function isOwner(address _owner) public view returns (bool isValid) {
         isValid = uint8(ownerVote[_owner]) > 0;
-    }
-
-    function getVoteCounts(address _owner) public view returns (uint256 votes) {
-        votes = uint8(ownerVote[_owner]);
     }
 
     function amIVoted(uint256 _reqId) public view reqExists(_reqId) returns (bool isValid) {
@@ -251,7 +261,7 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     *   Functions - internal, private
+     *   Functions - Internal, Private
      * *****************************************************************************/
 
     function _withdraw(uint256 _withdrawalAmount, address _to) private {
