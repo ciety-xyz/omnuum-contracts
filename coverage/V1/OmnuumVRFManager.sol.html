@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for V1/OmnuumVRFManager.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">V1/</a> OmnuumVRFManager.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>33/33</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.86% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>13/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/6</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>34/34</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.10;
+&nbsp;
+import '@chainlink/contracts/src/v0.8/VRFConsumerBase.sol';
+import '../utils/Ownable.sol';
+import './OmnuumCAManager.sol';
+import './OmnuumExchange.sol';
+import '../library/RevertMessage.sol';
+&nbsp;
+contract OmnuumVRFManager is Ownable, VRFConsumerBase {
+    address s_LINK;
+    uint256 fee;
+    bytes32 s_key_hash;
+    address omA;
+&nbsp;
+    OmnuumCAManager caManager;
+&nbsp;
+    uint16 public safetyRatio = 150;
+&nbsp;
+    constructor(
+        address _LINK,
+        address _vrf_coord,
+        bytes32 _key_hash,
+        uint256 _fee,
+        address _omnuumCA
+    ) VRFConsumerBase(_vrf_coord, _LINK) {
+        s_LINK = _LINK;
+        s_key_hash = _key_hash;
+        fee = _fee;
+        caManager = OmnuumCAManager(_omnuumCA);
+    }
+&nbsp;
+    mapping(address =&gt; bytes32) aToId;
+    mapping(bytes32 =&gt; address) idToA;
+    mapping(bytes32 =&gt; bytes32) idToTopic;
+&nbsp;
+    // actionType: fee, safetyRatio
+    event Updated(uint256 value, bytes32 indexed actionType);
+    event RequestVRF(address indexed roller, bytes32 indexed requestId, bytes32 indexed topic);
+    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bytes32 indexed topic, bool success, string reason);
+&nbsp;
+    // Only for allowed CA (Omnuum contracts except NFT contract)
+    function requestVRF(string calldata topic) external {
+        address exchangeAddress = caManager.getContract('EXCHANGE');
+        require(LINK.balanceOf(exchangeAddress) &gt; fee, 'Not enough LINK');
+        require(caManager.isRegistered(msg.sender), 'OO3');
+&nbsp;
+        bytes32 requestId = requestRandomness(s_key_hash, fee);
+        idToA[requestId] = msg.sender;
+        idToTopic[requestId] = keccak256(abi.encodePacked(topic));
+&nbsp;
+        emit RequestVRF(msg.sender, requestId, idToTopic[requestId]);
+    }
+&nbsp;
+    function requestVRFOnce(address targetAddress, string calldata topic) external payable {
+        require(caManager.isRegistered(msg.sender), 'OO3');
+&nbsp;
+        address exchangeAddress = caManager.getContract('EXCHANGE');
+&nbsp;
+        require(LINK.balanceOf(exchangeAddress) &gt;= fee, 'Not enough LINK');
+&nbsp;
+        uint256 required_amount = OmnuumExchange(exchangeAddress).getExchangeAmount(address(0), s_LINK, fee);
+        require((required_amount * safetyRatio) / 100 &lt;= msg.value, 'Not enough Ether');
+&nbsp;
+        require(aToId[targetAddress] == '', 'Already used');
+&nbsp;
+        // receive 2 link from exchange
+        OmnuumExchange(exchangeAddress).exchangeToken{ value: msg.value }(s_LINK, fee, address(this));
+&nbsp;
+        bytes32 requestId = requestRandomness(s_key_hash, fee);
+        idToA[requestId] = targetAddress;
+        idToTopic[requestId] = keccak256(abi.encodePacked(topic));
+&nbsp;
+        emit RequestVRF(targetAddress, requestId, idToTopic[requestId]);
+    }
+&nbsp;
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        address requestAddress = idToA[requestId];
+        // contracts should implement vrfResponse method if they want to do specific action
+        bytes memory payload = abi.encodeWithSignature('vrfResponse(uint256)', randomness);
+        (bool success, bytes memory returnData) = address(requestAddress).call(payload);
+&nbsp;
+        string memory reason = success ? '' : RevertMessage.parse(returnData);
+&nbsp;
+        aToId[requestAddress] = requestId;
+        delete idToA[requestId];
+&nbsp;
+        emit ResponseVRF(requestId, randomness, idToTopic[requestId], success, reason);
+    }
+&nbsp;
+    function updateFee(uint256 _fee) external onlyOwner {
+        fee = _fee;
+        emit Updated(_fee, keccak256(abi.encodePacked('fee')));
+    }
+&nbsp;
+    function updateSafetyRatio(uint16 _safetyRatio) external onlyOwner {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(_safetyRatio &gt;= 100, 'should above 100');
+        safetyRatio = _safetyRatio;
+        emit Updated(_safetyRatio, keccak256(abi.encodePacked('safetyRatio')));
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Mar 28 2022 14:08:00 GMT+0900 (Korean Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

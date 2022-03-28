@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for V1/OmnuumWallet.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">V1/</a> OmnuumWallet.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>36/36</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">85.71% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>24/28</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>14/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>44/44</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">58×</span>
+<span class="cline-any cline-yes">54×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40×</span>
+<span class="cline-any cline-yes">38×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-yes">29×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36×</span>
+<span class="cline-any cline-yes">35×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">351×</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-yes">1053×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19×</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">75×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">29×</span>
+<span class="cline-any cline-yes">29×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.10;
+&nbsp;
+import '@openzeppelin/contracts/utils/Address.sol';
+&nbsp;
+contract OmnuumWallet {
+    using Address for address;
+    using Address for address payable;
+&nbsp;
+    // =========== EVENTs =========== //
+    event EtherReceived();
+    event PaymentReceived(bytes32 topic, string description);
+    event Requested(uint256 indexed reqId, address indexed requester, uint256 withdrawalValue);
+    event Approved(uint256 indexed reqId, address indexed owner);
+    event Revoked(uint256 indexed reqId, address indexed owner);
+    event Withdrawn(uint256 indexed reqId, address indexed receiver, uint256 value);
+&nbsp;
+    // =========== STORAGEs =========== //
+    address[] public owners;
+    mapping(address =&gt; bool) public isOwner; //owner address =&gt; true/false
+    mapping(uint256 =&gt; mapping(address =&gt; bool)) approvals; //reqId =&gt; address =&gt; approval
+    struct Request {
+        address destination;
+        uint256 value;
+        bool withdrawn;
+    } // withdrawal destination address, amount of withdrawal, tag for withdrawn
+    Request[] public requests;
+&nbsp;
+    // =========== MODIFIERs =========== //
+    modifier onlyOwners() {
+        require(isOwner[msg.sender], 'only owner');
+        _;
+    }
+    modifier reqExists(uint256 _id) {
+        require(_id &lt; requests.length, 'request not exist');
+        _;
+    }
+    modifier notApproved(uint256 _id) {
+        require(!approvals[_id][msg.sender], 'already approved');
+        _;
+    }
+    modifier isApproved(uint256 _id) {
+        require(approvals[_id][msg.sender], 'not approved');
+        _;
+    }
+    modifier notWithdrawn(uint256 _id) {
+        require(!requests[_id].withdrawn, 'already withdrawn');
+        _;
+    }
+    modifier isAllAgreed(uint256 _id) {
+        require(getApprovalCount(_id) == owners.length, 'consensus not reached');
+        _;
+    }
+&nbsp;
+    // =========== CONSTRUCTOR =========== //
+    constructor(address[] memory _owners) {
+        //minimum 2 owners are required for multi sig wallet
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(_owners.length &gt; 1, 'Single owner');
+&nbsp;
+        //Register owners
+        for (uint256 i; i &lt; _owners.length; i++) {
+            address owner = _owners[i];
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(!isOwner[owner], 'Owner exists');
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(!owner.isContract(), 'Not EOA');
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(owner != address(0), 'Invalid address');
+&nbsp;
+            isOwner[owner] = true;
+            owners.push(owner);
+        }
+    }
+&nbsp;
+    // =========== Ether RECEIVER =========== //
+&nbsp;
+    function makePayment(bytes32 _topic, string calldata _description) external payable {
+        require(msg.value &gt; 0, 'Useless payment');
+        emit PaymentReceived(_topic, _description);
+    }
+&nbsp;
+    receive() external payable {
+        emit EtherReceived();
+    }
+&nbsp;
+    // =========== WALLET LOGICs =========== //
+    function approvalRequest(uint256 _withdrawalValue) external onlyOwners returns (uint256) {
+        require(_withdrawalValue &lt;= address(this).balance, 'request value exceeds balance');
+&nbsp;
+        requests.push(Request({ destination: msg.sender, value: _withdrawalValue, withdrawn: false }));
+&nbsp;
+        uint256 reqId = requests.length - 1;
+&nbsp;
+        approve(reqId);
+&nbsp;
+        emit Requested(reqId, msg.sender, _withdrawalValue);
+        return (reqId);
+    }
+&nbsp;
+    function approve(uint256 _reqId) public onlyOwners reqExists(_reqId) notApproved(_reqId) notWithdrawn(_reqId) {
+        approvals[_reqId][msg.sender] = true;
+        emit Approved(_reqId, msg.sender);
+    }
+&nbsp;
+    function checkApproval(uint256 _reqId, address _approver) public view returns (bool) {
+        return approvals[_reqId][_approver];
+    }
+&nbsp;
+    function getApprovalCount(uint256 _reqId) public view returns (uint256) {
+        uint256 count;
+        for (uint256 i; i &lt; owners.length; i++) {
+            if (checkApproval(_reqId, owners[i])) {
+                count++;
+            }
+        }
+        return count;
+    }
+&nbsp;
+    function revokeApproval(uint256 _reqId) external onlyOwners reqExists(_reqId) isApproved(_reqId) notWithdrawn(_reqId) {
+        approvals[_reqId][msg.sender] = false;
+        emit Revoked(_reqId, msg.sender);
+    }
+&nbsp;
+    function withdrawal(uint256 _reqId) external onlyOwners reqExists(_reqId) notWithdrawn(_reqId) isAllAgreed(_reqId) {
+        Request storage request = requests[_reqId];
+        require(msg.sender == request.destination, 'withdrawer must be the requester');
+&nbsp;
+        request.withdrawn = true;
+        payable(request.destination).sendValue(request.value);
+        emit Withdrawn(_reqId, request.destination, request.value);
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Mar 28 2022 14:08:00 GMT+0900 (Korean Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

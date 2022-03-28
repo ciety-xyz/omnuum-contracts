@@ -10,6 +10,7 @@ require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
 // require('hardhat-contract-sizer');
 require('hardhat-abi-exporter');
+require('solidity-coverage');
 
 module.exports = {
   solidity: '0.8.10',
