@@ -28,7 +28,8 @@ module.exports = {
       Updated: 'Updated',
     },
     Wallet: {
-      FeeReceived: 'FeeReceived',
+      PaymentReceived: 'PaymentReceived',
+      EtherReceived: 'EtherReceived',
       Requested: 'Requested',
       Approved: 'Approved',
       Revoked: 'Revoked',
@@ -60,6 +61,7 @@ module.exports = {
       silent: 'Transaction reverted silently',
     },
     wallet: {
+      useless: 'Useless payment',
       onlyOwner: 'only owner',
       reqNotExists: 'request not exist',
       alreadyApproved: 'already approved',
@@ -117,10 +119,14 @@ module.exports = {
     },
   },
   testValues: {
+    paymentDescription: 'Test for Payment',
+    paymentTestTopic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST')),
+    zeroOwnerAccount: { addr: ethers.constants.AddressZero, vote: 0 },
     baseFeeRate: 5000, // converted as 0.05 (5 percent)
     discountFeeRate: 10000, // converted as 0.1 (10 percent)
-    walletOwnersLen: 3,
     sendEthValue: '10',
+    consensusRatio: 66,
+    minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),

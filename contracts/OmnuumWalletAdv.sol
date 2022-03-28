@@ -7,8 +7,8 @@ pragma solidity ^0.8.0;
 // @version V1
 
 contract OmnuumWalletAdv {
-    uint256 immutable consensusRatio;
-    uint8 immutable minLimitForConsensus;
+    uint256 public immutable consensusRatio;
+    uint8 public immutable minLimitForConsensus;
 
     enum RequestTypes {
         Withdraw, // =0,
@@ -46,7 +46,7 @@ contract OmnuumWalletAdv {
 
     /* *****************************************************************************
      *   Constructor
-     * - set consensus ratio, minimum votes limit for consensus and initial owners
+     * - set consensus ratio, minimum votes limit for consensus, and initial accounts
      * *****************************************************************************/
     constructor(
         uint256 _consensusRatio,
@@ -66,8 +66,9 @@ contract OmnuumWalletAdv {
     /* *****************************************************************************
      *   Events - TBD
      * *****************************************************************************/
-    event PaymentReceived(bytes32 indexed topic, string description);
-    event EtherReceived();
+    event PaymentReceived(address indexed sender, bytes32 indexed topic, string description);
+    event EtherReceived(address indexed sender);
+    event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
 
     /* *****************************************************************************
      *   Modifiers
@@ -135,13 +136,11 @@ contract OmnuumWalletAdv {
 
     function makePayment(bytes32 _topic, string calldata _description) external payable {
         require(msg.value > 0, 'Useless payment');
-        // emit with msg.sender?
-        emit PaymentReceived(_topic, _description);
+        emit PaymentReceived(msg.sender, _topic, _description);
     }
 
     receive() external payable {
-        // emit with msg.sender?
-        emit EtherReceived();
+        emit EtherReceived(msg.sender);
     }
 
     // @function request
@@ -157,9 +156,7 @@ contract OmnuumWalletAdv {
         OwnerAccount calldata _currentAccount,
         OwnerAccount calldata _newAccount,
         uint256 _withdrawalAmount
-    ) public onlyOwner(msg.sender) returns (uint256 reqId) {
-        require(_requestType != RequestTypes.Cancel, 'Canceled request not acceptable');
-
+    ) public onlyOwner(msg.sender) {
         address _requester = msg.sender;
 
         Request storage _request = requests.push();
@@ -171,8 +168,7 @@ contract OmnuumWalletAdv {
         _request.voters[_requester] = true;
         _request.votes = uint8(ownerVote[_requester]);
 
-        // emit Requested(indexed address owner, indexed uint256 requestId, indexed uint256 requestType)
-        return requests.length - 1;
+        emit Requested(_requester, requests.length - 1, _requestType);
     }
 
     // @function approve
