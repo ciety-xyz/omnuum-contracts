@@ -10,7 +10,7 @@ const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js'
 
 const end_date = toSolDate(addDays(new Date(), 2));
 const group_id = 0;
-const nounce = 0;
+const nonce = 0;
 
 upgrades.silenceWarnings();
 
@@ -222,7 +222,7 @@ describe('TicketManager', () => {
       );
       await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nounce, omnuumAC, senderVerifier.address);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, omnuumAC, senderVerifier.address);
 
       const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity, ticket, payload, {
         value: price.mul(use_quantity),
@@ -260,7 +260,7 @@ describe('TicketManager', () => {
       );
       await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nounce, omnuumAC, senderVerifier.address);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, omnuumAC, senderVerifier.address);
 
       const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity1, ticket, payload, {
         value: price.mul(use_quantity1),

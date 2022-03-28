@@ -32,17 +32,17 @@ describe('SenderVerifier', () => {
       const payload = await signPayload(
         minterAC.address, // sender
         Constants.payloadTopic.ticket, // topic
-        group_id, // nounce
+        group_id, // nonce
         omnuumAC, // signer
-        senderVerifier.address, // verify contract address
+        senderVerifier.address // verify contract address
       );
 
       const verify_result = await senderVerifier.verify(
         omnuumAC.address, // signer
         minterAC.address, // sender
         Constants.payloadTopic.ticket, // topic
-        group_id, // nounce
-        payload,
+        group_id, // nonce
+        payload
       );
 
       expect(verify_result).to.be.deep.equal([]);
@@ -61,8 +61,8 @@ describe('SenderVerifier', () => {
           minterAC.address,
           Constants.payloadTopic.mint, // topic - false
           group_id,
-          payload,
-        ),
+          payload
+        )
       ).to.be.revertedWith(Constants.reasons.senderVerifier.topic);
     });
     it('[Revert] False Signer', async () => {
@@ -79,11 +79,11 @@ describe('SenderVerifier', () => {
           minterAC.address,
           Constants.payloadTopic.ticket, // topic - false
           group_id,
-          payload,
-        ),
+          payload
+        )
       ).to.be.revertedWith(Constants.reasons.senderVerifier.signer);
     });
-    it('[Revert] False Nounce', async () => {
+    it('[Revert] False Nonce', async () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
@@ -96,10 +96,10 @@ describe('SenderVerifier', () => {
           omnuumAC.address,
           minterAC.address,
           Constants.payloadTopic.ticket,
-          group_id + 1, // nounce - false
-          payload,
-        ),
-      ).to.be.revertedWith(Constants.reasons.senderVerifier.nounce);
+          group_id + 1, // nonce - false
+          payload
+        )
+      ).to.be.revertedWith(Constants.reasons.senderVerifier.nonce);
     });
     it('[Revert] False Sender', async () => {
       const {
@@ -110,7 +110,7 @@ describe('SenderVerifier', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        senderVerifier.verify(omnuumAC.address, falseSenderAC.address, Constants.payloadTopic.ticket, group_id, payload),
+        senderVerifier.verify(omnuumAC.address, falseSenderAC.address, Constants.payloadTopic.ticket, group_id, payload)
       ).to.be.revertedWith(Constants.reasons.senderVerifier.sender);
     });
   });

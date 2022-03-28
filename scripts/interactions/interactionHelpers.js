@@ -11,7 +11,7 @@ const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, paylo
     Payload: [
       { name: 'sender', type: 'address' },
       { name: 'topic', type: 'string' },
-      { name: 'nounce', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
     ],
   },
   primaryType: 'Payload',
@@ -24,7 +24,7 @@ const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, paylo
   message: {
     sender: minterAddress,
     topic: payloadTopic,
-    nounce: groupId,
+    nonce: groupId,
   },
 });
 

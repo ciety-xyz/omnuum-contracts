@@ -45,7 +45,7 @@ module.exports = {
       onlyOwner: 'Ownable: caller is not the owner',
     },
     senderVerifier: {
-      nounce: 'False Nounce',
+      nonce: 'False Nonce',
       topic: 'False Topic',
       sender: 'False Sender',
       signer: 'False Signer',

@@ -13,7 +13,7 @@ contract SenderVerifier is EIP712 {
     struct Payload {
         address sender;
         string topic;
-        uint256 nounce;
+        uint256 nonce;
         bytes signature;
     }
 
@@ -21,12 +21,12 @@ contract SenderVerifier is EIP712 {
         address _owner,
         address _sender,
         string calldata _topic,
-        uint256 _nounce,
+        uint256 _nonce,
         Payload calldata _payload
     ) external view {
         address signer = recoverSigner(_payload);
         require(_owner == signer, 'False Signer');
-        require(_nounce == _payload.nounce, 'False Nounce');
+        require(_nonce == _payload.nonce, 'False Nonce');
         require(keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)), 'False Topic');
         require(_payload.sender == _sender, 'False Sender');
     }
@@ -41,10 +41,10 @@ contract SenderVerifier is EIP712 {
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
-                        keccak256('Payload(address sender,string topic,uint256 nounce)'),
+                        keccak256('Payload(address sender,string topic,uint256 nonce)'),
                         _payload.sender,
                         keccak256(bytes(_payload.topic)),
-                        _payload.nounce
+                        _payload.nonce
                     )
                 )
             );
