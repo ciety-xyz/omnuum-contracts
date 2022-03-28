@@ -125,7 +125,7 @@ contract OmnuumWalletAdv {
         assembly {
             codeSize := extcodesize(_address)
         }
-        require(codeSize == 0, 'Contract address not acceptable'); // know that it's not perfect to protect, but can handle by the owners
+        require(codeSize == 0, 'Contract address not acceptable'); // know that it's not perfect to protect from CA, but can handle by the owners
         _;
     }
 
@@ -171,9 +171,8 @@ contract OmnuumWalletAdv {
         _request.voters[_requester] = true;
         _request.votes = uint8(ownerVote[_requester]);
 
-        reqId = requests.length - 1;
-
         // emit Requested(indexed address owner, indexed uint256 requestId, indexed uint256 requestType)
+        return requests.length - 1;
     }
 
     // @function approve
@@ -248,7 +247,7 @@ contract OmnuumWalletAdv {
     // @return votes - the total number of voting rights the owners have
 
     function totalVotes() public view returns (uint256 votes) {
-        votes = ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
+        return ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
     }
 
     // @function isOwner
@@ -257,7 +256,7 @@ contract OmnuumWalletAdv {
     // @return _isVerified - Verification result of whether the owner is correct
 
     function isOwner(address _owner) public view returns (bool isVerified) {
-        isVerified = uint8(ownerVote[_owner]) > 0;
+        return uint8(ownerVote[_owner]) > 0;
     }
 
     // @function isOwnerVoted
@@ -267,15 +266,15 @@ contract OmnuumWalletAdv {
     // @return isVoted -  whether the owner voted
 
     function isOwnerVoted(address _owner, uint256 _reqId) public view returns (bool isVoted) {
-        isVoted = requests[_reqId].voters[_owner];
+        return requests[_reqId].voters[_owner];
     }
 
     // @function requiredVotesForConsensus
-    // @dev - Allows users to see how many votes are needed to reach consensus.
+    // @dev Allows users to see how many votes are needed to reach consensus.
     // @votesForConsensus the number of votes required to reach a consensus
 
     function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
-        votesForConsensus = (totalVotes() * consensusRatio) / 100;
+        return (totalVotes() * consensusRatio) / 100;
     }
 
     /* *****************************************************************************
@@ -283,9 +282,9 @@ contract OmnuumWalletAdv {
      * *****************************************************************************/
 
     // @function _withdraw
-    // @dev - Withdraw Ethers from the wallet
-    // @param _value
-    // @param _to
+    // @dev Withdraw Ethers from the wallet
+    // @param _value - Withdraw amount
+    // @param _to - Withdrawal recipient
 
     function _withdraw(uint256 _value, address _to) private {
         require(_value <= address(this).balance, 'Insufficient balance');
@@ -294,8 +293,8 @@ contract OmnuumWalletAdv {
     }
 
     // @function _addOwner
-    // @dev - Add a new Owner to the wallet
-    // @param _newAccount
+    // @dev Add a new Owner to the wallet
+    // @param _newAccount - New owner account to be added
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
         OwnerVotes _vote = _newAccount.vote;
@@ -304,8 +303,8 @@ contract OmnuumWalletAdv {
     }
 
     // @function _removeOwner
-    // @dev - Remove existing owner form the wallet
-    // @param _removalAccount
+    // @dev Remove existing owner form the wallet
+    // @param _removalAccount - Current owner account to be removed
 
     function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
         ownerCounter[_removalAccount.vote]--;
@@ -314,9 +313,9 @@ contract OmnuumWalletAdv {
     }
 
     // @function _changeOwner
-    // @dev - Change owner
-    // @param _currentAccount
-    // @param _netAccount
+    // @dev Allows changing the existing owner to the new one. It also includes the functionality to change the existing owner's level
+    // @param _currentAccount - Current owner account to be changed
+    // @param _newAccount - New owner account to be applied
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         //        require(!_isMatchAccount(_currentAccount, _newAccount), 'same account substitution');
@@ -333,7 +332,8 @@ contract OmnuumWalletAdv {
     }
 
     // @function _checkMinConsensus
-    // @dev -
+    // @dev It is the verification function to prevent a dangerous situation in which the number of votes that an owner has
+    // @dev is equal to or greater than the number of votes required for reaching consensus so that the owner achieves consensus by himself or herself.
 
     function _checkMinConsensus() private view {
         require(requiredVotesForConsensus() >= minLimitForConsensus, 'Violate min limit for consensus');
