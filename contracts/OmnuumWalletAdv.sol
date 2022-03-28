@@ -64,11 +64,12 @@ contract OmnuumWalletAdv {
     }
 
     /* *****************************************************************************
-     *   Events - TBD
+     *   Events
      * *****************************************************************************/
     event PaymentReceived(address indexed sender, bytes32 indexed topic, string description);
     event EtherReceived(address indexed sender);
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
+    event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
 
     /* *****************************************************************************
      *   Modifiers
@@ -168,7 +169,7 @@ contract OmnuumWalletAdv {
         _request.voters[_requester] = true;
         _request.votes = uint8(ownerVote[_requester]);
 
-        emit Requested(_requester, requests.length - 1, _requestType);
+        emit Requested(msg.sender, requests.length - 1, _requestType);
     }
 
     // @function approve
@@ -187,8 +188,7 @@ contract OmnuumWalletAdv {
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
         _request.votes += uint8(_vote);
-
-        // emit Approved(indexed address owner, indexed uint256 requestId, uint256 votes)
+        emit Approved(msg.sender, _reqId, _vote);
     }
 
     // @function revoke

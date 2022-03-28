@@ -163,7 +163,10 @@ describe('Omnuum Multi-sig Wallet', () => {
 
   describe('[Method] request', () => {
     it('can make a request by owner', async () => {
-      const requestSigner = walletOwnerSigner[0];
+      const ownerNo = 0;
+      const requestSigner = walletOwnerSigner[ownerNo];
+      const voteLevel = walletOwnerAccounts[ownerNo].vote;
+      const requestId = 0;
       const requestType = 2;
 
       const txResponse = await request({
@@ -171,9 +174,11 @@ describe('Omnuum Multi-sig Wallet', () => {
         walletContract: Wallet.connect(requestSigner),
       });
 
+      // Confirm event emit
       // event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType)
-      await expect(txResponse).to.emit(Wallet, events.Wallet.Requested).withArgs(requestSigner.address, 0, requestType);
-      const requestStorageDate = await Wallet.requests(0);
+      await expect(txResponse).to.emit(Wallet, events.Wallet.Requested).withArgs(requestSigner.address, requestId, requestType);
+      const requestStorageDate = await Wallet.requests(requestId);
+
       expect(requestStorageDate.requester).to.eq(requestSigner.address);
       expect(requestStorageDate.requestType).to.eq(requestType);
 
@@ -182,8 +187,10 @@ describe('Omnuum Multi-sig Wallet', () => {
       );
       expect(requestStorageDate.newOwner.addr, requestStorageDate.newOwner.vote).to.eq(...Object.values(testValues.zeroOwnerAccount));
       expect(requestStorageDate.withdrawalAmount).to.eq(0);
-      expect(requestStorageDate.votes).to.eq(2);
+      expect(requestStorageDate.votes).to.eq(voteLevel);
       expect(requestStorageDate.isExecute).to.false;
+
+      expect(await Wallet.isOwnerVoted(requestSigner.address, requestId)).to.true;
     });
 
     it('[Revert] request by now owner', async () => {
@@ -196,5 +203,38 @@ describe('Omnuum Multi-sig Wallet', () => {
     });
   });
 
-  describe('[Method] approve', () => {});
+  describe('[Method] approve', () => {
+    it('can be approved by another owner', async () => {
+      const requesterOwnerNo = 0;
+      const approverOwnerNo = 1;
+      const approveSigner = walletOwnerSigner[approverOwnerNo];
+      const approverVoteLevel = walletOwnerAccounts[approverOwnerNo].vote;
+      const requesterVoteLevel = walletOwnerAccounts[requesterOwnerNo].vote;
+      const totalVoteLevel = approverVoteLevel + requesterVoteLevel;
+
+      const requestId = 0;
+
+      // Send a dummy request transaction before approval
+      await request({
+        walletContract: Wallet.connect(walletOwnerSigner[requesterOwnerNo]),
+      });
+
+      // Confirm event emit when approve
+      // event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes)
+      await expect(await Wallet.connect(approveSigner).approve(requestId))
+        .to.emit(Wallet, events.Wallet.Approved)
+        .withArgs(approveSigner.address, requestId, approverVoteLevel);
+
+      const requestStorageDate = await Wallet.requests(requestId);
+
+      expect(requestStorageDate.votes).to.eq(totalVoteLevel);
+
+      expect(await Wallet.isOwnerVoted(approveSigner.address, requestId)).to.true;
+    });
+
+    it('[Revert] if approve by not onwer', async () => {});
+    it('[Revert] if approve to the request which is not exist', async () => {});
+    it('[Revert] if approve to the request which is not already executed or canceled', async () => {});
+    it('[Revert] if approve again', async () => {});
+  });
 });

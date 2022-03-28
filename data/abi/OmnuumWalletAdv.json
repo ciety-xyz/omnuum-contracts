@@ -1,5 +1,6 @@
 [
   "constructor(uint256,uint8,tuple(address,uint8)[])",
+  "event Approved(address indexed,uint256 indexed,uint8)",
   "event EtherReceived(address indexed)",
   "event PaymentReceived(address indexed,bytes32 indexed,string)",
   "event Requested(address indexed,uint256 indexed,uint8 indexed)",
