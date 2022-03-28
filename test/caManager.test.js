@@ -55,7 +55,7 @@ describe('OmnuumCAManager', () => {
       expect(after_override).to.be.equal(mockContract2.address);
 
       // overrided, but still exist and must be registered
-      const isExist = await omnuumCAManager.isRegistered(mockContract.address);
+      const isExist = await omnuumCAManager.checkRegistration(mockContract.address);
 
       expect(isExist).to.be.true;
     });
@@ -81,13 +81,13 @@ describe('OmnuumCAManager', () => {
     });
   });
 
-  describe('[Method] removeContract, isRegistered', () => {
+  describe('[Method] removeContract, checkRegistration', () => {
     it('can remove contract', async () => {
       const { omnuumCAManager, mockNFT: mockContract } = this;
 
       await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
 
-      const before_remove = await omnuumCAManager.isRegistered(mockContract.address);
+      const before_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(before_remove).to.be.true;
 
       const tx = await omnuumCAManager.removeContract(mockContract.address);
@@ -98,7 +98,7 @@ describe('OmnuumCAManager', () => {
         .to.emit(omnuumCAManager, Constants.events.CAManager.Updated)
         .withArgs(mockContract.address, [Constants.ContractTopic.TEST, true], 'remove');
 
-      const after_remove = await omnuumCAManager.isRegistered(mockContract.address);
+      const after_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(after_remove).to.be.false;
 
       // indexedContracts also removed

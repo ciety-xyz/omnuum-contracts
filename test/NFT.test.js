@@ -664,7 +664,7 @@ describe('OmnuumNFT', () => {
           value: price.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT8);
-    }).timeout(5000);
+    });
     it('[Revert] Minter request more quantity than ticket', async () => {
       const {
         accounts: [omnuumAC, minterAC],
@@ -715,7 +715,7 @@ describe('OmnuumNFT', () => {
           value: price.mul(secondTryCount),
         })
       ).wait();
-    }).timeout(3000);
+    });
     it('[Revert] Minter request more quantity than total remaining quantity', async () => {
       const {
         accounts: [omnuumAC, minterAC],

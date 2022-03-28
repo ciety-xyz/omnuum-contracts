@@ -88,6 +88,10 @@ module.exports = {
       MT9: 'MT9', // Mint subject cannot be CA
     },
   },
+  contractRole: {
+    exchange: 'EXCHANGE',
+    vrf: 'VRF',
+  },
   payloadTopic: {
     mint: 'MINT',
     vrf: 'VRF',
