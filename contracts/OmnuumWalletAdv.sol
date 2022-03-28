@@ -227,12 +227,12 @@ contract OmnuumWalletAdv {
         // emit Executed(indexed address owner, indexed requestId, indexed requestType)
     }
 
-    // @function cancelRequest
+    // @function cancel
     // @dev Allows a requester(owner) to cancel the own request
     // @dev After proceeding, it cannot revert the cancellation. Be cautious
     // @param _reqId - Request id requested by the requester
 
-    function cancelRequest(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
+    function cancel(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
         requests[_reqId].requestType = RequestTypes.Cancel;
 
         // emit Canceled(indexed address owner, indexed requestId)

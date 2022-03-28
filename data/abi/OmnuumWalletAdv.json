@@ -5,7 +5,7 @@
   "event PaymentReceived(address indexed,bytes32 indexed,string)",
   "event Requested(address indexed,uint256 indexed,uint8 indexed)",
   "function approve(uint256)",
-  "function cancelRequest(uint256)",
+  "function cancel(uint256)",
   "function consensusRatio() view returns (uint256)",
   "function execute(uint256)",
   "function isOwner(address) view returns (bool)",
