@@ -5,22 +5,24 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
+/// @title TicketManager - manage ticket and verify ticket signature
+/// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 contract TicketManager is EIP712 {
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
 
     struct Ticket {
-        address user;
-        address nft;
-        uint256 price;
-        uint32 quantity;
-        uint256 groupId;
-        bytes signature;
+        address user; // owner of this ticket
+        address nft; // ticket nft contract
+        uint256 price; // price of mint with this ticket
+        uint32 quantity; // possible mint quantity
+        uint256 groupId; // ticket's group id
+        bytes signature; // ticket's signature
     }
 
-    // nft => groupId => end date
+    /// @dev nft => groupId => end date
     mapping(address => mapping(uint256 => uint256)) endDates;
 
-    // nft => groupId => ticket owner => use count
+    /// @dev nft => groupId => ticket owner => use count
     mapping(address => mapping(uint256 => mapping(address => uint32))) ticketUsed;
 
     string private constant SIGNING_DOMAIN = 'OmnuumTicket';
@@ -29,17 +31,26 @@ contract TicketManager is EIP712 {
     event EndDate(address indexed nft, uint256 groupId, uint256 endDate);
     event UseTicket(address indexed nft, address minter, uint32 quantity, Ticket ticket);
 
+    /// @notice set end date for ticket group
+    /// @param _nft nft contract
+    /// @param _groupId id of ticket group
+    /// @param _endDate end date timestamp
     function setEndDate(
         address _nft,
-        uint256 groupId,
-        uint256 endDate
+        uint256 _groupId,
+        uint256 _endDate
     ) external {
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
-        endDates[_nft][groupId] = endDate;
+        endDates[_nft][_groupId] = _endDate;
 
-        emit EndDate(_nft, groupId, endDate);
+        emit EndDate(_nft, _groupId, _endDate);
     }
 
+    /// @notice use ticket for minting
+    /// @param _signer address who is believed to be signer of ticket
+    /// @param _minter address who is believed to be owner of ticket
+    /// @param _quantity quantity of which minter is willing to mint
+    /// @param _ticket ticket
     function useTicket(
         address _signer,
         address _minter,
@@ -52,6 +63,12 @@ contract TicketManager is EIP712 {
         emit UseTicket(msg.sender, _minter, _quantity, _ticket);
     }
 
+    /// @notice verify ticket
+    /// @param _signer address who is believed to be signer of ticket
+    /// @param _nft nft contract address
+    /// @param _minter address who is believed to be owner of ticket
+    /// @param _quantity quantity of which minter is willing to mint
+    /// @param _ticket ticket
     function verify(
         address _signer,
         address _nft,
@@ -66,11 +83,15 @@ contract TicketManager is EIP712 {
         require(ticketUsed[_nft][_ticket.groupId][_minter] + _quantity <= _ticket.quantity, 'MT3');
     }
 
+    /// @dev recover signer from payload hash
+    /// @param _ticket payload struct
     function recoverSigner(Ticket calldata _ticket) internal view returns (address) {
         bytes32 digest = _hash(_ticket);
         return ECDSA.recover(digest, _ticket.signature);
     }
 
+    /// @dev hash payload
+    /// @param _ticket payload struct
     function _hash(Ticket calldata _ticket) internal view returns (bytes32) {
         return
             _hashTypedDataV4(
