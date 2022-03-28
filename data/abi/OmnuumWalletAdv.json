@@ -4,6 +4,7 @@
   "event EtherReceived(address indexed)",
   "event PaymentReceived(address indexed,bytes32 indexed,string)",
   "event Requested(address indexed,uint256 indexed,uint8 indexed)",
+  "event Revoked(address indexed,uint256 indexed,uint8)",
   "function approve(uint256)",
   "function cancel(uint256)",
   "function consensusRatio() view returns (uint256)",

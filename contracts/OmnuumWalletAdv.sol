@@ -70,6 +70,7 @@ contract OmnuumWalletAdv {
     event EtherReceived(address indexed sender);
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
+    event Revoked(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
 
     /* *****************************************************************************
      *   Modifiers
@@ -188,6 +189,7 @@ contract OmnuumWalletAdv {
         Request storage _request = requests[_reqId];
         _request.voters[msg.sender] = true;
         _request.votes += uint8(_vote);
+
         emit Approved(msg.sender, _reqId, _vote);
     }
 
@@ -201,7 +203,18 @@ contract OmnuumWalletAdv {
         delete _request.voters[msg.sender];
         _request.votes -= uint8(_vote);
 
-        // emit Revoked(indexed address owner, indexed requestId, uint256 votes)
+        emit Revoked(msg.sender, _reqId, _vote);
+    }
+
+    // @function cancel
+    // @dev Allows a requester(owner) to cancel the own request
+    // @dev After proceeding, it cannot revert the cancellation. Be cautious
+    // @param _reqId - Request id requested by the requester
+
+    function cancel(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
+        requests[_reqId].requestType = RequestTypes.Cancel;
+
+        // emit Canceled(indexed address owner, indexed requestId)
     }
 
     // @function execute
@@ -225,17 +238,6 @@ contract OmnuumWalletAdv {
         }
 
         // emit Executed(indexed address owner, indexed requestId, indexed requestType)
-    }
-
-    // @function cancel
-    // @dev Allows a requester(owner) to cancel the own request
-    // @dev After proceeding, it cannot revert the cancellation. Be cautious
-    // @param _reqId - Request id requested by the requester
-
-    function cancel(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
-        requests[_reqId].requestType = RequestTypes.Cancel;
-
-        // emit Canceled(indexed address owner, indexed requestId)
     }
 
     // @function totalVotes
