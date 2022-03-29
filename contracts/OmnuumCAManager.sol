@@ -17,16 +17,16 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     /// @dev (omnuum contract address => (bytes32 topic => isRegistered))
-    mapping(address => mapping(bytes32 => bool)) roles;
+    mapping(address => mapping(bytes32 => bool)) public roles;
 
     /// @dev (omnuum contract address => (topic, active))
-    mapping(address => Contract) contracts;
+    mapping(address => Contract) public contracts;
 
     // @dev topic indexed mapping, (string topic => omnuum contract address)
     mapping(string => address) indexedContracts;
 
     // actionType: register, remove
-    event Updated(address, Contract, string actionType);
+    event Updated(address indexed contractAccount, Contract, string indexed actionType);
     event RoleAdded(address ca, string role);
     event RoleRemoved(address ca, string role);
 
@@ -71,8 +71,9 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _topics topic list for each contract address
     function registerContractMultiple(address[] calldata _CAs, string[] calldata _topics) external onlyOwner {
         uint256 len = _CAs.length;
-        require(len == _topics.length, 'length unmatched');
-        for (uint256 i; i < len; i++) {
+        /// @custom:error (ARG1) - Arguments length should be same
+        require(_CAs.length == _topics.length, 'ARG1');
+        for (uint256 i = 0; i < len; i++) {
             registerContract(_CAs[i], _topics[i]);
         }
     }
@@ -109,10 +110,14 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
+    function isRegistered(address CA) public view returns (bool) {
+        return contracts[CA].active;
+    }
+
     /// @notice Get contract address for specified topic
     /// @param _topic topic for address
     /// @return address which is registered with topic
-    function getContract(string calldata _topic) external view returns (address) {
+    function getContract(string calldata _topic) public view returns (address) {
         return indexedContracts[_topic];
     }
 }

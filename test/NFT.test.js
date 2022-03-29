@@ -246,7 +246,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, payload, {
           value: basePrice.mul(2),
         }),
-      ).revertedWith(Constants.reasons.senderVerifier.sender);
+      ).revertedWith(Constants.reasons.code.VR4);
 
       // CASE2: invalid signer
       const invalidSignedPayload = await signPayload(
@@ -261,7 +261,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, invalidSignedPayload, {
           value: basePrice.mul(2),
         }),
-      ).revertedWith(Constants.reasons.senderVerifier.signer);
+      ).revertedWith(Constants.reasons.code.VR1);
     });
     it('[Revert] Cannot mint as public after public mint schedule ended', async () => {
       const {
@@ -555,7 +555,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(maliciousAC).ticketMint(2, ticket, invalidSenderPayload, {
           value: ticketPrice.mul(2),
         }),
-      ).revertedWith(Constants.reasons.senderVerifier.sender);
+      ).revertedWith(Constants.reasons.code.VR4);
 
       // CASE2: invalid payload, signed by anonymous
       const anonymousSignedPayload = await signPayload(
@@ -570,7 +570,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, anonymousSignedPayload, {
           value: ticketPrice.mul(2),
         }),
-      ).revertedWith(Constants.reasons.senderVerifier.signer);
+      ).revertedWith(Constants.reasons.code.VR1);
     });
     it('[Revert] Invalid ticket (user, price, groupId)', async () => {
       const {
@@ -603,7 +603,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(minterAC).ticketMint(quantity, invalidSignedticket, payload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketManager.signer);
+      ).to.be.revertedWith(Constants.reasons.code.VR1);
 
       // CASE2: invalid minter - normal payload, but use another address' ticket
       const invalidMinterPayload = await signPayload(
@@ -618,7 +618,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(maliciousAC).ticketMint(quantity, ticket, invalidMinterPayload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketManager.minter);
+      ).to.be.revertedWith(Constants.reasons.code.VR6);
 
       // CASE3: invalid nft contract - ex) use A NFT ticket for B NFT
       const anotherContractTicket = await createTicket(
@@ -631,7 +631,7 @@ describe('OmnuumNFT', () => {
         omnuumNFT1155.connect(minterAC).ticketMint(quantity, anotherContractTicket, payload, {
           value: price.mul(quantity),
         }),
-      ).to.be.revertedWith(Constants.reasons.ticketManager.nft);
+      ).to.be.revertedWith(Constants.reasons.code.VR5);
     });
     it('[Revert] Time expired ticket', async () => {
       const {
@@ -829,7 +829,7 @@ describe('OmnuumNFT', () => {
       const tx = await omnuumNFT1155.setUri(uri);
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.Uri).withArgs(uri);
+      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.Uri).withArgs(omnuumNFT1155.address, uri);
       await expect(await omnuumNFT1155.isRevealed()).to.be.true;
     });
     it('[Revert] only owner', async () => {

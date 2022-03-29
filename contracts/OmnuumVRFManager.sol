@@ -11,12 +11,12 @@ import './library/RevertMessage.sol';
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 /// @notice Use only purpose for Omnuum
 contract OmnuumVRFManager is Ownable, VRFConsumerBase {
-    address s_LINK;
-    uint256 fee;
-    bytes32 s_key_hash;
-    address omA;
+    address private s_LINK;
+    uint256 private fee;
+    bytes32 private s_key_hash;
+    address private omA;
 
-    OmnuumCAManager caManager;
+    OmnuumCAManager private caManager;
 
     /// @notice safety margin ratio of LINK/ETH exchange rate to prevent risk of price volatility
     /// @dev 2 decimal (150 == 1.5)
@@ -40,10 +40,10 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     }
 
     /// @dev request address to request ID
-    mapping(address => bytes32) aToId;
+    mapping(address => bytes32) public aToId;
 
     /// @dev request ID to request address
-    mapping(bytes32 => address) idToA;
+    mapping(bytes32 => address) public idToA;
 
     /// @dev actionType: fee, safetyRatio
     event Updated(uint256 value, string actionType);
@@ -54,7 +54,11 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @dev only allowed contract which has VRF role
     function requestVRF() external {
         address exchangeAddress = caManager.getContract('EXCHANGE');
+
+        // @custom:error (SE7) - Not enough LINK at exchange contract
         require(LINK.balanceOf(exchangeAddress) > 2 ether, 'Not enough LINK');
+
+        // @custom:error (OO3) - Only Omnuum can call
         require(caManager.hasRole(msg.sender, 'VRF'), 'OO3');
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
@@ -68,17 +72,22 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @dev Can use this function only once per target address
     /// @param _targetAddress contract which will use this vrf result
     function requestVRFOnce(address _targetAddress) external payable {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(caManager.hasRole(msg.sender, 'VRF'), 'OO3');
         require(_targetAddress != address(0));
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
-        require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'Not enough LINK');
+        /// @custom:error (SE7) - Not enough LINK at exchange contract
+        require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'SE7');
 
         uint256 required_amount = OmnuumExchange(exchangeAddress).getExchangeAmount(address(0), s_LINK, fee);
-        require((required_amount * safetyRatio) / 100 <= msg.value, 'Not enough Ether');
 
-        require(aToId[_targetAddress] == '', 'Already used');
+        /// @custom:error (ARG3) - Not enough ether sent
+        require((required_amount * safetyRatio) / 100 <= msg.value, 'ARG3');
+
+        /// @custom:error (SE8) - Already used address
+        require(aToId[_targetAddress] == '', 'SE8');
 
         // receive 2 link from exchange
         OmnuumExchange(exchangeAddress).exchangeToken{ value: msg.value }(s_LINK, 2 ether, address(this));

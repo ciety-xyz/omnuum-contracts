@@ -18,23 +18,25 @@ contract TicketManager is EIP712 {
     }
 
     // nft => groupId => end date
-    mapping(address => mapping(uint256 => uint256)) endDates;
+    mapping(address => mapping(uint256 => uint256)) public endDates;
 
     // nft => groupId => ticket owner => use count
-    mapping(address => mapping(uint256 => mapping(address => uint32))) ticketUsed;
+    mapping(address => mapping(uint256 => mapping(address => uint32))) public ticketUsed;
 
     string private constant SIGNING_DOMAIN = 'OmnuumTicket';
     string private constant SIGNATURE_VERSION = '1';
 
-    event EndDate(address indexed nft, uint256 groupId, uint256 endDate);
-    event UseTicket(address indexed nft, address minter, uint32 quantity, Ticket ticket);
+    event EndDate(address indexed nft, uint256 indexed groupId, uint256 endDate);
+    event UseTicket(address indexed nft, address indexed minter, uint32 quantity, Ticket ticket);
 
     function setEndDate(
         address _nft,
         uint256 groupId,
         uint256 endDate
     ) external {
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
+
         endDates[_nft][groupId] = endDate;
 
         emit EndDate(_nft, groupId, endDate);
@@ -59,10 +61,19 @@ contract TicketManager is EIP712 {
         uint32 _quantity,
         Ticket calldata _ticket
     ) public view {
+        /// @custom:error (MT8) - Minting period is ended
         require(block.timestamp <= endDates[_nft][_ticket.groupId], 'MT8');
-        require(_signer == recoverSigner(_ticket), 'False Signer');
-        require(_ticket.nft == _nft, 'False NFT');
-        require(_minter == _ticket.user, 'False Minter');
+
+        /// @custom:error (VR1) - False Signer
+        require(_signer == recoverSigner(_ticket), 'VR1');
+
+        /// @custom:error (VR5) - False NFT
+        require(_ticket.nft == _nft, 'VR5');
+
+        /// @custom:error (VR6) - False Minter
+        require(_minter == _ticket.user, 'VR6');
+
+        /// @custom:error (MT3) - Remaining token count is not enough
         require(ticketUsed[_nft][_ticket.groupId][_minter] + _quantity <= _ticket.quantity, 'MT3');
     }
 

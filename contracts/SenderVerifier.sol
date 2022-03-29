@@ -23,12 +23,20 @@ contract SenderVerifier is EIP712 {
         string calldata _topic,
         uint256 _nonce,
         Payload calldata _payload
-    ) external view {
+    ) public view {
         address signer = recoverSigner(_payload);
-        require(_owner == signer, 'False Signer');
-        require(_nonce == _payload.nonce, 'False Nonce');
-        require(keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)), 'False Topic');
-        require(_payload.sender == _sender, 'False Sender');
+
+        /// @custom:error (VR1) - False Signer
+        require(_owner == signer, 'VR1');
+
+        /// @custom:error (VR2) - False Nounce
+        require(_nonce == _payload.nonce, 'VR2');
+
+        /// @custom:error (VR3) - False Topic
+        require(keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)), 'VR3');
+
+        /// @custom:error (VR4) - False Sender
+        require(_payload.sender == _sender, 'VR4');
     }
 
     function recoverSigner(Payload calldata _payload) internal view returns (address) {

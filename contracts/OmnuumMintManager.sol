@@ -17,7 +17,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     mapping(address => uint256) public specialFeeRates;
 
     event ChangeFeeRate(uint256 baseFeeRate);
-    event SetSpecialFeeRate(address nftContract, uint256 discountFeeRate);
+    event SetSpecialFeeRate(address indexed nftContract, uint256 discountFeeRate);
     event Airdrop(address indexed Contract, uint256 count);
     event SetSchedule(address indexed nft, uint256 indexed groupId);
     event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
@@ -48,6 +48,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @notice change fee rate
     /// @param _newFeeRate new fee rate
     function changeFeeRate(uint256 _newFeeRate) external onlyOwner {
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
         require(_newFeeRate <= 100000, 'NE1');
         feeRate = _newFeeRate;
         emit ChangeFeeRate(_newFeeRate);
@@ -58,6 +59,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @param _feeRate fee rate only for nft contract
     function setSpecialFeeRate(address _nftContract, uint256 _feeRate) external onlyOwner {
         require(_nftContract != address(0));
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
         require(_feeRate <= 100000, 'NE1');
         specialFeeRates[_nftContract] = _feeRate;
         emit SetSpecialFeeRate(_nftContract, _feeRate);
@@ -78,7 +80,8 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 _basePrice,
         uint32 _supply,
         uint32 _maxMintAtAddress
-    ) public {
+    ) external {
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
 
         PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
@@ -102,12 +105,19 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint32 _quantity,
         uint256 _value,
         address _minter
-    ) public {
+    ) external {
         PublicMintSchedule storage schedule = publicMintSchedules[msg.sender][_groupId];
 
+        /// @custom:error (MT8) - Minting period is ended
         require(block.timestamp <= schedule.endDate, 'MT8');
+
+        /// @custom:error (MT5) - Not enough money
         require(schedule.basePrice * _quantity <= _value, 'MT5');
+
+        /// @custom:error (MT2) - Cannot mint more than possible amount per address
         require(schedule.minted[_minter] + _quantity <= schedule.maxMintAtAddress, 'MT2');
+
+        /// @custom:error (MT3) - Remaining token count is not enough
         require(schedule.mintedTotal + _quantity <= schedule.supply, 'MT3');
 
         schedule.minted[_minter] += _quantity;
@@ -130,10 +140,13 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         uint256 len = _tos.length;
 
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(targetContract.owner() == msg.sender, 'OO1');
+
+        /// @custom:error (ARG1) - Arguments length should be same
         require(len == _quantitys.length, 'ARG1');
 
-        for (uint256 i; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             targetContract.mintDirect(_tos[i], _quantitys[i]);
         }
         emit Airdrop(_nftContract, _tos.length);

@@ -68,6 +68,7 @@ module.exports = {
       // Arguments Error
       ARG1: 'ARG1', // Arguments length should be same
       ARG2: 'ARG2', // Arguments are not correct
+      ARG3: 'ARG3', // Not enough ether sent
       // Only Owner Error
       OO1: 'OO1', // Ownable: Caller is not the collection owner
       OO2: 'OO2', // Only Omnuum or owner can change
@@ -91,7 +92,10 @@ module.exports = {
       SE3: 'SE3', // Already voted
       SE4: 'SE4', // Not voted
       SE5: 'SE5', // Address: unable to send value, recipient may have reverted
-      // Mint Error
+      SE6: 'SE6', // NFT already revealed
+      SE7: 'SE7', // Not enough LINK at exchange contract
+      SE8: 'SE8', // Already used address
+        // Mint Error
       MT1: 'MT1', // There is no available ticket
       MT2: 'MT2', // Cannot mint more than possible amount per address
       MT3: 'MT3', // Remaining token count is not enough
@@ -102,6 +106,13 @@ module.exports = {
       // Address Error
       AE1: 'AE1', // Zero address not acceptable
       AE2: 'AE2', // Contract address not acceptable
+      // Verification Error
+      VR1: 'VR1', // False Signer
+      VR2: 'VR2', // False Nonce
+      VR3: 'VR3', // False Topic
+      VR4: 'VR4', // False Sender
+      VR5: 'VR5', // False NFT
+      VR6: 'VR6', // False Minter
     },
   },
   contractRole: {

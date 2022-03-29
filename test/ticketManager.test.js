@@ -131,7 +131,7 @@ describe('TicketManager', () => {
       await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
 
       await expect(ticketManager.verify(omnuumAC.address, mockNFT.address, minterAC.address, quantity, ticket)).to.be.revertedWith(
-        Constants.reasons.senderVerifier.signer,
+        Constants.reasons.code.VR1,
       );
     });
     it('[Revert] False NFT', async () => {
@@ -160,7 +160,7 @@ describe('TicketManager', () => {
       await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
 
       await expect(ticketManager.verify(omnuumAC.address, mockNFT.address, minterAC.address, quantity, ticket)).to.be.revertedWith(
-        Constants.reasons.ticketManager.nft,
+        Constants.reasons.code.VR5,
       );
     });
     it('[Revert] False Minter', async () => {
@@ -188,7 +188,7 @@ describe('TicketManager', () => {
       await (await ticketManager.setEndDate(mockNFT.address, group_id, end_date)).wait();
 
       await expect(ticketManager.verify(omnuumAC.address, mockNFT.address, fakeMinterAC.address, quantity, ticket)).to.be.revertedWith(
-        Constants.reasons.ticketManager.minter,
+        Constants.reasons.code.VR6,
       );
     });
   });

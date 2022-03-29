@@ -14,11 +14,11 @@ import './OmnuumCAManager.sol';
 contract OmnuumExchange is OwnableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    OmnuumCAManager caManager;
+    OmnuumCAManager private caManager;
 
-    uint256 tmpLinkExRate;
+    uint256 public tmpLinkExRate;
 
-    event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
+    event Exchange(address indexed baseToken, address indexed targetToken, uint256 amount, address user, address indexed receipient);
 
     function initialize(address _caManagerA) public initializer {
         require(_caManagerA != address(0));
@@ -45,7 +45,7 @@ contract OmnuumExchange is OwnableUpgradeable {
 
     /// @notice update temporary exchange rate which is used for LINK/ETH
     /// @param _newRate new exchange rate (LINK/ETH)
-    function updateTmpExchangeRate(uint256 _newRate) public onlyOwner {
+    function updateTmpExchangeRate(uint256 _newRate) external onlyOwner {
         tmpLinkExRate = _newRate;
     }
 
@@ -57,7 +57,8 @@ contract OmnuumExchange is OwnableUpgradeable {
         address _token,
         uint256 _amount,
         address _to
-    ) public payable {
+    ) external payable {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(caManager.hasRole(msg.sender, 'EXCHANGE'), 'OO3');
 
         IERC20Upgradeable(_token).safeTransfer(msg.sender, _amount);
@@ -68,6 +69,7 @@ contract OmnuumExchange is OwnableUpgradeable {
     /// @notice withdraw specific amount to omnuum wallet contract
     /// @param _amount amount of ether to be withdrawn
     function withdraw(uint256 _amount) external onlyOwner {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(_amount <= address(this).balance, 'Not enough balance');
         payable(caManager.getContract('WALLET')).transfer(_amount);
     }

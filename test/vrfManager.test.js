@@ -145,7 +145,7 @@ describe('OmnuumVRFManager', () => {
       await mockLink.changeBalance(ethers.utils.parseEther('1'));
 
       await expect(mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address)).to.be.revertedWith(
-        Constants.reasons.vrfManager.LINK,
+        Constants.reasons.code.SE7,
       );
     });
     it('[Revert] not enough ether for LINK fee (local mock)', async () => {
@@ -168,7 +168,7 @@ describe('OmnuumVRFManager', () => {
         mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address, {
           value: exchangeAmount.mul(safetyRatio).div(100).sub(lackAmount),
         }),
-      ).to.be.revertedWith(Constants.reasons.vrfManager.Ether);
+      ).to.be.revertedWith(Constants.reasons.code.ARG3);
     });
     it('[Revert] Already used address', async () => {
       const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT1155 } = this;
@@ -203,7 +203,7 @@ describe('OmnuumVRFManager', () => {
 
       // fail for second try
       await expect(revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) })).to.be.revertedWith(
-        Constants.reasons.vrfManager.Once,
+        Constants.reasons.code.SE8,
       );
     });
   });
