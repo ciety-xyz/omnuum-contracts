@@ -25,6 +25,10 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         uint256 _fee,
         address _omnuumCA
     ) VRFConsumerBase(_vrf_coord, _LINK) {
+        require(_LINK != address(0));
+        require(_vrf_coord != address(0));
+        require(_omnuumCA != address(0));
+
         s_LINK = _LINK;
         s_key_hash = _key_hash;
         fee = _fee;
@@ -53,6 +57,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     function requestVRFOnce(address targetAddress) external payable {
         require(caManager.isRegistered(msg.sender), 'OO3');
+        require(targetAddress != address(0));
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
