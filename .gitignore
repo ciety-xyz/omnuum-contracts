@@ -14,3 +14,4 @@ cache
 .npmrc
 
 /scripts/scratch
+.DS_Store
