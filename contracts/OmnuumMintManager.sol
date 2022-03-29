@@ -11,7 +11,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     mapping(address => uint256) public discountRate;
 
     event ChangeBaseFeeRate(uint256 baseFeeRate);
-    event SetDiscountRate(address nftContract, uint256 discountFeeRate);
+    event SetDiscountRate(address indexed nftContract, uint256 discountFeeRate);
     event Airdrop(address indexed Contract, uint256 count);
     event SetSchedule(address indexed nft, uint256 indexed groupId);
     event PublicMint(address indexed nft, address indexed minter, uint256 indexed groupId, uint32 quantity);
