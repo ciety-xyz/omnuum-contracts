@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
 /// @title OmnuumWallet - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution
 /// @notice This contract is not managed by Omnuum admin, but for owners
