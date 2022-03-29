@@ -18,10 +18,10 @@ contract TicketManager is EIP712 {
     }
 
     // nft => groupId => end date
-    mapping(address => mapping(uint256 => uint256)) endDates;
+    mapping(address => mapping(uint256 => uint256)) public endDates;
 
     // nft => groupId => ticket owner => use count
-    mapping(address => mapping(uint256 => mapping(address => uint32))) ticketUsed;
+    mapping(address => mapping(uint256 => mapping(address => uint32))) public ticketUsed;
 
     string private constant SIGNING_DOMAIN = 'OmnuumTicket';
     string private constant SIGNATURE_VERSION = '1';

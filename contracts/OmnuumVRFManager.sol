@@ -8,13 +8,12 @@ import './OmnuumExchange.sol';
 import './library/RevertMessage.sol';
 
 contract OmnuumVRFManager is Ownable, VRFConsumerBase {
-    //RINKBY CHAINLINK
-    address s_LINK;
-    uint256 fee;
-    bytes32 s_key_hash;
-    address omA;
+    address private s_LINK;
+    uint256 private fee;
+    bytes32 private s_key_hash;
+    address private omA;
 
-    OmnuumCAManager caManager;
+    OmnuumCAManager private caManager;
 
     uint16 public safetyRatio = 150;
 
@@ -31,8 +30,8 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         caManager = OmnuumCAManager(_omnuumCA);
     }
 
-    mapping(address => bytes32) aToId;
-    mapping(bytes32 => address) idToA;
+    mapping(address => bytes32) public aToId;
+    mapping(bytes32 => address) public idToA;
 
     // actionType: fee, safetyRatio
     event Updated(uint256 value, string actionType);

@@ -16,15 +16,15 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
 
-    OmnuumCAManager caManager;
-    OmnuumMintManager mintManager;
-    address omA;
+    OmnuumCAManager private caManager;
+    OmnuumMintManager private mintManager;
+    address private omA;
 
     uint32 public maxSupply;
 
     bool public isRevealed;
 
-    string internal coverUri;
+    string private coverUri;
 
     event Uri(string uri);
     event ReceiveFee(uint256 amount);

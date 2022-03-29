@@ -5,7 +5,7 @@ import './OmnuumVRFManager.sol';
 import './OmnuumCAManager.sol';
 
 contract RevealManager {
-    OmnuumCAManager caManager;
+    OmnuumCAManager private caManager;
 
     constructor(OmnuumCAManager _caManager) {
         caManager = _caManager;

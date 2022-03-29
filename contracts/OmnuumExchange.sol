@@ -7,9 +7,9 @@ import './OmnuumCAManager.sol';
 
 // in future, this contract will act like internal token exchange for business
 contract OmnuumExchange is OwnableUpgradeable {
-    OmnuumCAManager caManager;
+    OmnuumCAManager private caManager;
 
-    uint256 tmpLinkExRate;
+    uint256 public tmpLinkExRate;
 
     event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
 

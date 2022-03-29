@@ -9,8 +9,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
         bool active;
     }
 
-    mapping(address => Contract) contracts;
-    mapping(string => address) indexedContracts;
+    mapping(address => Contract) public contracts;
+    mapping(string => address) public indexedContracts;
 
     // actionType: register, remove
     event Updated(address, Contract, string actionType);
