@@ -45,7 +45,7 @@ module.exports = {
   async testDeploy(accounts, overrides) {
     /* Deploy Upgradeable Proxies */
     this.omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
-    this.omnuumMintManager = await upgrades.deployProxy(this.OmnuumMintManager, [testValues.baseFeeRate]);
+    this.omnuumMintManager = await upgrades.deployProxy(this.OmnuumMintManager, [testValues.feeRate]);
     this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
 
     /* Deploy Contracts */

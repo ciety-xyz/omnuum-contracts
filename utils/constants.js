@@ -9,8 +9,8 @@ module.exports = {
       Uri: 'Uri',
     },
     MintManager: {
-      SetDiscountRate: 'SetDiscountRate',
-      ChangeBaseFeeRate: 'ChangeBaseFeeRate',
+      SetSpecialFeeRate: 'SetSpecialFeeRate',
+      ChangeFeeRate: 'ChangeFeeRate',
       Airdrop: 'Airdrop',
       SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
@@ -142,8 +142,9 @@ module.exports = {
     paymentDescription: 'Test for Payment',
     paymentTestTopic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST')),
     zeroOwnerAccount: { addr: ethers.constants.AddressZero, vote: 0 },
-    baseFeeRate: 5000, // converted as 0.05 (5 percent)
-    discountFeeRate: 10000, // converted as 0.1 (10 percent)
+    feeRate: 5000, // converted as 0.05 (5 percent)
+    specialFeeRate: 10000, // converted as 0.1 (10 percent)
+    walletOwnersLen: 3,
     sendEthValue: '10',
     consensusRatio: 66,
     minLimitForConsensus: 3,
