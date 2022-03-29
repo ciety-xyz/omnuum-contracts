@@ -15,3 +15,4 @@ cache
 
 /scripts/scratch
 .DS_Store
+data/
