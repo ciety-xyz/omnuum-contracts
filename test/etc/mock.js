@@ -1,5 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { mapC, go } = require('fxjs');
+const { mapC, go, zip, map } = require('fxjs');
 const { ContractTopic, chainlink, testValues, contractRole } = require('../../utils/constants.js');
 
 Error.stackTraceLimit = Infinity;
@@ -49,8 +49,18 @@ module.exports = {
     this.omnuumExchange = await upgrades.deployProxy(this.OmnuumExchange, [this.omnuumCAManager.address]);
 
     /* Deploy Contracts */
-    this.walletOwners = accounts.slice(-testValues.walletOwnersLen);
-    this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwners.map((account) => account.address));
+    this.walletOwnerSigner = accounts.slice(-5);
+    this.walletOwnerAccounts = go(
+      this.walletOwnerSigner,
+      zip([2, 2, 1, 1, 1]),
+      map(([vote, signer]) => ({ addr: signer.address, vote })),
+    );
+
+    this.omnuumWallet = await this.OmnuumWallet.deploy(
+      testValues.consensusRatio,
+      testValues.minLimitForConsensus,
+      this.walletOwnerAccounts,
+    );
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
     [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester, this.mockExchange] = await go(
       [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords, this.MockVrfRequester, this.MockExchange],

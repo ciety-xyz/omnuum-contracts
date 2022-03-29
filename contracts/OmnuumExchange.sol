@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts/interfaces/IERC20.sol';
+import '@openzeppelin/contracts-upgradeable/interfaces/IERC20Upgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import './OmnuumCAManager.sol';
 
 /// @title OmnuumExchange - Omnuum internal exchange contract to use token freely by other omnuum contracts
@@ -11,6 +12,8 @@ import './OmnuumCAManager.sol';
 /// @dev Warning:: This contract is for temporary use and will be upgraded to version 2 which use dex to exchange token,
 /// @dev Until version 2, LINK token will be deposited this contract directly and send LINK to omnuum contracts whenever they want
 contract OmnuumExchange is OwnableUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+
     OmnuumCAManager caManager;
 
     uint256 tmpLinkExRate;
@@ -18,6 +21,8 @@ contract OmnuumExchange is OwnableUpgradeable {
     event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
 
     function initialize(address _caManagerA) public initializer {
+        require(_caManagerA != address(0));
+
         __Ownable_init();
 
         caManager = OmnuumCAManager(_caManagerA);
@@ -55,7 +60,7 @@ contract OmnuumExchange is OwnableUpgradeable {
     ) public payable {
         require(caManager.hasRole(msg.sender, 'EXCHANGE'), 'OO3');
 
-        IERC20(_token).transfer(msg.sender, _amount);
+        IERC20Upgradeable(_token).safeTransfer(msg.sender, _amount);
 
         emit Exchange(address(0), _token, _amount, msg.sender, _to);
     }

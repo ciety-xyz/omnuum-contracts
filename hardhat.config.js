@@ -8,12 +8,12 @@ require('hardhat-gas-reporter');
 require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
-require('hardhat-contract-sizer');
+// require('hardhat-contract-sizer');
 
 require('hardhat-abi-exporter');
 
 module.exports = {
-  solidity: '0.8.4',
+  solidity: '0.8.10',
   defaultNetwork: 'localhost',
   networks: {
     hardhat: {

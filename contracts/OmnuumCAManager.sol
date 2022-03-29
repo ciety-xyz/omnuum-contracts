@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
@@ -80,6 +80,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _CA contract address
     /// @param _topic topic for address
     function registerContract(address _CA, string calldata _topic) public onlyOwner {
+        require(_CA != address(0));
         require(_CA.isContract(), 'Not CA');
 
         contracts[_CA] = Contract(_topic, true);
