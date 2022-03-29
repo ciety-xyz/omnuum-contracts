@@ -52,7 +52,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 _basePrice,
         uint32 _supply,
         uint32 _maxMintAtAddress
-    ) public {
+    ) external {
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
 
         PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
@@ -70,7 +70,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint32 _quantity,
         uint256 value,
         address _minter
-    ) public {
+    ) external {
         PublicMintSchedule storage schedule = publicMintSchedules[msg.sender][_groupId];
 
         require(block.timestamp <= schedule.endDate, 'MT8');

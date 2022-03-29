@@ -19,7 +19,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
         __Ownable_init();
     }
 
-    function registerContractMultiple(address[] calldata CAs, string[] calldata topics) public onlyOwner {
+    function registerContractMultiple(address[] calldata CAs, string[] calldata topics) external onlyOwner {
         require(CAs.length == topics.length, 'length unmatched');
         for (uint256 i = 0; i < CAs.length; i++) {
             registerContract(CAs[i], topics[i]);
@@ -32,7 +32,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
         emit Updated(CA, contracts[CA], 'register');
     }
 
-    function removeContract(address CA) public onlyOwner {
+    function removeContract(address CA) external onlyOwner {
         emit Updated(CA, contracts[CA], 'remove');
 
         string memory topic = contracts[CA].topic;
@@ -43,7 +43,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    function isRegistered(address CA) external view returns (bool) {
+    function isRegistered(address CA) public view returns (bool) {
         return contracts[CA].active;
     }
 

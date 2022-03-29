@@ -30,7 +30,7 @@ contract OmnuumExchange is OwnableUpgradeable {
         return (tmpLinkExRate * _amount) / 1 ether;
     }
 
-    function updateTmpExchangeRate(uint256 _newRate) public {
+    function updateTmpExchangeRate(uint256 _newRate) external {
         require(caManager.isRegistered(msg.sender), 'OO3');
         tmpLinkExRate = _newRate;
     }
@@ -40,7 +40,7 @@ contract OmnuumExchange is OwnableUpgradeable {
         address _token,
         uint256 _amount,
         address _to
-    ) public payable {
+    ) external payable {
         require(caManager.isRegistered(msg.sender), 'OO3');
 
         IERC20(_token).transfer(msg.sender, _amount);
@@ -48,7 +48,7 @@ contract OmnuumExchange is OwnableUpgradeable {
         emit Exchange(address(0), _token, _amount, msg.sender, _to);
     }
 
-    function withdraw() public {
+    function withdraw() external {
         require(caManager.isRegistered(msg.sender), 'OO3');
         payable(msg.sender).transfer(address(this).balance);
     }

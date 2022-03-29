@@ -23,7 +23,7 @@ contract SenderVerifier is EIP712 {
         string calldata _topic,
         uint256 _nounce,
         Payload calldata _payload
-    ) external view {
+    ) public view {
         address signer = recoverSigner(_payload);
         require(_owner == signer, 'False Signer');
         require(_nounce == _payload.nounce, 'False Nounce');

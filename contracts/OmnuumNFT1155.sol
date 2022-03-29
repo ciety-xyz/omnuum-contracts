@@ -80,7 +80,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint32 _quantity,
         TicketManager.Ticket calldata _ticket,
         SenderVerifier.Payload calldata _payload
-    ) public payable nonReentrant {
+    ) external payable nonReentrant {
         require(!msg.sender.isContract(), 'MT9');
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
@@ -91,7 +91,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         sendFee();
     }
 
-    function mintDirect(address _to, uint32 _quantity) public {
+    function mintDirect(address _to, uint32 _quantity) external {
         require(msg.sender == caManager.getContract('MINTMANAGER') || msg.sender == owner(), 'OO2');
         mintLoop(_to, _quantity);
     }
