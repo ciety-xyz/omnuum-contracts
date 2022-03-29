@@ -52,6 +52,7 @@ describe('OmnuumMintManager', () => {
       await expect(omnuumMintManager.changeBaseFeeRate(100001)).to.be.revertedWith(Constants.reasons.code.NE1);
     });
   });
+
   describe('[Method] setDiscountRate', () => {
     it('Get baseFeeRate', async () => {
       const { omnuumMintManager } = this;

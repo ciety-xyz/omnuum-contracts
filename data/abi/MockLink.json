@@ -1,6 +1,0 @@
-[
-  "function balanceOf(address) view returns (uint256)",
-  "function changeBalance(uint256)",
-  "function transfer(address,uint256) returns (bool)",
-  "function transferAndCall(address,uint256,bytes) returns (bool)"
-]

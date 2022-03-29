@@ -1,6 +1,0 @@
-[
-  "constructor()",
-  "event OwnershipTransferred(address indexed,address indexed)",
-  "function owner() view returns (address)",
-  "function transferOwnership(address)"
-]

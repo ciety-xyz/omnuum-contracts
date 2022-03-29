@@ -8,7 +8,7 @@ require('hardhat-gas-reporter');
 require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
-require('hardhat-contract-sizer');
+// require('hardhat-contract-sizer');
 
 require('hardhat-abi-exporter');
 

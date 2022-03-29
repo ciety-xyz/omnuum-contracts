@@ -23,19 +23,12 @@ describe('OmnuumVRFManager', () => {
 
   describe('[Method] requestVRF', () => {
     it('Should request VRF and receive response (local mock)', async () => {
-      const {
-        omnuumVRFManager,
-        mockVrfCoords,
-        omnuumCAManager,
-        accounts: [omnuumAC],
-      } = this;
+      const { omnuumVRFManager, mockVrfCoords, mockVrfRequester } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // omnuumAC is registered as contract on omnuumCAManager
-      await omnuumCAManager.isRegistered(omnuumAC.address); // true
-
-      const requestTx = await omnuumVRFManager.requestVRF();
+      // internally call VRF Manager (requestVRF)
+      const requestTx = await mockVrfRequester.requestVRF(omnuumVRFManager.address);
 
       const iface = omnuumVRFManager.interface;
 
@@ -46,9 +39,9 @@ describe('OmnuumVRFManager', () => {
 
       await expect(requestTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
-        .withArgs(omnuumAC.address, requestEvent.args.requestId);
+        .withArgs(mockVrfRequester.address, requestEvent.args.requestId);
 
-      expect(roller).to.be.equal(omnuumAC.address);
+      expect(roller).to.be.equal(mockVrfRequester.address);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -60,7 +53,7 @@ describe('OmnuumVRFManager', () => {
       // call to EOA is always success
       await expect(responseTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.ResponseVRF)
-        .withArgs(requestId, randomNumber, true, '');
+        .withArgs(requestId, randomNumber, false, 'Transaction reverted silently');
     });
     it('Should request VRF and receive response (rinkeby)', async () => {
       // TODO: rinkeby test
@@ -141,6 +134,7 @@ describe('OmnuumVRFManager', () => {
     it('[Revert] When link is not enough on exchange contract (local mock)', async () => {
       const {
         omnuumVRFManager,
+        mockVrfRequester,
         mockLink,
         accounts: [anyAC],
       } = this;
@@ -150,11 +144,14 @@ describe('OmnuumVRFManager', () => {
       // change link balance -> 1 LINK, VRF requires 2 LINK
       await mockLink.changeBalance(ethers.utils.parseEther('1'));
 
-      await expect(omnuumVRFManager.requestVRFOnce(anyAC.address)).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
+      await expect(mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address)).to.be.revertedWith(
+        Constants.reasons.vrfManager.LINK,
+      );
     });
     it('[Revert] not enough ether for LINK fee (local mock)', async () => {
       const {
         omnuumVRFManager,
+        mockVrfRequester,
         omnuumExchange,
         mockLink,
         accounts: [anyAC],
@@ -168,7 +165,7 @@ describe('OmnuumVRFManager', () => {
       const lackAmount = ethers.utils.parseEther('0.00001');
 
       await expect(
-        omnuumVRFManager.requestVRFOnce(anyAC.address, {
+        mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address, {
           value: exchangeAmount.mul(safetyRatio).div(100).sub(lackAmount),
         }),
       ).to.be.revertedWith(Constants.reasons.vrfManager.Ether);
