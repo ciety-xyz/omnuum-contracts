@@ -8,3 +8,9 @@ build
 artifacts/
 .openzeppelin/
 cache
+
+.npmrc
+scripts/
+.DS_Store
+
+data/

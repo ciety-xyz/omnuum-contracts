@@ -67,7 +67,7 @@ module.exports = {
       alreadyWithdrawn: 'already withdrawn',
       consensusNotReached: 'consensus not reached',
       notEnoughBalance: 'request value exceeds balance',
-      notRequester: 'withdrawer and requester must be equal',
+      notRequester: 'withdrawer must be the requester',
     },
     code: {
       ARG1: 'ARG1',
