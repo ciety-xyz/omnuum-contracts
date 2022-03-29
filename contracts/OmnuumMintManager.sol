@@ -34,12 +34,14 @@ contract OmnuumMintManager is OwnableUpgradeable {
     }
 
     function changeBaseFeeRate(uint256 _newBaseFeeRate) external onlyOwner {
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
         require(_newBaseFeeRate <= 100000, 'NE1');
         baseFeeRate = _newBaseFeeRate;
         emit ChangeBaseFeeRate(_newBaseFeeRate);
     }
 
     function setDiscountRate(address _nftContract, uint256 _discountRate) external onlyOwner {
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
         require(_discountRate <= 100000, 'NE1');
         discountRate[_nftContract] = _discountRate;
         emit SetDiscountRate(_nftContract, _discountRate);
@@ -53,6 +55,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint32 _supply,
         uint32 _maxMintAtAddress
     ) external {
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(Ownable(_nft).owner() == msg.sender, 'OO1');
 
         PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
@@ -73,9 +76,16 @@ contract OmnuumMintManager is OwnableUpgradeable {
     ) external {
         PublicMintSchedule storage schedule = publicMintSchedules[msg.sender][_groupId];
 
+        /// @custom:error (MT8) - Minting period is ended
         require(block.timestamp <= schedule.endDate, 'MT8');
+
+        /// @custom:error (MT5) - Not enough money
         require(schedule.basePrice * _quantity <= value, 'MT5');
+
+        /// @custom:error (MT2) - Cannot mint more than possible amount per address
         require(schedule.minted[_minter] + _quantity <= schedule.maxMintAtAddress, 'MT2');
+
+        /// @custom:error (MT3) - Remaining token count is not enough
         require(schedule.mintedTotal + _quantity <= schedule.supply, 'MT3');
 
         schedule.minted[_minter] += _quantity;
@@ -94,7 +104,10 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         uint256 len = _tos.length;
 
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(targetContract.owner() == msg.sender, 'OO1');
+
+        /// @custom:error (ARG1) - Arguments length should be same
         require(len == _quantitys.length, 'ARG1');
 
         for (uint256 i = 0; i < len; i++) {
