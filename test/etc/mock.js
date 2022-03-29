@@ -32,8 +32,7 @@ module.exports = {
     this.OmnuumVRFManager = await ethers.getContractFactory('OmnuumVRFManager');
     this.OmnuumExchange = await ethers.getContractFactory('OmnuumExchange');
     this.RevealManager = await ethers.getContractFactory('RevealManager');
-    // this.OmnuumWallet = await ethers.getContractFactory('OmnuumWallet');
-    this.OmnuumWallet = await ethers.getContractFactory('OmnuumWalletAdv');
+    this.OmnuumWallet = await ethers.getContractFactory('OmnuumWallet');
     this.NFTbeacon = await upgrades.deployBeacon(this.OmnuumNFT1155);
   },
   async prepareMockDeploy() {
