@@ -26,8 +26,8 @@ contract TicketManager is EIP712 {
     string private constant SIGNING_DOMAIN = 'OmnuumTicket';
     string private constant SIGNATURE_VERSION = '1';
 
-    event EndDate(address indexed nft, uint256 groupId, uint256 endDate);
-    event UseTicket(address indexed nft, address minter, uint32 quantity, Ticket ticket);
+    event EndDate(address indexed nft, uint256 indexed groupId, uint256 endDate);
+    event UseTicket(address indexed nft, address indexed minter, uint32 quantity, Ticket ticket);
 
     function setEndDate(
         address _nft,
