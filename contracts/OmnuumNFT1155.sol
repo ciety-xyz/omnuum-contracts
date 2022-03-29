@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import './utils/OwnableUpgradeable.sol';
 import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
@@ -36,6 +36,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
+        require(_caManagerAddress != address(0));
+        require(_omA != address(0));
+        require(_prjOwner != address(0));
+
         __ERC1155_init('');
         __ReentrancyGuard_init();
         __Ownable_init();
@@ -52,9 +56,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     function sendFee() internal {
         uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 baseFeeRate = mintManager.baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
-        uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
+        uint256 feeRate = mintManager.getFeeRate(address(this));
+        uint256 amount = (msg.value * feeRate) / 10**rateDecimal;
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
             payable(feeReceiver).sendValue(amount);

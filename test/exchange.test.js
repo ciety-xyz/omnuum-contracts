@@ -92,38 +92,49 @@ describe('OmnuumExchange', () => {
 
       const rate = ethers.utils.parseEther('0.1');
 
-      expect(omnuumExchange.connect(accounts[1]).updateTmpExchangeRate(rate)).to.be.revertedWith(Constants.reasons.code.OO3);
+      await expect(omnuumExchange.connect(accounts[1]).updateTmpExchangeRate(rate)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
   });
   describe('[Method] withdraw', () => {
     it('Withdraw successfully', async () => {
-      const { omnuumExchange, mockLink, accounts } = this;
+      const {
+        omnuumExchange,
+        mockExchange,
+        mockLink,
+        omnuumWallet,
+        accounts: [depositer],
+      } = this;
 
-      const value = ethers.utils.parseEther('1.5');
+      const value = ethers.utils.parseEther('5');
       const test_link_move_amount = ethers.utils.parseEther('1');
 
-      // 1. send ether to exchange
-      const deposit_tx = await omnuumExchange.exchangeToken(mockLink.address, test_link_move_amount, accounts[1].address, {
-        value,
-      });
+      // mock proxy request through mockExchange -> omnuumExchange
+      // depositer send 5 ether to exchange contract
+      const deposit_tx = await mockExchange.exchangeToken(
+        omnuumExchange.address,
+        mockLink.address,
+        test_link_move_amount,
+        depositer.address,
+        {
+          value,
+        },
+      );
 
       await deposit_tx.wait();
 
-      const prev_bal = await accounts[0].getBalance();
+      const exchange_balance = await ethers.provider.getBalance(omnuumExchange.address);
+      const wallet_prev_bal = await ethers.provider.getBalance(omnuumWallet.address);
 
-      const withdraw_receipt = await (await omnuumExchange.withdraw()).wait();
+      await (await omnuumExchange.withdraw(exchange_balance)).wait();
 
-      const withdraw_gas_fee = withdraw_receipt.gasUsed.mul(withdraw_receipt.effectiveGasPrice);
+      const wallet_cur_bal = await ethers.provider.getBalance(omnuumWallet.address);
 
-      const cur_bal = await accounts[0].getBalance();
-
-      expect(cur_bal).to.equal(prev_bal.add(value).sub(withdraw_gas_fee));
+      expect(wallet_cur_bal).to.equal(wallet_prev_bal.add(value));
     });
-
     it('[Revert] Only omnuum can withdraw', async () => {
       const { omnuumExchange, accounts } = this;
 
-      expect(omnuumExchange.connect(accounts[1]).withdraw()).to.be.revertedWith(Constants.reasons.code.OO3);
+      await expect(omnuumExchange.connect(accounts[1]).withdraw(1)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
   });
 });

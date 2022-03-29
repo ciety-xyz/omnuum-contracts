@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol';
@@ -9,7 +9,7 @@ contract SenderVerifier is EIP712 {
 
     string private constant SIGNING_DOMAIN = 'Omnuum';
     string private constant SIGNATURE_VERSION = '1';
-    
+
     struct Payload {
         address sender;
         string topic;
