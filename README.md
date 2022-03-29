@@ -8,7 +8,6 @@ Core contracts are NFT and several supportive contracts. NFT contract is based o
 
 ## Project Setting
 
-
 ```shell
 npm install
 ```
@@ -16,11 +15,15 @@ npm install
 ## Testing
 
 
-- test command
+- Test commands
 
 ```shell
 npx hardhat node
 npx hardhat test
+```
+- Code Coverage
+```shell
+npx hardhat coverage --network hardhat
 ```
 
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import './utils/OwnableUpgradeable.sol';
 import './SenderVerifier.sol';
 import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
@@ -19,19 +19,18 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
 
-    OmnuumCAManager caManager;
-    OmnuumMintManager mintManager;
-    address omA;
+    OmnuumCAManager private caManager;
+    OmnuumMintManager private mintManager;
+    address private omA;
 
     /// @notice max amount can be minted
     uint32 public maxSupply;
 
     /// @notice whether revealed or not
     bool public isRevealed;
+    string private coverUri;
 
-    string internal coverUri;
-
-    event Uri(string uri);
+    event Uri(address indexed nftContract, string indexed uri);
     event ReceiveFee(uint256 amount);
 
     /// @notice constructor function for upgradeable
@@ -47,6 +46,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
+        require(_caManagerAddress != address(0));
+        require(_omA != address(0));
+        require(_prjOwner != address(0));
+
         __ERC1155_init('');
         __ReentrancyGuard_init();
         __Ownable_init();
@@ -64,9 +67,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @dev send fee to omnuum wallet
     function sendFee() internal {
         uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 baseFeeRate = mintManager.baseFeeRate();
-        uint256 feeRate = baseFeeRate * (10**rateDecimal - mintManager.discountRate(address(this)));
-        uint256 amount = (msg.value * feeRate) / 10**(rateDecimal * 2);
+        uint256 feeRate = mintManager.getFeeRate(address(this));
+        uint256 amount = (msg.value * feeRate) / 10**rateDecimal;
         if (amount > 0) {
             address feeReceiver = caManager.getContract('WALLET');
             payable(feeReceiver).sendValue(amount);
@@ -83,6 +85,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint16 _groupId,
         SenderVerifier.Payload calldata _payload
     ) public payable nonReentrant {
+        /// @custom:error (MT9) - Mint subject cannot be CA
         require(msg.sender.code.length == 0, 'MT9');
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
@@ -100,8 +103,11 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         uint32 _quantity,
         TicketManager.Ticket calldata _ticket,
         SenderVerifier.Payload calldata _payload
-    ) public payable nonReentrant {
+    ) external payable nonReentrant {
+        /// @custom:error (MT9) - Mint subject cannot be CA
         require(!msg.sender.isContract(), 'MT9');
+
+        /// @custom:error (MT5) - Not enough money
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
@@ -110,11 +116,11 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         mintLoop(msg.sender, _quantity);
         sendFee();
     }
-
     /// @notice direct mint, neither public nor ticket
     /// @param _to mint destination address
     /// @param _quantity minting quantity
-    function mintDirect(address _to, uint32 _quantity) public {
+    function mintDirect(address _to, uint32 _quantity) external {
+        /// @custom:error (OO2) - Only Omnuum or owner can change
         require(msg.sender == caManager.getContract('MINTMANAGER') || msg.sender == owner(), 'OO2');
         mintLoop(_to, _quantity);
     }
@@ -123,9 +129,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _to mint destination address
     /// @param _quantity minting quantity
     function mintLoop(address _to, uint32 _quantity) internal {
+        /// @custom:error (MT3) - Remaining token count is not enough
         require(_tokenIdCounter.current() + _quantity <= maxSupply, 'MT3');
         uint256[] memory tokenIds = new uint256[](_quantity);
-        for (uint32 i; i < _quantity; i++) {
+        for (uint32 i = 0; i < _quantity; i++) {
             _tokenIdCounter.increment();
             tokenIds[i] = _tokenIdCounter.current();
 
@@ -136,10 +143,11 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice set uri for reveal
     /// @param __uri uri of revealed metadata
     function setUri(string memory __uri) external onlyOwner {
-        require(!isRevealed, 'Already Revealed');
+        /// @custom:error (SE6) - NFT already revealed
+        require(!isRevealed, 'SE6');
         _setURI(__uri);
         isRevealed = true;
-        emit Uri(__uri);
+        emit Uri(address(this), __uri);
     }
 
     /// @notice get current metadata uri
