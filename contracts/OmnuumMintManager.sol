@@ -97,7 +97,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         require(targetContract.owner() == msg.sender, 'OO1');
         require(len == _quantitys.length, 'ARG1');
 
-        for (uint256 i; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             targetContract.mintDirect(_tos[i], _quantitys[i]);
         }
         emit Airdrop(nftContract, _tos.length);

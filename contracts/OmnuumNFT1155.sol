@@ -99,7 +99,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     function mintLoop(address _to, uint32 _quantity) internal {
         require(_tokenIdCounter.current() + _quantity <= maxSupply, 'MT3');
         uint256[] memory tokenIds = new uint256[](_quantity);
-        for (uint32 i; i < _quantity; i++) {
+        for (uint32 i = 0; i < _quantity; i++) {
             _tokenIdCounter.increment();
             tokenIds[i] = _tokenIdCounter.current();
 

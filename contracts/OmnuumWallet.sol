@@ -57,7 +57,7 @@ contract OmnuumWallet {
         require(_owners.length > 1, 'single owner');
 
         //Register owners
-        for (uint256 i; i < _owners.length; i++) {
+        for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
             require(!isOwner[owner], 'Owner exists');
             require(!owner.isContract(), 'not EOA');
@@ -104,7 +104,7 @@ contract OmnuumWallet {
 
     function getApprovalCount(uint256 _reqId) public view returns (uint256) {
         uint256 count;
-        for (uint256 i; i < owners.length; i++) {
+        for (uint256 i = 0; i < owners.length; i++) {
             if (checkApproval(_reqId, owners[i])) {
                 count++;
             }
