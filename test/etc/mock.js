@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { mapC, go, zip, map } = require('fxjs');
-const { ContractTopic, chainlink, testValues } = require('../../utils/constants.js');
+const { ContractTopic, chainlink, testValues, contractRole } = require('../../utils/constants.js');
 
 Error.stackTraceLimit = Infinity;
 
@@ -39,6 +39,8 @@ module.exports = {
     this.MockLink = await ethers.getContractFactory('MockLink');
     this.MockVrfCoords = await ethers.getContractFactory('MockVrfCoords');
     this.MockNFT = await ethers.getContractFactory('MockNFT');
+    this.MockExchange = await ethers.getContractFactory('MockExchange');
+    this.MockVrfRequester = await ethers.getContractFactory('MockVrfRequester');
   },
   async testDeploy(accounts, overrides) {
     /* Deploy Upgradeable Proxies */
@@ -60,8 +62,8 @@ module.exports = {
       this.walletOwnerAccounts,
     );
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
-    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords] = await go(
-      [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords],
+    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester, this.mockExchange] = await go(
+      [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords, this.MockVrfRequester, this.MockExchange],
       mapC(async (conFactory) => {
         const contract = await conFactory.deploy();
         await contract.deployed();
@@ -89,7 +91,7 @@ module.exports = {
           this.senderVerifier.address,
           this.revealManager.address,
           this.omnuumWallet.address,
-          this.accounts[0].address,
+          this.mockVrfRequester.address,
         ],
         [
           ContractTopic.VRF,
@@ -99,10 +101,13 @@ module.exports = {
           ContractTopic.VERIFIER,
           ContractTopic.REVEAL,
           ContractTopic.WALLET,
-          ContractTopic.DEV,
+          ContractTopic.TEST,
         ],
       )
     ).wait();
+
+    await (await this.omnuumCAManager.addRole([this.omnuumVRFManager.address, this.mockExchange.address], contractRole.exchange)).wait();
+    await (await this.omnuumCAManager.addRole([this.revealManager.address, this.mockVrfRequester.address], contractRole.vrf)).wait();
 
     /* Deploy NFT beacon proxy */
     this.omnuumNFT1155 = await (

@@ -61,6 +61,9 @@ module.exports = {
     RevertMessage: {
       silent: 'Transaction reverted silently',
     },
+    caManager: {
+      notCA: 'Not CA',
+    },
     code: {
       // Arguments Error
       ARG1: 'ARG1', // Arguments length should be same
@@ -101,13 +104,16 @@ module.exports = {
       AE2: 'AE2', // Contract address not acceptable
     },
   },
+  contractRole: {
+    exchange: 'EXCHANGE',
+    vrf: 'VRF',
+  },
   payloadTopic: {
     mint: 'MINT',
     vrf: 'VRF',
     ticket: 'TICKET',
   },
   ContractTopic: {
-    DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
