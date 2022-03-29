@@ -16,14 +16,14 @@ contract OmnuumCAManager is OwnableUpgradeable {
         bool active;
     }
 
-    /// @dev (omnuum contract address => (bytes32 topic => isRegistered))
+    /// @notice (omnuum contract address => (bytes32 topic => isRegistered))
     mapping(address => mapping(bytes32 => bool)) public roles;
 
-    /// @dev (omnuum contract address => (topic, active))
+    /// @notice (omnuum contract address => (topic, active))
     mapping(address => Contract) public contracts;
 
-    // @dev topic indexed mapping, (string topic => omnuum contract address)
-    mapping(string => address) indexedContracts;
+    // @notice topic indexed mapping, (string topic => omnuum contract address)
+    mapping(string => address) public indexedContracts;
 
     // actionType: register, remove
     event Updated(address indexed contractAccount, Contract, string indexed actionType);
@@ -83,7 +83,9 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _topic topic for address
     function registerContract(address _CA, string calldata _topic) public onlyOwner {
         require(_CA != address(0));
-        require(_CA.isContract(), 'Not CA');
+
+        /// @custom:error (AE2) - Contract address not acceptable
+        require(_CA.isContract(), 'AE2');
 
         contracts[_CA] = Contract(_topic, true);
         indexedContracts[_topic] = _CA;
@@ -110,8 +112,11 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    function isRegistered(address CA) public view returns (bool) {
-        return contracts[CA].active;
+    /// @notice Check whether contract address is registered
+    /// @param _CA contract address
+    /// @return isRegistered boolean
+    function isRegistered(address _CA) public view returns (bool isRegistered) {
+        return contracts[_CA].active;
     }
 
     /// @notice Get contract address for specified topic

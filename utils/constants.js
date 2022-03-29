@@ -42,27 +42,8 @@ module.exports = {
       initialize: 'Initializable: contract is already initialized',
       onlyOwner: 'Ownable: caller is not the owner',
     },
-    senderVerifier: {
-      nonce: 'False Nonce',
-      topic: 'False Topic',
-      sender: 'False Sender',
-      signer: 'False Signer',
-    },
-    ticketManager: {
-      signer: 'False Signer',
-      nft: 'False NFT',
-      minter: 'False Minter',
-    },
-    vrfManager: {
-      LINK: 'Not enough LINK',
-      Ether: 'Not enough Ether',
-      Once: 'Already used',
-    },
     RevertMessage: {
       silent: 'Transaction reverted silently',
-    },
-    caManager: {
-      notCA: 'Not CA',
     },
     code: {
       // Arguments Error
@@ -76,6 +57,7 @@ module.exports = {
       OO4: 'OO4', // Only the owner of the wallet is allowed
       OO5: 'OO5', // Already the owner of the wallet
       OO6: 'OO6', // Only the requester is allowed
+      OO7: 'OO7', // Only role owner can access
       // Not Exist Error
       NX1: 'NX1', // ERC721Metadata: URI query for nonexistent token
       NX2: 'NX2', // Non-existent wallet account
@@ -95,7 +77,7 @@ module.exports = {
       SE6: 'SE6', // NFT already revealed
       SE7: 'SE7', // Not enough LINK at exchange contract
       SE8: 'SE8', // Already used address
-        // Mint Error
+      // Mint Error
       MT1: 'MT1', // There is no available ticket
       MT2: 'MT2', // Cannot mint more than possible amount per address
       MT3: 'MT3', // Remaining token count is not enough

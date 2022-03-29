@@ -66,7 +66,7 @@ describe('OmnuumVRFManager', () => {
       // change link balance -> 1 LINK, VRF requires 2 LINK
       await mockLink.changeBalance(ethers.utils.parseEther('1'));
 
-      await expect(omnuumVRFManager.requestVRF()).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
+      await expect(omnuumVRFManager.requestVRF()).to.be.revertedWith(Constants.reasons.code.SE7);
     });
     it('[Revert] Not Omnuum contract', async () => {
       const {
@@ -76,7 +76,7 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      await expect(omnuumVRFManager.connect(maliciousAC).requestVRF()).to.be.revertedWith(Constants.reasons.code.OO3);
+      await expect(omnuumVRFManager.connect(maliciousAC).requestVRF()).to.be.revertedWith(Constants.reasons.code.OO7);
     });
   });
 
@@ -129,7 +129,7 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      await expect(omnuumVRFManager.connect(not_omnuumAC).requestVRFOnce(anyAC.address)).to.be.revertedWith(Constants.reasons.code.OO3);
+      await expect(omnuumVRFManager.connect(not_omnuumAC).requestVRFOnce(anyAC.address)).to.be.revertedWith(Constants.reasons.code.OO7);
     });
     it('[Revert] When link is not enough on exchange contract (local mock)', async () => {
       const {

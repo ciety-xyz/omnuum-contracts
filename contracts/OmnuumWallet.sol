@@ -6,10 +6,10 @@ pragma solidity 0.8.10;
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 
 contract OmnuumWallet {
-    /// @dev - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
+    /// @notice - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
     uint256 public immutable consensusRatio;
 
-    // @dev - Minimum limit of required number of votes for consensus
+    // @notice - Minimum limit of required number of votes for consensus
     uint8 public immutable minLimitForConsensus;
 
     /// @dev - Withdraw = 0

@@ -61,9 +61,9 @@ describe('OmnuumExchange', () => {
       } = this;
       const amount = 2;
 
-      expect(
+      await expect(
         omnuumExchange.connect(not_omnuum).exchangeToken(Constants.chainlink.rinkeby.LINK, amount, not_omnuum.address),
-      ).to.be.revertedWith(Constants.reasons.code.OO3);
+      ).to.be.revertedWith(Constants.reasons.code.OO7);
     });
   });
   describe('[Method] updateTmpExchangeRate', () => {

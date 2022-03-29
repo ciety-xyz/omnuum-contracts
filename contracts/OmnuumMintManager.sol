@@ -82,7 +82,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint32 _maxMintAtAddress
     ) external {
         /// @custom:error (OO1) - Ownable: Caller is not the collection owner
-        require(Ownable(_nft).owner() == msg.sender, 'OO1');
+        require(OwnableUpgradeable(_nft).owner() == msg.sender, 'OO1');
 
         PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
 

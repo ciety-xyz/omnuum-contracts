@@ -76,7 +76,7 @@ describe('OmnuumCAManager', () => {
       } = this;
 
       await expect(omnuumCAManager.registerContract(fake_contract.address, Constants.ContractTopic.TEST)).to.be.revertedWith(
-        Constants.reasons.caManager.notCA,
+        Constants.reasons.code.AE2,
       );
     });
   });

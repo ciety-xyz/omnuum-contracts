@@ -16,6 +16,7 @@ contract OmnuumExchange is OwnableUpgradeable {
 
     OmnuumCAManager private caManager;
 
+    /// @notice temporary use purpose of LINK/ETH exchange rate
     uint256 public tmpLinkExRate;
 
     event Exchange(address indexed baseToken, address indexed targetToken, uint256 amount, address user, address indexed receipient);
@@ -58,8 +59,8 @@ contract OmnuumExchange is OwnableUpgradeable {
         uint256 _amount,
         address _to
     ) external payable {
-        /// @custom:error (OO3) - Only Omnuum can call
-        require(caManager.hasRole(msg.sender, 'EXCHANGE'), 'OO3');
+        /// @custom :error (OO7) - Only role owner can access
+        require(caManager.hasRole(msg.sender, 'EXCHANGE'), 'OO7');
 
         IERC20Upgradeable(_token).safeTransfer(msg.sender, _amount);
 
@@ -69,8 +70,8 @@ contract OmnuumExchange is OwnableUpgradeable {
     /// @notice withdraw specific amount to omnuum wallet contract
     /// @param _amount amount of ether to be withdrawn
     function withdraw(uint256 _amount) external onlyOwner {
-        /// @custom:error (OO3) - Only Omnuum can call
-        require(_amount <= address(this).balance, 'Not enough balance');
+        /// @custom:error (ARG2) - Arguments are not correct
+        require(_amount <= address(this).balance, 'ARG2');
         payable(caManager.getContract('WALLET')).transfer(_amount);
     }
 }
