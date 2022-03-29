@@ -547,7 +547,6 @@ describe('Omnuum Multi-sig Wallet', () => {
       expect(await Wallet.totalVotes()).to.equal(totalVotes - currentAccountVoteTwo.vote);
       expect(await Wallet.ownerCounter(checkVoteLevel)).to.equal(levelTwoOwnerCounter - 1);
     });
-
     it('can execute change to other owner', async () => {
       // remove requestId: 3
       const requestId = 3;
