@@ -72,6 +72,7 @@ contract OmnuumWalletAdv {
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
     event Revoked(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
     event Canceled(address indexed owner, uint256 indexed requestId);
+    event Executed(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
 
     /* *****************************************************************************
      *   Modifiers
@@ -222,7 +223,7 @@ contract OmnuumWalletAdv {
     // @function execute
     // @dev Allow an requester(owner) to execute the request
     // @dev After proceeding, it cannot revert the execution. Be cautious
-    // @parma _reqId - Request id that the requester wants to execute
+    // @param _reqId - Request id that the requester wants to execute
 
     function execute(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
         Request storage _request = requests[_reqId];
@@ -238,8 +239,7 @@ contract OmnuumWalletAdv {
         } else if (_type == uint8(RequestTypes.Change)) {
             _changeOwner(_request.currentOwner, _request.newOwner);
         }
-
-        // emit Executed(indexed address owner, indexed requestId, indexed requestType)
+        emit Executed(msg.sender, _reqId, _request.requestType);
     }
 
     // @function totalVotes
@@ -271,10 +271,18 @@ contract OmnuumWalletAdv {
 
     // @function requiredVotesForConsensus
     // @dev Allows users to see how many votes are needed to reach consensus.
-    // @votesForConsensus the number of votes required to reach a consensus
+    // @return - votesForConsensus the number of votes required to reach a consensus
 
     function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
         return (totalVotes() * consensusRatio) / 100;
+    }
+
+    // @function getLastRequestNo
+    // @dev Allows users to get the last request number
+    // @requestNo last request number
+
+    function getLastRequestNo() public view returns (uint256 requestNo) {
+        return requests.length - 1;
     }
 
     /* *****************************************************************************

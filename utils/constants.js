@@ -34,6 +34,7 @@ module.exports = {
       Approved: 'Approved',
       Revoked: 'Revoked',
       Canceled: 'Canceled',
+      Executed: 'Executed',
     },
   },
   reasons: {
