@@ -11,3 +11,4 @@ cache
 
 .npmrc
 scripts/
+.DS_Store
