@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import './utils/OwnableUpgradeable.sol';
 import './OmnuumNFT1155.sol';
 
 contract OmnuumMintManager is OwnableUpgradeable {
@@ -40,6 +39,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     }
 
     function setDiscountRate(address _nftContract, uint256 _discountRate) external onlyOwner {
+        require(_nftContract != address(0));
         require(_discountRate <= 100000, 'NE1');
         discountRate[_nftContract] = _discountRate;
         emit SetDiscountRate(_nftContract, _discountRate);
