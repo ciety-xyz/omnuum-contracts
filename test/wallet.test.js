@@ -5,30 +5,30 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
 
-const { mapL, mapC, zip, range, go, takeAll, reduce } = require('fxjs');
+const { map, mapL, filter, each, mapC, zip, sum, range, go, takeAll, reduce } = require('fxjs');
 
 const { testDeploy, prepareDeploy, prepareMockDeploy } = require('./etc/mock.js');
 const { testValues, events, reasons } = require('../utils/constants');
 
 upgrades.silenceWarnings();
 
-const sendEtherToWallet = async ({ sender, sendEthValue }) => {
-  const send_tx = await sender.sendTransaction({
+const sendEtherToWallet = async ({ sendSigner, sendData, sendValueInEther }) => {
+  const send_tx = await sendSigner.sendTransaction({
     to: this.omnuumWallet.address,
-    value: ethers.utils.parseEther(sendEthValue),
+    data: sendData,
+    value: ethers.utils.parseEther(sendValueInEther),
   });
   await send_tx.wait();
   return send_tx;
 };
 
-const requestWithdrawal = async ({ signer, reqValue }) => {
-  const request_withdrawal_value = ethers.utils.parseEther(reqValue);
-  const req_tx = await this.omnuumWallet.connect(signer).approvalRequest(request_withdrawal_value);
-  await req_tx.wait();
-  return req_tx;
-};
+let accounts;
+let Wallet;
+let walletOwnerAccounts;
+let walletOwnerSigners;
+let NFT;
 
-describe('Wallet', () => {
+describe('Omnuum Multi-sig Wallet', () => {
   before(async () => {
     await prepareDeploy.call(this);
     await prepareMockDeploy.call(this);
@@ -36,40 +36,52 @@ describe('Wallet', () => {
 
   beforeEach(async () => {
     this.accounts = await ethers.getSigners();
-    await testDeploy.call(this, this.accounts);
+    accounts = this.accounts;
+    await testDeploy.call(this, accounts);
+
+    Wallet = this.omnuumWallet;
+    NFT = this.omnuumNFT1155;
+    walletOwnerSigners = this.walletOwnerSigner;
+    walletOwnerAccounts = this.walletOwnerAccounts;
   });
 
-  describe('[Constructor] Wallet Owner Address Registration', () => {
-    it('Register owners members correctly', async () => {
-      const registeredOwners = await go(
-        range(testValues.walletOwnersLen),
-        mapC((idx) => this.omnuumWallet.owners(idx)),
+  describe('[Constructor] works correctly', () => {
+    it('Register owner accounts correctly', async () => {
+      await go(
+        walletOwnerAccounts,
+        each(async ({ addr, vote }) => {
+          expect(await Wallet.ownerVote(addr)).to.equal(vote);
+        }),
       );
-      expect(registeredOwners).to.deep.equal(this.walletOwners.map((owner) => owner.address));
     });
-
+    it('Register consensusRatio correctly', async () => {
+      expect(await Wallet.consensusRatio()).to.equal(testValues.consensusRatio);
+    });
+    it('Register minLimitForConsensus correctly', async () => {
+      expect(await Wallet.minLimitForConsensus()).to.equal(testValues.minLimitForConsensus);
+    });
     it('[Revert] Registered only owners, not other account', async () => {
-      await expect(this.omnuumWallet.owners(testValues.walletOwnersLen)).to.be.reverted;
+      expect(await Wallet.ownerVote(accounts[0].address)).to.equal(0);
     });
   });
 
   describe('[Method] receive', () => {
     it('Can receive ETH', async () => {
-      const projectOwner = await this.omnuumNFT1155.owner();
+      const projectOwner = await NFT.owner();
       const sendTxWithData = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
+        sendSigner: ethers.provider.getSigner(projectOwner),
+        sendValueInEther: testValues.sendEthValue,
       });
 
-      await expect(sendTxWithData).to.emit(this.omnuumWallet, events.Wallet.EtherReceived);
+      await expect(sendTxWithData).to.emit(Wallet, events.Wallet.EtherReceived);
     });
     it('Receive Fee correctly', async () => {
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const walletAddress = this.omnuumWallet.address;
+      const projectOwner = await NFT.owner();
+      const walletAddress = Wallet.address;
       const beforeWalletBalance = await ethers.provider.getBalance(walletAddress);
       const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
+        sendSigner: ethers.provider.getSigner(projectOwner),
+        sendValueInEther: testValues.sendEthValue,
       });
 
       await sendTx.wait();
@@ -79,7 +91,7 @@ describe('Wallet', () => {
     });
     it('Receive Accumulated fee from multiple accounts', async () => {
       const CHARITY_MEMBERS_LEN = 10;
-      const walletAddress = this.omnuumWallet.address;
+      const walletAddress = Wallet.address;
       const charitySigners = (await ethers.getSigners()).slice(-CHARITY_MEMBERS_LEN);
       const charityValues = go(
         range(CHARITY_MEMBERS_LEN),
@@ -92,8 +104,8 @@ describe('Wallet', () => {
         zip(charityValues),
         mapC(([sendValue, signer]) =>
           sendEtherToWallet({
-            sender: signer,
-            sendEthValue: sendValue,
+            sendSigner: signer,
+            sendValueInEther: sendValue,
           }),
         ),
       );
@@ -101,7 +113,7 @@ describe('Wallet', () => {
       await go(
         sendTxs,
         mapC(async (sendTx) => {
-          await expect(sendTx).to.emit(this.omnuumWallet, events.Wallet.EtherReceived);
+          await expect(sendTx).to.emit(Wallet, events.Wallet.EtherReceived).withArgs(sendTx.from);
         }),
       );
 
@@ -121,332 +133,601 @@ describe('Wallet', () => {
 
   describe('[Method] makePayment', () => {
     it('Receive payment and emit event', async () => {
-      const { omnuumWallet } = this;
-      const walletAddress = this.omnuumWallet.address;
+      const sendSigner = accounts[0];
+      const value = ethers.utils.parseEther('1');
 
-      const value = ethers.utils.parseEther('13');
+      const beforeWalletBalance = await ethers.provider.getBalance(Wallet.address);
 
-      const beforeWalletBalance = await ethers.provider.getBalance(walletAddress);
-      const topic_byte32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST'));
-      const description = 'test for payment';
+      await expect(Wallet.connect(sendSigner).makePayment(testValues.paymentTestTopic, testValues.paymentDescription, { value }))
+        .to.emit(Wallet, events.Wallet.PaymentReceived)
+        .withArgs(sendSigner.address, testValues.paymentTestTopic, testValues.paymentDescription);
 
-      const tx = await omnuumWallet.makePayment(topic_byte32, description, { value });
-
-      await tx.wait();
-
-      await expect(tx).to.emit(omnuumWallet, events.Wallet.PaymentReceived).withArgs(topic_byte32, description);
-
-      const afterWalletBalance = await ethers.provider.getBalance(walletAddress);
+      const afterWalletBalance = await ethers.provider.getBalance(Wallet.address);
 
       expect(afterWalletBalance.sub(beforeWalletBalance)).to.equal(value);
     });
-
     it('[Revert] Cannot send zero amount', async () => {
-      const { omnuumWallet } = this;
-
-      const topic_byte32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST'));
-      const description = 'test for payment';
-
-      await expect(omnuumWallet.makePayment(topic_byte32, description, { value: 0 })).to.be.revertedWith(reasons.wallet.useless);
-    });
-  });
-
-  describe('[Method] approvalRequest', () => {
-    it('Can request approval and emit requested and approval Events when owner requests', async () => {
-      const requester = this.walletOwners[0];
-      const withdrawalValue = '0';
-      const reqTx = await requestWithdrawal({ signer: requester, reqValue: withdrawalValue });
-      const reqId = '0';
-      await expect(reqTx).to.emit(this.omnuumWallet, events.Wallet.Requested).withArgs(reqId, requester.address, withdrawalValue);
-      await expect(reqTx).to.emit(this.omnuumWallet, events.Wallet.Approved).withArgs(reqId, requester.address);
-
-      expect(await this.omnuumWallet.checkApproval(reqId, requester.address)).to.be.true;
-    });
-    it('[Revert] Only permit wallet owners', async () => {
-      const [notOwner] = this.accounts;
-      expect(this.walletOwners.map((owner) => owner.address))
-        .to.be.an('array')
-        .that.does.not.include(notOwner.address);
-
-      const request_withdrawal_value = ethers.utils.parseEther('0');
-      await expect(this.omnuumWallet.approvalRequest(request_withdrawal_value)).to.be.revertedWith(reasons.wallet.onlyOwner);
-    });
-    it('[Revert] Request more ETH than current contract balance', async () => {
-      const requester = this.walletOwners[0];
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const walletAddress = this.omnuumWallet.address;
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-
-      await sendTx.wait();
-      const currentWalletBalance = await ethers.provider.getBalance(walletAddress);
-      await expect(this.omnuumWallet.connect(requester).approvalRequest(currentWalletBalance.add(1))).to.be.revertedWith(
-        reasons.wallet.notEnoughBalance,
+      await expect(Wallet.makePayment(testValues.paymentTestTopic, testValues.paymentDescription, { value: 0 })).to.be.revertedWith(
+        reasons.code.NE3,
       );
     });
   });
+
+  const request = async ({
+    walletContract,
+    requestType = 0,
+    currentAccount = testValues.zeroOwnerAccount,
+    newAccount = testValues.zeroOwnerAccount,
+    withdrawalAmount = ethers.utils.parseEther('0'),
+  }) => walletContract.request(requestType, currentAccount, newAccount, withdrawalAmount);
+
+  describe('[Method] request', () => {
+    it('can make a request by owner', async () => {
+      const ownerNo = 0;
+      const requestSigner = walletOwnerSigners[ownerNo];
+      const voteLevel = walletOwnerAccounts[ownerNo].vote;
+      const requestId = 0;
+      const requestType = 2;
+
+      const txResponse = await request({
+        requestType,
+        walletContract: Wallet.connect(requestSigner),
+      });
+
+      // Confirm event emit
+      // event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType)
+      await expect(txResponse).to.emit(Wallet, events.Wallet.Requested).withArgs(requestSigner.address, requestId, requestType);
+      const requestStorageDate = await Wallet.requests(requestId);
+
+      expect(requestStorageDate.requester).to.equal(requestSigner.address);
+      expect(requestStorageDate.requestType).to.equal(requestType);
+
+      expect(requestStorageDate.currentOwner.addr, requestStorageDate.currentOwner.vote).to.equal(
+        ...Object.values(testValues.zeroOwnerAccount),
+      );
+      expect(requestStorageDate.newOwner.addr, requestStorageDate.newOwner.vote).to.equal(...Object.values(testValues.zeroOwnerAccount));
+      expect(requestStorageDate.withdrawalAmount).to.equal(0);
+      expect(requestStorageDate.votes).to.equal(voteLevel);
+      expect(requestStorageDate.isExecute).to.false;
+
+      expect(await Wallet.isOwnerVoted(requestSigner.address, requestId)).to.true;
+    });
+
+    it('[Revert] request by now owner', async () => {
+      const notOwnerSigner = accounts[0];
+      await expect(
+        request({
+          walletContract: Wallet.connect(notOwnerSigner),
+        }),
+      ).to.be.revertedWith(reasons.code.OO4);
+    });
+  });
+
+  const prepareRequest = async () => {
+    const requesterOwnerNo = 0;
+    const approverOwnerNo = 1;
+    const approveOwnerSigner = walletOwnerSigners[approverOwnerNo];
+    const requestOwnerSigner = walletOwnerSigners[requesterOwnerNo];
+    const approverVoteLevel = walletOwnerAccounts[approverOwnerNo].vote;
+    const requesterVoteLevel = walletOwnerAccounts[requesterOwnerNo].vote;
+    const totalVoteLevel = approverVoteLevel + requesterVoteLevel;
+    const requestId = 0;
+    // Send a dummy request transaction before approval
+    await request({
+      walletContract: Wallet.connect(requestOwnerSigner),
+    });
+    return [approveOwnerSigner, requestOwnerSigner, totalVoteLevel, requestId, approverVoteLevel, requesterVoteLevel];
+  };
 
   describe('[Method] approve', () => {
-    it('Can approve event and emit Approved event', async () => {
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const [requester, approver] = this.walletOwners;
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      const reqId = '0';
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const txApprove = await this.omnuumWallet.connect(approver).approve(reqId);
-      await txApprove.wait();
-      await expect(txApprove).to.emit(this.omnuumWallet, events.Wallet.Approved).withArgs('0', approver.address);
-
-      // requester + approver = 2
-      expect(await this.omnuumWallet.getApprovalCount(reqId)).to.be.equal(2);
+    let approveOwnerSigner;
+    let requestOwnerSigner;
+    let totalVoteLevel;
+    let requestId;
+    let approverVoteLevel;
+    beforeEach(async () => {
+      [approveOwnerSigner, requestOwnerSigner, totalVoteLevel, requestId, approverVoteLevel] = await prepareRequest();
     });
-    it('[Revert] Only permit wallet owners', async () => {
-      const [notOwner] = await ethers.getSigners();
-      await expect(this.omnuumWallet.connect(notOwner).approve(0)).to.be.revertedWith(reasons.wallet.onlyOwner);
+    it('can be approved by the owner', async () => {
+      // Confirm event emit when approve
+      // event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes)
+      await expect(Wallet.connect(approveOwnerSigner).approve(requestId))
+        .to.emit(Wallet, events.Wallet.Approved)
+        .withArgs(approveOwnerSigner.address, requestId, approverVoteLevel);
+
+      const requestStorageDate = await Wallet.requests(requestId);
+
+      expect(requestStorageDate.votes).to.equal(totalVoteLevel);
+      expect(await Wallet.isOwnerVoted(approveOwnerSigner.address, requestId)).to.true;
     });
-    it('[Revert] Approve only existed request', async () => {
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const [requester, approver] = this.walletOwners;
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
 
-      const existReqId = '0';
-      const notExistReqId = '1';
-
-      await expect(wallet.requests(existReqId)).to.not.be.reverted;
-
-      await expect(wallet.connect(approver).approve(existReqId)).to.not.be.revertedWith(reasons.wallet.reqNotExists);
-
-      await expect(wallet.requests(notExistReqId)).to.be.reverted;
-      await expect(wallet.connect(approver).approve(notExistReqId)).to.be.revertedWith(reasons.wallet.reqNotExists);
+    it('[Revert] if approve by not onwer', async () => {
+      const notOnwerSigner = accounts[0];
+      await expect(Wallet.connect(notOnwerSigner).approve(requestId)).to.be.revertedWith(reasons.code.OO4);
     });
-    it('[Revert] Approve can be once', async () => {
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const [requester, approver] = this.walletOwners;
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      await (await wallet.connect(approver).approve('0')).wait();
+    it('[Revert] if approve to the request which does not exist', async () => {
+      await expect(Wallet.connect(approveOwnerSigner).approve(requestId + 1)).to.be.revertedWith(reasons.code.NX3);
+    });
+    it('[Revert] if approve to the request which is already executed', async () => {
+      // Approve by the second owner
+      await Wallet.connect(approveOwnerSigner).approve(requestId);
 
-      await expect(wallet.connect(approver).approve('0')).to.be.revertedWith(reasons.wallet.alreadyApproved);
-    });
-  });
+      const { votes } = await Wallet.requests(requestId);
+      const requiredVotesForConsensus = await Wallet.requiredVotesForConsensus();
 
-  describe('[Method] revokeApproval', () => {
-    it('Can revoke approval and emit Revoked event', async () => {
-      const [requester, approver] = this.walletOwners;
-      const wallet = this.omnuumWallet.connect(approver);
-      const projectOwner = await this.omnuumNFT1155.owner();
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const reqId = '0';
+      // Check whether consensus is reached
+      expect(votes.toNumber()).to.be.greaterThanOrEqual(requiredVotesForConsensus.toNumber());
 
-      await (await wallet.approve(reqId)).wait();
-      await expect(wallet.revokeApproval(reqId)).to.be.emit(wallet, 'Revoked').withArgs(reqId, approver.address);
+      // Execute the request by requester owner
+      await Wallet.connect(requestOwnerSigner).execute(requestId);
+
+      // Confirm the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+
+      // Another owner attempts to approve the request that has already been executed => revert
+      const anotherOwnerSigner = walletOwnerSigners[2];
+      await expect(Wallet.connect(anotherOwnerSigner).approve(requestId)).to.be.revertedWith(reasons.code.SE1);
     });
-    it('[Revert] Only permit wallet owners', async () => {
-      const [notOwner] = await ethers.getSigners();
-      const [requester, approver] = this.walletOwners;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const reqId = '0';
-      await (await wallet.connect(approver).approve(reqId)).wait();
-      await expect(wallet.connect(notOwner).revokeApproval(reqId)).to.be.revertedWith(reasons.wallet.onlyOwner);
+    it('[Revert] if approve to the request which is already canceled', async () => {
+      // Cancel by Requester
+      await Wallet.connect(requestOwnerSigner).cancel(requestId);
+
+      // Check the request is canceled (4 = cancel)
+      expect((await Wallet.requests(requestId)).requestType).to.equal(4);
+
+      // Another owner attempts to approve the request that has already been canceled => revert
+      await expect(Wallet.connect(approveOwnerSigner).approve(requestId)).to.be.revertedWith(reasons.code.SE2);
     });
-    it('[Revert] Revoke approval once', async () => {
-      const [requester, approver] = this.walletOwners;
-      const wallet = this.omnuumWallet.connect(approver);
-      const projectOwner = await this.omnuumNFT1155.owner();
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const reqId = '0';
-      await (await wallet.approve(reqId)).wait();
-      await (await wallet.revokeApproval(reqId)).wait();
-      await expect(wallet.revokeApproval(reqId)).to.be.revertedWith(reasons.wallet.notApproved);
-    });
-    it('[Revert] Revoke only existed request', async () => {
-      const [requester, approver] = this.walletOwners;
-      const wallet = this.omnuumWallet.connect(approver);
-      const projectOwner = await this.omnuumNFT1155.owner();
-      await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendEthValue: testValues.sendEthValue,
-      });
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const existedReqId = '0';
-      const notExistedReqId = '1';
-      await (await wallet.approve(existedReqId)).wait();
-      await expect(wallet.revokeApproval(notExistedReqId)).to.be.revertedWith(reasons.wallet.reqNotExists);
+    it('[Revert] if approve again', async () => {
+      // Approve
+      await Wallet.connect(approveOwnerSigner).approve(requestId);
+
+      // Approve again => revert
+      await expect(Wallet.connect(approveOwnerSigner).approve(requestId)).to.be.revertedWith(reasons.code.SE3);
     });
   });
 
-  describe('[Method] withdrawal', () => {
-    it('Can withdraw ETH to requester correctly and emit Withdrawn event', async () => {
-      // send ETH to wallet
-      const nftAddress = this.omnuumNFT1155.address;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendData: nftAddress,
-        sendEthValue: testValues.sendEthValue,
+  describe('[Method] revoke', () => {
+    let approveOwnerSigner;
+    let requestOwnerSigner;
+    let requestId;
+    let approverVoteLevel;
+    let requesterVoteLevel;
+    beforeEach(async () => {
+      [approveOwnerSigner, requestOwnerSigner, , requestId, approverVoteLevel, requesterVoteLevel] = await prepareRequest();
+      await Wallet.connect(approveOwnerSigner).approve(requestId);
+    });
+    it('can be revoked by the owner', async () => {
+      await expect(Wallet.connect(approveOwnerSigner).revoke(requestId))
+        .to.emit(Wallet, events.Wallet.Revoked)
+        .withArgs(approveOwnerSigner.address, requestId, approverVoteLevel);
+
+      // Check if the result is revoked
+      const { votes } = await Wallet.requests(requestId);
+      expect(votes).to.equal(requesterVoteLevel);
+      expect(await Wallet.isOwnerVoted(approveOwnerSigner.address, requestId)).to.false;
+    });
+    it('[Revert] if revoke by not onwer', async () => {
+      const notOWnerSigner = accounts[0];
+      await expect(Wallet.connect(notOWnerSigner).revoke(requestId)).to.be.revertedWith(reasons.code.OO4);
+    });
+    it('[Revert] if revoke to the request which does not exist', async () => {
+      await expect(Wallet.connect(approveOwnerSigner).revoke(requestId + 1)).to.be.revertedWith(reasons.code.NX3);
+    });
+    it('[Revert] if revoke to the request which is already executed', async () => {
+      const { votes } = await Wallet.requests(requestId);
+      const requiredVotesForConsensus = await Wallet.requiredVotesForConsensus();
+
+      // Check whether consensus is reached
+      expect(votes.toNumber()).to.be.greaterThanOrEqual(requiredVotesForConsensus.toNumber());
+
+      // Execute the request by requester owner
+      await Wallet.connect(requestOwnerSigner).execute(requestId);
+
+      // Confirm the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+
+      await expect(Wallet.connect(approveOwnerSigner).revoke(requestId)).to.be.revertedWith(reasons.code.SE1);
+    });
+    it('[Revert] if revoke to the request which is already canceled', async () => {
+      // Cancel by Requester
+      await Wallet.connect(requestOwnerSigner).cancel(requestId);
+
+      // Check the request is canceled (4 = cancel)
+      expect((await Wallet.requests(requestId)).requestType).to.equal(4);
+
+      // Approver attempts to revoke the request that has already been canceled => revert
+      await expect(Wallet.connect(approveOwnerSigner).revoke(requestId)).to.be.revertedWith(reasons.code.SE2);
+    });
+    it('[Revert] if revoke the request which is not been approved', async () => {
+      const anotherApproverSigner = walletOwnerSigners[2];
+      await expect(Wallet.connect(anotherApproverSigner).revoke(requestId)).to.be.revertedWith(reasons.code.SE4);
+    });
+  });
+
+  describe('[Method] cancel', () => {
+    let approveOwnerSigner;
+    let requestOwnerSigner;
+    let requestId;
+    beforeEach(async () => {
+      [approveOwnerSigner, requestOwnerSigner, , requestId] = await prepareRequest();
+    });
+    it('can cancel the request only by requester', async () => {
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId))
+        .to.emit(Wallet, events.Wallet.Canceled)
+        .withArgs(requestOwnerSigner.address, requestId);
+    });
+    it('[Revert] if cancel by not owner', async () => {
+      const notOnwerSigner = accounts[0];
+      await expect(Wallet.connect(notOnwerSigner).cancel(requestId)).to.be.revertedWith(reasons.code.OO6);
+    });
+    it('[Revert] if cancel to the request which does not exist', async () => {
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId + 1)).to.be.revertedWith(reasons.code.NX3);
+    });
+    it('[Revert] if cancel to the request which is already executed', async () => {
+      await Wallet.connect(approveOwnerSigner).approve(requestId);
+
+      const { votes } = await Wallet.requests(requestId);
+      const requiredVotesForConsensus = await Wallet.requiredVotesForConsensus();
+
+      // Check whether consensus is reached
+      expect(votes.toNumber()).to.be.greaterThanOrEqual(requiredVotesForConsensus.toNumber());
+
+      // Execute the request by requester owner
+      await Wallet.connect(requestOwnerSigner).execute(requestId);
+
+      // Confirm the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+
+      // Requester attempts to cancel the request that has already been executed => revert
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId)).to.be.revertedWith(reasons.code.SE1);
+    });
+    it('[Revert] if cancel to the request which is already canceled', async () => {
+      // Cancel by Requester
+      await Wallet.connect(requestOwnerSigner).cancel(requestId);
+
+      // Check the request is canceled (4 = cancel)
+      expect((await Wallet.requests(requestId)).requestType).to.equal(4);
+
+      // Requester attempts to cancel again the request that has already been canceled => revert
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId)).to.be.revertedWith(reasons.code.SE2);
+    });
+  });
+
+  const makeAccountToArguments = (account) => [...Object.values(account)];
+
+  describe('[Method] execute', () => {
+    const requestNo = 0;
+    const approverNo = 1;
+    let requestOwnerSigner;
+    let approverOwnerSigner;
+    let currentAccountVoteTwo;
+    let currentAccountVoteOne;
+    let newOwnerAccount;
+    const initialPaymentValue = '1';
+    const withdrawalEtherAmount = '0.91911';
+
+    let totalVotes;
+    let levelOneOwnerCounter;
+    let levelTwoOwnerCounter;
+    const checkVoteLevel = 2;
+
+    beforeEach(async () => {
+      requestOwnerSigner = walletOwnerSigners[requestNo];
+      approverOwnerSigner = walletOwnerSigners[approverNo];
+      currentAccountVoteTwo = walletOwnerAccounts[approverNo];
+      currentAccountVoteOne = { ...walletOwnerAccounts[approverNo], vote: 1 };
+      newOwnerAccount = { addr: accounts[0].address, vote: 1 };
+      const walletSignedByRequester = Wallet.connect(requestOwnerSigner);
+
+      totalVotes = go(
+        walletOwnerAccounts,
+        map((account) => account.vote),
+        sum,
+      );
+
+      levelOneOwnerCounter = go(
+        walletOwnerAccounts,
+        filter((account) => account.vote === 1),
+      ).length;
+
+      levelTwoOwnerCounter = go(
+        walletOwnerAccounts,
+        filter((account) => account.vote === 2),
+      ).length;
+
+      // Withdraw - RequestType: 0, requestId: 0
+      await sendEtherToWallet({
+        sendSigner: requestOwnerSigner,
+        sendValueInEther: initialPaymentValue,
       });
+      await request({
+        requestType: 0,
+        walletContract: walletSignedByRequester,
+        withdrawalAmount: ethers.utils.parseEther(withdrawalEtherAmount),
+      });
+      await Wallet.connect(approverOwnerSigner).approve(0);
 
-      await sendTx.wait();
+      // Add - RequestType: 1, requestId: 1
+      await request({
+        walletContract: walletSignedByRequester,
+        requestType: 1,
+        currentAccount: testValues.zeroOwnerAccount,
+        newAccount: { addr: newOwnerAccount.addr, vote: newOwnerAccount.vote },
+      });
+      await Wallet.connect(approverOwnerSigner).approve(1);
 
-      // request by owner
-      const [requester, ...approvers] = this.walletOwners;
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
+      // Remove - RequestType: 2, requestId: 2
+      await request({
+        requestType: 2,
+        walletContract: walletSignedByRequester,
+        currentAccount: makeAccountToArguments(currentAccountVoteTwo),
+      });
+      await Wallet.connect(approverOwnerSigner).approve(2);
 
-      // approve by other owners
-      const reqId = '0';
-      await go(
-        approvers,
-        mapC((approver) => wallet.connect(approver).approve(reqId)),
-        mapC((tx) => tx.wait()),
-      );
+      // Change (owners) - RequestType: 3, requestId: 3
+      await request({
+        requestType: 3,
+        walletContract: walletSignedByRequester,
+        currentAccount: makeAccountToArguments(currentAccountVoteTwo),
+        newAccount: makeAccountToArguments(newOwnerAccount),
+      });
+      await Wallet.connect(approverOwnerSigner).approve(3);
 
-      // check consensus (unanimous)
-      expect((await wallet.getApprovalCount(reqId)).toNumber()).to.be.equal(this.walletOwners.length);
-
-      const beforeRequesterBalance = await requester.getBalance();
-
-      // withdrawal transaction by requester
-      const txWithdrawal = await wallet.connect(requester).withdrawal(reqId);
-      const receipt = await txWithdrawal.wait();
-      const afterRequesterBalance = await requester.getBalance();
-      const withdrawal_gas_cost = receipt.gasUsed.mul(txWithdrawal.gasPrice);
-
-      expect(afterRequesterBalance.sub(beforeRequesterBalance).add(withdrawal_gas_cost).toString()).to.be.equal(
-        ethers.utils.parseEther(testValues.sendEthValue),
-      );
-
-      const walletBalance = await ethers.provider.getBalance(wallet.address);
-      expect(walletBalance.toString()).to.be.equal(ethers.utils.parseEther('0'));
+      // Change (level) - RequestType: 3, requestId: 4
+      await request({
+        requestType: 3,
+        walletContract: walletSignedByRequester,
+        currentAccount: makeAccountToArguments(currentAccountVoteTwo),
+        newAccount: makeAccountToArguments(currentAccountVoteOne),
+      });
+      await Wallet.connect(approverOwnerSigner).approve(4);
     });
 
-    it('[Revert] Only owner can withdraw', async () => {
-      const nftAddress = this.omnuumNFT1155.address;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendData: nftAddress,
-        sendEthValue: testValues.sendEthValue,
-      });
+    it('can execute withdrawal', async () => {
+      // withdrawal requestId: 0
+      const requestId = 0;
 
-      await sendTx.wait();
+      // Execute the request
+      const tx = Wallet.connect(requestOwnerSigner).execute(requestId);
+      await expect(tx).to.emit(Wallet, events.Wallet.Executed).withArgs(requestOwnerSigner.address, requestId, 0);
 
-      // request by owner
-      const [requester, ...approvers] = this.walletOwners;
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
+      // Check wallet balance change
+      await expect(() => tx).to.changeEtherBalance(Wallet, ethers.utils.parseEther(`-${withdrawalEtherAmount}`));
 
-      // approve by other owners
-      const reqId = '0';
-      await go(
-        approvers,
-        mapC((approver) => wallet.connect(approver).approve(reqId)),
-        mapC((tx) => tx.wait()),
+      // Check owner balance has been added
+      await expect(() => tx).to.changeEtherBalance(requestOwnerSigner, ethers.utils.parseEther(`${withdrawalEtherAmount}`));
+
+      // Check wallet balance has been subtracted
+      expect(await ethers.provider.getBalance(Wallet.address)).to.equal(
+        ethers.utils.parseEther(initialPaymentValue).sub(ethers.utils.parseEther(withdrawalEtherAmount)),
       );
 
-      await expect(wallet.connect(this.accounts[0]).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.onlyOwner);
+      // Check the status of the request changes executed to true
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
     });
-    it('[Revert] Withdraw by other owner', async () => {
-      // send ETH to wallet
-      const nftAddress = this.omnuumNFT1155.address;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendData: nftAddress,
-        sendEthValue: testValues.sendEthValue,
-      });
-      await sendTx.wait();
+    it('can execute add', async () => {
+      // add requestId: 1
+      const requestId = 1;
 
-      // request by owner
-      const [requester, ...approvers] = this.walletOwners;
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
+      // Check status before the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.false;
+      expect(await Wallet.isOwner(newOwnerAccount.addr)).to.false;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes);
+      expect(await Wallet.ownerCounter(checkVoteLevel)).to.equal(levelTwoOwnerCounter);
 
-      // approve by other owners
-      const reqId = '0';
-      await go(
-        approvers,
-        mapC((approver) => wallet.connect(approver).approve(reqId)),
-        mapC((tx) => tx.wait()),
-      );
+      // Execute add request
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId))
+        .to.emit(Wallet, events.Wallet.Executed)
+        .withArgs(requestOwnerSigner.address, requestId, 1);
 
-      // withdraw by different owner
-      await expect(wallet.connect(approvers[0]).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.notRequester);
+      // Check status after the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+      expect(await Wallet.isOwner(newOwnerAccount.addr)).to.true;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes + newOwnerAccount.vote);
     });
-    it('[Revert] Only withdraw once', async () => {
-      // send ETH to wallet
-      const nftAddress = this.omnuumNFT1155.address;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendData: nftAddress,
-        sendEthValue: testValues.sendEthValue,
-      });
-      await sendTx.wait();
+    it('can execute remove', async () => {
+      // remove requestId: 2
+      const requestId = 2;
 
-      // request by owner
-      const [requester, ...approvers] = this.walletOwners;
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
+      // Check status before the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.false;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.true;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes);
+      expect(await Wallet.ownerCounter(checkVoteLevel)).to.equal(levelTwoOwnerCounter);
 
-      // approve by other owners
-      const reqId = '0';
-      await go(
-        approvers,
-        mapC((approver) => wallet.connect(approver).approve(reqId)),
-        mapC((tx) => tx.wait()),
-      );
+      // Execute add request
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId))
+        .to.emit(Wallet, events.Wallet.Executed)
+        .withArgs(requestOwnerSigner.address, requestId, 2);
 
-      await (await wallet.connect(requester).withdrawal(reqId)).wait();
-      await expect(wallet.connect(requester).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.alreadyWithdrawn);
+      // Check status after the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.false;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes - currentAccountVoteTwo.vote);
+      expect(await Wallet.ownerCounter(checkVoteLevel)).to.equal(levelTwoOwnerCounter - 1);
     });
-    it('[Revert] Consensus is required', async () => {
-      // send ETH to wallet
-      const nftAddress = this.omnuumNFT1155.address;
-      const wallet = this.omnuumWallet;
-      const projectOwner = await this.omnuumNFT1155.owner();
-      const sendTx = await sendEtherToWallet({
-        sender: ethers.provider.getSigner(projectOwner),
-        sendData: nftAddress,
-        sendEthValue: testValues.sendEthValue,
+    it('can execute change to other owner', async () => {
+      // remove requestId: 3
+      const requestId = 3;
+
+      // Check status before the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.false;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.true;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes);
+      expect(await Wallet.ownerCounter(1)).to.equal(levelOneOwnerCounter);
+      expect(await Wallet.ownerCounter(2)).to.equal(levelTwoOwnerCounter);
+
+      // Execute add request
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId))
+        .to.emit(Wallet, events.Wallet.Executed)
+        .withArgs(requestOwnerSigner.address, requestId, 3);
+
+      // Check status after the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.false;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes - currentAccountVoteTwo.vote + newOwnerAccount.vote);
+      expect(await Wallet.ownerCounter(2)).to.equal(levelTwoOwnerCounter - 1);
+      expect(await Wallet.ownerCounter(1)).to.equal(levelOneOwnerCounter + 1);
+    });
+    it('can execute change the owner level', async () => {
+      // remove requestId: 3
+      const requestId = 4;
+
+      // Check status before the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.false;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.true;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes);
+      expect(await Wallet.ownerCounter(1)).to.equal(levelOneOwnerCounter);
+      expect(await Wallet.ownerCounter(2)).to.equal(levelTwoOwnerCounter);
+
+      // Execute add request
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId))
+        .to.emit(Wallet, events.Wallet.Executed)
+        .withArgs(requestOwnerSigner.address, requestId, 3);
+
+      // Check status after the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.true;
+      expect(await Wallet.totalVotes()).to.equal(totalVotes - currentAccountVoteTwo.vote + currentAccountVoteOne.vote);
+      expect(await Wallet.ownerCounter(2)).to.equal(levelTwoOwnerCounter - 1);
+      expect(await Wallet.ownerCounter(1)).to.equal(levelOneOwnerCounter + 1);
+    });
+    it('[Revert] if execute the request which does not exist', async () => {
+      const notExistRequestId = 99;
+      await expect(Wallet.connect(requestOwnerSigner).execute(notExistRequestId)).to.be.revertedWith(reasons.code.NX3);
+    });
+    it('[Revert] if execute the request which is already executed', async () => {
+      const requestId = 0;
+
+      // Request execution
+      await Wallet.connect(requestOwnerSigner).execute(requestId);
+
+      // Execute again
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.SE1);
+    });
+    it('[Revert] if execute the request which is already canceled', async () => {
+      const requestId = 0;
+
+      // Request cancel
+      await Wallet.connect(requestOwnerSigner).cancel(requestId);
+
+      // Execute again
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.SE2);
+    });
+    it('[Revert] if execute by not requester', async () => {
+      const requestId = 0;
+      const notOwner = accounts[0];
+      // Request cancel
+      await expect(Wallet.connect(notOwner).cancel(requestId)).to.be.revertedWith(reasons.code.OO6);
+    });
+    it('[Revert] if execute before reaching the consensus', async () => {
+      const requestId = 0;
+
+      // Revoke approval
+      await Wallet.connect(approverOwnerSigner).revoke(requestId);
+
+      // Execute request
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.NE2);
+    });
+    it('[Revert] if execute the withdrawal if the contract balance is insufficient', async () => {
+      // Request withdrawal with the larger amount than the balance of wallet contract
+      const walletBalance = await ethers.provider.getBalance(Wallet.address);
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 0, // Withdraw
+        withdrawalAmount: walletBalance.add(ethers.utils.parseEther('1')),
       });
 
-      await sendTx.wait();
+      const requestId = await Wallet.getLastRequestNo();
+      await Wallet.connect(approverOwnerSigner).approve(requestId);
 
-      // request by owner
-      const [requester, ...approvers] = this.walletOwners;
-      await requestWithdrawal({ signer: requester, reqValue: testValues.sendEthValue });
-      const reqId = '0';
-      await (await wallet.connect(approvers[0]).approve(reqId)).wait();
-      await expect(wallet.connect(requester).withdrawal(reqId)).to.be.revertedWith(reasons.wallet.consensusNotReached);
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.NE4);
+    });
+    it('[Revert] if execute the add new owner if the owner already one of members', async () => {
+      // add request with the current existing account
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 1, // Add
+        currentAccount: testValues.zeroOwnerAccount,
+        newAccount: currentAccountVoteTwo,
+      });
+      const requestId = await Wallet.getLastRequestNo();
+
+      expect(await Wallet.isOwner(currentAccountVoteTwo.addr)).to.true;
+
+      await Wallet.connect(approverOwnerSigner).approve(requestId);
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.OO5);
+    });
+    it('[Revert] if execute the addition of new owner if it is zero address or contract address', async () => {
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 1, // Add
+        currentAccount: testValues.zeroOwnerAccount,
+        newAccount: testValues.zeroOwnerAccount,
+      });
+      const requestId = await Wallet.getLastRequestNo();
+
+      await Wallet.connect(approverOwnerSigner).approve(requestId);
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.AE1);
+    });
+    it('[Revert] if execute the change of owner account that does not satisfy the min number of votes for consensus', async () => {
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 1, // Add
+        currentAccount: testValues.zeroOwnerAccount,
+        newAccount: { addr: Wallet.address, vote: 2 },
+      });
+      const requestId = await Wallet.getLastRequestNo();
+
+      await Wallet.connect(approverOwnerSigner).approve(requestId);
+      await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.AE2);
+    });
+    it('[Revert] if execute the change of owner level that does not satisfy the min number of votes for consensus', async () => {
+      const changeAccount = walletOwnerAccounts[0]; // Level two
+      const changeAccountTobe = { ...walletOwnerAccounts[0], vote: 1 }; // Level one
+
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 3, // Change
+        currentAccount: changeAccount,
+        newAccount: changeAccountTobe,
+      });
+
+      const lastRequestId = await Wallet.getLastRequestNo();
+      await Wallet.connect(approverOwnerSigner).approve(lastRequestId);
+
+      // Removal of vote two level owner
+      const removalRequestId = 2;
+      await Wallet.connect(requestOwnerSigner).execute(removalRequestId);
+
+      await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NE5);
+    });
+    it('[Revert] if execute the removal of owner that does not exist', async () => {
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 2, // Remove
+        currentAccount: testValues.zeroOwnerAccount,
+        newAccount: { addr: accounts[0].address, vote: 2 },
+      });
+      const lastRequestId = await Wallet.getLastRequestNo();
+      await Wallet.connect(approverOwnerSigner).approve(lastRequestId);
+      await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NX2);
+    });
+    it('[Revert] if execute the removal of owner that does not satisfy the min number of votes for consensus', async () => {
+      const removalRequestId = 2;
+      await Wallet.connect(requestOwnerSigner).execute(removalRequestId);
+
+      await request({
+        walletContract: Wallet.connect(requestOwnerSigner),
+        requestType: 2, // Remove
+        currentAccount: walletOwnerAccounts[walletOwnerAccounts.length - 1],
+        newAccount: testValues.zeroOwnerAccount,
+      });
+      const lastRequestId = await Wallet.getLastRequestNo();
+      await Wallet.connect(walletOwnerSigners[walletOwnerSigners.length - 2]).approve(lastRequestId);
+
+      await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NE5);
     });
   });
 });

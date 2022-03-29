@@ -2,9 +2,31 @@
   {
     "inputs": [
       {
-        "internalType": "address[]",
-        "name": "_owners",
-        "type": "address[]"
+        "internalType": "uint256",
+        "name": "_consensusRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_minLimitForConsensus",
+        "type": "uint8"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "enum OmnuumWallet.OwnerVotes",
+            "name": "vote",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct OmnuumWallet.OwnerAccount[]",
+        "name": "_initialOwnerAccounts",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -15,15 +37,21 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "reqId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum OmnuumWallet.OwnerVotes",
+        "name": "votes",
+        "type": "uint8"
       }
     ],
     "name": "Approved",
@@ -31,7 +59,33 @@
   },
   {
     "anonymous": false,
-    "inputs": [],
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Canceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
     "name": "EtherReceived",
     "type": "event"
   },
@@ -39,7 +93,38 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum OmnuumWallet.RequestTypes",
+        "name": "requestType",
+        "type": "uint8"
+      }
+    ],
+    "name": "Executed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "topic",
         "type": "bytes32"
@@ -59,21 +144,21 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256",
-        "name": "reqId",
+        "name": "requestId",
         "type": "uint256"
       },
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "requester",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "withdrawalValue",
-        "type": "uint256"
+        "internalType": "enum OmnuumWallet.RequestTypes",
+        "name": "requestType",
+        "type": "uint8"
       }
     ],
     "name": "Requested",
@@ -84,63 +169,25 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "reqId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum OmnuumWallet.OwnerVotes",
+        "name": "votes",
+        "type": "uint8"
       }
     ],
     "name": "Revoked",
     "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "reqId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "Withdrawn",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_withdrawalValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "approvalRequest",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -161,19 +208,21 @@
         "internalType": "uint256",
         "name": "_reqId",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_approver",
-        "type": "address"
       }
     ],
-    "name": "checkApproval",
+    "name": "cancel",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "consensusRatio",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "uint256",
         "name": "",
-        "type": "bool"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -187,11 +236,18 @@
         "type": "uint256"
       }
     ],
-    "name": "getApprovalCount",
+    "name": "execute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLastRequestNo",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "requestNo",
         "type": "uint256"
       }
     ],
@@ -202,7 +258,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "_owner",
         "type": "address"
       }
     ],
@@ -210,7 +266,31 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "",
+        "name": "isVerified",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_reqId",
+        "type": "uint256"
+      }
+    ],
+    "name": "isOwnerVoted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isVoted",
         "type": "bool"
       }
     ],
@@ -236,22 +316,106 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "minLimitForConsensus",
+    "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
-    "name": "owners",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum OmnuumWallet.OwnerVotes",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "ownerCounter",
     "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
+    "name": "ownerVote",
+    "outputs": [
+      {
+        "internalType": "enum OmnuumWallet.OwnerVotes",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum OmnuumWallet.RequestTypes",
+        "name": "_requestType",
+        "type": "uint8"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "enum OmnuumWallet.OwnerVotes",
+            "name": "vote",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct OmnuumWallet.OwnerAccount",
+        "name": "_currentAccount",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "enum OmnuumWallet.OwnerVotes",
+            "name": "vote",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct OmnuumWallet.OwnerAccount",
+        "name": "_newAccount",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_withdrawalAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "request",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -266,18 +430,75 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "destination",
+        "name": "requester",
         "type": "address"
       },
       {
+        "internalType": "enum OmnuumWallet.RequestTypes",
+        "name": "requestType",
+        "type": "uint8"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "enum OmnuumWallet.OwnerVotes",
+            "name": "vote",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct OmnuumWallet.OwnerAccount",
+        "name": "currentOwner",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "enum OmnuumWallet.OwnerVotes",
+            "name": "vote",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct OmnuumWallet.OwnerAccount",
+        "name": "newOwner",
+        "type": "tuple"
+      },
+      {
         "internalType": "uint256",
-        "name": "value",
+        "name": "withdrawalAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votes",
         "type": "uint256"
       },
       {
         "internalType": "bool",
-        "name": "withdrawn",
+        "name": "isExecute",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requiredVotesForConsensus",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "votesForConsensus",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -291,22 +512,22 @@
         "type": "uint256"
       }
     ],
-    "name": "revokeApproval",
+    "name": "revoke",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "totalVotes",
+    "outputs": [
       {
         "internalType": "uint256",
-        "name": "_reqId",
+        "name": "votes",
         "type": "uint256"
       }
     ],
-    "name": "withdrawal",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
