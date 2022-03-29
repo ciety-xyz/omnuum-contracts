@@ -13,9 +13,9 @@ contract OmnuumCAManager is OwnableUpgradeable {
     mapping(address => Contract) managerContracts;
     mapping(string => address) indexedContracts;
 
-    event NftContractRegistered(address nftContract, address nftOwner);
-    event ManagerContractRegistered(address managerContract, bytes32 topic);
-    event ManagerContractRemoved(address managerContract, bytes32 topic);
+    event NftContractRegistered(address indexed nftContract, address indexed nftOwner);
+    event ManagerContractRegistered(address indexed managerContract, bytes32 indexed topic);
+    event ManagerContractRemoved(address indexed managerContract, bytes32 indexed topic);
 
     function initialize() public initializer {
         __Ownable_init();
