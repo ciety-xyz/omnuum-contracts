@@ -1,26 +1,38 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-// @title OmnuumWallet - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution
-// @notice This contract is not managed by Omnuum admin, but for owners
-// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
-// @version V1
+/// @title OmnuumWallet - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution
+/// @notice This contract is not managed by Omnuum admin, but for owners
+/// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
+/// @version V1
 
 contract OmnuumWallet {
+    /// @dev - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
     uint256 public immutable consensusRatio;
+
+    // @dev - Minimum limit of required number of votes for consensus
     uint8 public immutable minLimitForConsensus;
 
+    /// @dev - Withdraw = 0
+    /// @dev - Add = 1
+    /// @dev - Remove = 2
+    /// @dev - Change = 3
+    /// @dev - Cancel = 4
     enum RequestTypes {
-        Withdraw, // =0,
-        Add, // =1,
-        Remove, // =2,
-        Change, // =3
-        Cancel // =4
+        Withdraw,
+        Add,
+        Remove,
+        Change,
+        Cancel
     }
+
+    /// @dev - F = 0 (F-Level: Not owner)
+    /// @dev - D = 1 (D-Level: own 1 vote)
+    /// @dev - C = 2 (C-Level: own 2 votes)
     enum OwnerVotes {
-        F, // =0,  F-Level: not owner
-        D, // =1,  D-Level: 1 vote
-        C // =2,  C-Level: 2 votes
+        F,
+        D,
+        C
     }
     struct OwnerAccount {
         address addr;
@@ -78,72 +90,73 @@ contract OmnuumWallet {
      *   Modifiers
      * *****************************************************************************/
     modifier onlyOwner(address _address) {
-        // @custom:error (004) - Only the owner of the wallet is allowed
+        /// @custom:error (004) - Only the owner of the wallet is allowed
         require(isOwner(_address), 'OO4');
         _;
     }
 
     modifier notOwner(address _address) {
-        // @custom:error (005) - Already the owner of the wallet
+        /// @custom:error (005) - Already the owner of the wallet
         require(!isOwner(_address), 'OO5');
         _;
     }
 
     modifier isOwnerAccount(OwnerAccount memory _ownerAccount) {
-        // @custom:error (NX2) - Non-existent wallet account
+        /// @custom:error (NX2) - Non-existent wallet account
         address _addr = _ownerAccount.addr;
         require(isOwner(_addr) && uint8(ownerVote[_addr]) == uint8(_ownerAccount.vote), 'NX2');
         _;
     }
 
     modifier onlyRequester(uint256 _reqId) {
-        // @custom:error (OO6) - Only the requester is allowed
+        /// @custom:error (OO6) - Only the requester is allowed
         require(requests[_reqId].requester == msg.sender, 'OO6');
         _;
     }
 
     modifier reachConsensus(uint256 _reqId) {
-        // @custom:error (NE2) - Not reach consensus
+        /// @custom:error (NE2) - Not reach consensus
         require(requests[_reqId].votes >= requiredVotesForConsensus(), 'NE2');
         _;
     }
 
     modifier reqExists(uint256 _reqId) {
-        // @custom:error (NX3) - Non-existent owner request
+        /// @custom:error (NX3) - Non-existent owner request
         require(_reqId < requests.length, 'NX3');
         _;
     }
 
     modifier notExecutedOrCanceled(uint256 _reqId) {
-        // @custom:error (SE1) - Already executed
+        /// @custom:error (SE1) - Already executed
         require(!requests[_reqId].isExecute, 'SE1');
-        // @custom:error (SE2) - Request canceled
+
+        /// @custom:error (SE2) - Request canceled
         require(requests[_reqId].requestType != RequestTypes.Cancel, 'SE2');
         _;
     }
 
     modifier notVoted(address _owner, uint256 _reqId) {
-        // @custom:error (SE3) - Already voted
+        /// @custom:error (SE3) - Already voted
         require(!isOwnerVoted(_owner, _reqId), 'SE3');
         _;
     }
 
     modifier voted(address _owner, uint256 _reqId) {
-        // @custom:error (SE4) - Not voted
+        /// @custom:error (SE4) - Not voted
         require(isOwnerVoted(_owner, _reqId), 'SE4');
         _;
     }
 
     modifier isValidAddress(address _address) {
-        // @custom:error (AE1) - Zero address not acceptable
+        /// @custom:error (AE1) - Zero address not acceptable
         require(_address != address(0), 'AE1');
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(_address)
         }
 
-        // @notice It's not perfect filtering against CA, but the owners can handle it cautiously.
-        // @custom:error (AE2) - Contract address not acceptable
+        /// @notice It's not perfect filtering against CA, but the owners can handle it cautiously.
+        /// @custom:error (AE2) - Contract address not acceptable
         require(codeSize == 0, 'AE2');
         _;
     }
