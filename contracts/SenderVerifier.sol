@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol';
@@ -13,7 +13,7 @@ contract SenderVerifier is EIP712 {
     struct Payload {
         address sender;
         string topic;
-        uint256 nounce;
+        uint256 nonce;
         bytes signature;
     }
 
@@ -21,7 +21,7 @@ contract SenderVerifier is EIP712 {
         address _owner,
         address _sender,
         string calldata _topic,
-        uint256 _nounce,
+        uint256 _nonce,
         Payload calldata _payload
     ) public view {
         address signer = recoverSigner(_payload);
@@ -30,7 +30,7 @@ contract SenderVerifier is EIP712 {
         require(_owner == signer, 'VR1');
 
         /// @custom:error (VR2) - False Nounce
-        require(_nounce == _payload.nounce, 'VR2');
+        require(_nonce == _payload.nonce, 'VR2');
 
         /// @custom:error (VR3) - False Topic
         require(keccak256(abi.encodePacked(_payload.topic)) == keccak256(abi.encodePacked(_topic)), 'VR3');
@@ -49,10 +49,10 @@ contract SenderVerifier is EIP712 {
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
-                        keccak256('Payload(address sender,string topic,uint256 nounce)'),
+                        keccak256('Payload(address sender,string topic,uint256 nonce)'),
                         _payload.sender,
                         keccak256(bytes(_payload.topic)),
-                        _payload.nounce
+                        _payload.nonce
                     )
                 )
             );

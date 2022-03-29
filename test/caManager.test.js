@@ -25,53 +25,40 @@ describe('OmnuumCAManager', () => {
     it('[Revert] Should not initialize after deploy', async () => {
       const { omnuumCAManager, accounts } = this;
 
-      await expect(omnuumCAManager.connect(accounts[1]).initialize()).to.be.revertedWith(
-        Constants.reasons.common.initialize,
-      );
+      await expect(omnuumCAManager.connect(accounts[1]).initialize()).to.be.revertedWith(Constants.reasons.common.initialize);
     });
   });
 
   describe('[Method] registerContract', () => {
     it('should register contract', async () => {
-      const { omnuumCAManager, accounts } = this;
+      const { omnuumCAManager, mockNFT: mockContract } = this;
 
-      const contractAddress = accounts[10].address;
-
-      const tx = await omnuumCAManager.registerContract(contractAddress, Constants.ContractTopic.TEST);
+      const tx = await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST);
 
       await tx.wait();
 
       await expect(tx)
         .to.emit(omnuumCAManager, Constants.events.CAManager.Updated)
-        .withArgs(contractAddress, [Constants.ContractTopic.TEST, true], 'register');
+        .withArgs(mockContract.address, [Constants.ContractTopic.TEST, true], 'register');
     });
-
     it('should override existing contract at indexedContracts if same topic', async () => {
-      const {
-        omnuumCAManager,
-        accounts: [, mock_contract, mock_contract2],
-      } = this;
+      const { omnuumCAManager, mockNFT: mockContract, mockLink: mockContract2 } = this;
 
-      await (
-        await omnuumCAManager.registerContract(mock_contract.address, Constants.ContractTopic.TEST)
-      ).wait();
+      await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
 
       const before_override = await omnuumCAManager.getContract(Constants.ContractTopic.TEST);
-      expect(before_override).to.be.equal(mock_contract.address);
+      expect(before_override).to.be.equal(mockContract.address);
 
-      await (
-        await omnuumCAManager.registerContract(mock_contract2.address, Constants.ContractTopic.TEST)
-      ).wait();
+      await (await omnuumCAManager.registerContract(mockContract2.address, Constants.ContractTopic.TEST)).wait();
 
       const after_override = await omnuumCAManager.getContract(Constants.ContractTopic.TEST);
-      expect(after_override).to.be.equal(mock_contract2.address);
+      expect(after_override).to.be.equal(mockContract2.address);
 
       // overrided, but still exist and must be registered
-      const isExist = await omnuumCAManager.isRegistered(mock_contract.address);
+      const isExist = await omnuumCAManager.checkRegistration(mockContract.address);
 
       expect(isExist).to.be.true;
     });
-
     it('[Revert] only owner can register', async () => {
       const {
         omnuumCAManager,
@@ -79,33 +66,39 @@ describe('OmnuumCAManager', () => {
       } = this;
 
       await expect(
-        omnuumCAManager
-          .connect(not_omnuum)
-          .registerContract(fake_contract.address, Constants.ContractTopic.TEST),
+        omnuumCAManager.connect(not_omnuum).registerContract(fake_contract.address, Constants.ContractTopic.TEST),
       ).to.be.revertedWith(Constants.reasons.common.onlyOwner);
+    });
+    it('[Revert] EOA should not be registered', async () => {
+      const {
+        omnuumCAManager,
+        accounts: [, fake_contract],
+      } = this;
+
+      await expect(omnuumCAManager.registerContract(fake_contract.address, Constants.ContractTopic.TEST)).to.be.revertedWith(
+        Constants.reasons.caManager.notCA,
+      );
     });
   });
 
-  describe('[Method] removeContract, isRegistered', () => {
+  describe('[Method] removeContract, checkRegistration', () => {
     it('can remove contract', async () => {
-      const { omnuumCAManager, accounts } = this;
+      const { omnuumCAManager, mockNFT: mockContract } = this;
 
-      const contractAddress = accounts[10].address;
+      await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
 
-      await (await omnuumCAManager.registerContract(contractAddress, Constants.ContractTopic.TEST)).wait();
-
-      const before_remove = await omnuumCAManager.isRegistered(contractAddress);
+      const before_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(before_remove).to.be.true;
 
-      const tx = await omnuumCAManager.removeContract(contractAddress);
+      const tx = await omnuumCAManager.removeContract(mockContract.address);
 
       await tx.wait();
 
       await expect(tx)
         .to.emit(omnuumCAManager, Constants.events.CAManager.Updated)
-        .withArgs(contractAddress, [Constants.ContractTopic.TEST, true], 'remove');
+        .withArgs(mockContract.address, [Constants.ContractTopic.TEST, true], 'remove');
 
-      const after_remove = await omnuumCAManager.isRegistered(contractAddress);
+      const after_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(after_remove).to.be.false;
 
       // indexedContracts also removed
@@ -114,24 +107,17 @@ describe('OmnuumCAManager', () => {
     });
 
     it('should not remove indexed contracts if indexed contract mapping overriden', async () => {
-      const {
-        omnuumCAManager,
-        accounts: [, mock_contract, mock_contract2],
-      } = this;
+      const { omnuumCAManager, mockNFT: mockContract, mockLink: mockContract2 } = this;
 
-      await (
-        await omnuumCAManager.registerContract(mock_contract.address, Constants.ContractTopic.TEST)
-      ).wait();
+      await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
 
-      await (
-        await omnuumCAManager.registerContract(mock_contract2.address, Constants.ContractTopic.TEST)
-      ).wait();
+      await (await omnuumCAManager.registerContract(mockContract2.address, Constants.ContractTopic.TEST)).wait();
 
-      const tx = await omnuumCAManager.removeContract(mock_contract.address);
+      const tx = await omnuumCAManager.removeContract(mockContract.address);
       await tx.wait();
 
       const contract_address = await omnuumCAManager.getContract(Constants.ContractTopic.TEST);
-      expect(contract_address).to.be.equal(mock_contract2.address);
+      expect(contract_address).to.be.equal(mockContract2.address);
     });
 
     it('[Revert] only owner', async () => {
