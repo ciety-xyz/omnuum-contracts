@@ -71,6 +71,7 @@ contract OmnuumWalletAdv {
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
     event Revoked(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
+    event Canceled(address indexed owner, uint256 indexed requestId);
 
     /* *****************************************************************************
      *   Modifiers
@@ -148,6 +149,7 @@ contract OmnuumWalletAdv {
     // @function request
     // @dev Allows an owner to request for an agenda that wants to proceed
     // @dev The owner can make multiple requests even if the previous one is unresolved
+    // @dev The requester is automatically voted for the request
     // @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
     // @param _currentAccount - Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
     // @param _newAccount - Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
@@ -214,7 +216,7 @@ contract OmnuumWalletAdv {
     function cancel(uint256 _reqId) public reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
         requests[_reqId].requestType = RequestTypes.Cancel;
 
-        // emit Canceled(indexed address owner, indexed requestId)
+        emit Canceled(msg.sender, _reqId);
     }
 
     // @function execute

@@ -33,7 +33,7 @@ module.exports = {
       Requested: 'Requested',
       Approved: 'Approved',
       Revoked: 'Revoked',
-      Withdrawn: 'Withdrawn',
+      Canceled: 'Canceled',
     },
   },
   reasons: {

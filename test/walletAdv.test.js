@@ -345,5 +345,52 @@ describe('Omnuum Multi-sig Wallet', () => {
     });
   });
 
-  describe('[Method] cancel', () => {});
+  describe('[Method] cancel', () => {
+    let approveOwnerSigner;
+    let requestOwnerSigner;
+    let requestId;
+    beforeEach(async () => {
+      [approveOwnerSigner, requestOwnerSigner, , requestId] = await prepareRequest();
+    });
+    it('can cancel the request only by requester', async () => {
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId))
+        .to.emit(Wallet, events.Wallet.Canceled)
+        .withArgs(requestOwnerSigner.address, requestId);
+    });
+    it('[Revert] if cancel by not owner', async () => {
+      const notOnwerSigner = accounts[0];
+      await expect(Wallet.connect(notOnwerSigner).cancel(requestId)).to.be.revertedWith('Only requester');
+    });
+    it('[Revert] if cancel to the request which is not exist', async () => {
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId + 1)).to.be.revertedWith('Request not exists');
+    });
+    it('[Revert] if cancel to the request which is already executed', async () => {
+      await Wallet.connect(approveOwnerSigner).approve(requestId);
+
+      const { votes } = await Wallet.requests(requestId);
+      const requiredVotesForConsensus = await Wallet.requiredVotesForConsensus();
+
+      // Check whether consensus is reached
+      expect(votes.toNumber()).to.be.greaterThanOrEqual(requiredVotesForConsensus.toNumber());
+
+      // Execute the request by requester owner
+      await Wallet.connect(requestOwnerSigner).execute(requestId);
+
+      // Confirm the request is executed
+      expect((await Wallet.requests(requestId)).isExecute).to.true;
+
+      // Requester attempts to cancel the request that has already been executed => revert
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId)).to.be.revertedWith('Already executed');
+    });
+    it('[Revert] if cancel to the request which is already canceled', async () => {
+      // Cancel by Requester
+      await Wallet.connect(requestOwnerSigner).cancel(requestId);
+
+      // Check the request is canceled (4 = cancel)
+      expect((await Wallet.requests(requestId)).requestType).to.equal(4);
+
+      // Requester attempts to cancel again the request that has already been canceled => revert
+      await expect(Wallet.connect(requestOwnerSigner).cancel(requestId)).to.be.revertedWith('Request canceled');
+    });
+  });
 });
