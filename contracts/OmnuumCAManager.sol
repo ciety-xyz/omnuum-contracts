@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import './utils/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
+
 
 /// @title OmnuumCAManager - Contract Manager for Omnuum Protocol
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>

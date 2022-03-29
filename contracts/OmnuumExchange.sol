@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/interfaces/IERC20Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
+import './utils/OwnableUpgradeable.sol';
 import './OmnuumCAManager.sol';
 
 /// @title OmnuumExchange - Omnuum internal exchange contract to use token freely by other omnuum contracts

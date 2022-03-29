@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '../utils/Ownable.sol';
 import '../TicketManager.sol';
 import '../OmnuumMintManager.sol';
 import '../SenderVerifier.sol';
