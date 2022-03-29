@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { map, delay } = require('fxjs');
+const { delay } = require('fxjs');
 const { addDays } = require('date-fns');
 const Constants = require('../utils/constants.js');
 require('chai').should();
@@ -769,79 +769,6 @@ describe('OmnuumNFT', () => {
       ).to.be.revertedWith(Constants.reasons.code.MT3);
     });
   });
-
-  // describe('[Method] mintDirect', () => {
-  //   it('Should direct mint without payload', async () => {
-  //     const {
-  //       accounts: [omnuumAC, , receiverAC],
-  //       omnuumNFT1155,
-  //     } = this;
-  //
-  //     const quantity = 2;
-  //
-  //     const tx = await omnuumNFT1155.mintDirect(receiverAC.address, quantity, { value: Constants.testValues.minFee.mul(quantity) });
-  //
-  //     await map(
-  //       (idx) =>
-  //         expect(tx)
-  //           .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
-  //           .withArgs(omnuumAC.address, nullAddress, receiverAC.address, idx, 1),
-  //       [1, 2],
-  //     );
-  //   });
-  //   it('[Revert] only owner', async () => {
-  //     const {
-  //       accounts: [, not_omnuumAC],
-  //       omnuumNFT1155,
-  //     } = this;
-  //
-  //     await expect(omnuumNFT1155.connect(not_omnuumAC).mintDirect(not_omnuumAC.address, 2)).to.be.revertedWith(Constants.reasons.code.OO2);
-  //   });
-  //   it('[Revert] Minter request more quantity than total remaining quantity', async () => {
-  //     const {
-  //       accounts: [, receiverAC],
-  //       NFTbeacon,
-  //       OmnuumNFT1155,
-  //       omnuumCAManager,
-  //     } = this;
-  //
-  //     const maxSupply = 10;
-  //     const initialTryAmount = 12;
-  //     const usingAmount = 8;
-  //     const lastTryAmount = 3;
-  //
-  //     // total max quantity 10
-  //     const omnuumNFT1155 = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
-  //       maxSupply,
-  //       caManagerAddress: omnuumCAManager.address,
-  //     });
-  //
-  //     await expect(
-  //       omnuumNFT1155.mintDirect(receiverAC.address, initialTryAmount, { value: Constants.testValues.minFee.mul(initialTryAmount) }),
-  //     ).to.be.revertedWith(Constants.reasons.code.MT3);
-  //
-  //     // mint 8 of 10
-  //     await (
-  //       await omnuumNFT1155.mintDirect(receiverAC.address, usingAmount, { value: Constants.testValues.minFee.mul(usingAmount) })
-  //     ).wait();
-  //
-  //     await expect(
-  //       omnuumNFT1155.mintDirect(receiverAC.address, lastTryAmount, { value: Constants.testValues.minFee.mul(lastTryAmount) }),
-  //     ).to.be.revertedWith(Constants.reasons.code.MT3);
-  //   });
-  //   it('[Revert] Should pay ether greater or equal to minimum fee', async () => {
-  //     const {
-  //       accounts: [, , receiverAC],
-  //       omnuumNFT1155,
-  //     } = this;
-  //
-  //     const quantity = 2;
-  //
-  //     await expect(
-  //       omnuumNFT1155.mintDirect(receiverAC.address, quantity, { value: Constants.testValues.minFee.mul(quantity - 1) }),
-  //     ).to.be.revertedWith(Constants.reasons.code.MT5);
-  //   });
-  // });
 
   describe('[Method] setUri', () => {
     it('Should set uri and reveal', async () => {

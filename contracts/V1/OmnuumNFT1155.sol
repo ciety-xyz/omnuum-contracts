@@ -79,7 +79,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         require(msg.sender.code.length == 0, 'MT9');
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
 
-        OmnuumMintManager(mintManagerA).publicMint(_groupId, _quantity, msg.value, msg.sender);
+        OmnuumMintManager(mintManagerA).preparePublicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
         sendFee(_quantity);

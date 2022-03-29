@@ -32,7 +32,7 @@ contract MockNFT is Ownable {
         uint256 value,
         address _minter
     ) public {
-        OmnuumMintManager(_target).publicMint(_groupId, _quantity, value, _minter);
+        OmnuumMintManager(_target).preparePublicMint(_groupId, _quantity, value, _minter);
     }
 
     function publicContractMint(

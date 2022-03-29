@@ -89,7 +89,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         emit SetPublicSchedule(_nft, _groupId, _endDate, _basePrice, _supply, _maxMintAtAddress);
     }
 
-    function publicMint(
+    function preparePublicMint(
         uint16 _groupId,
         uint32 _quantity,
         uint256 value,
@@ -106,7 +106,6 @@ contract OmnuumMintManager is OwnableUpgradeable {
         schedule.mintedTotal += _quantity;
 
         emit PublicMint(msg.sender, _minter, _groupId, _quantity, schedule.supply, schedule.basePrice);
-        //        emit PublicMint(msg.sender, _minter, _groupId, _quantity);
     }
 
     // mint to multiple address ex) airdrop
