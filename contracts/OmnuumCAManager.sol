@@ -20,7 +20,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     function registerContractMultiple(address[] calldata CAs, string[] calldata topics) external onlyOwner {
-        require(CAs.length == topics.length, 'length unmatched');
+        /// @custom:error (ARG1) - Arguments length should be same
+        require(CAs.length == topics.length, 'ARG1');
         for (uint256 i = 0; i < CAs.length; i++) {
             registerContract(CAs[i], topics[i]);
         }

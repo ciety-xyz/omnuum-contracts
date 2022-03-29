@@ -5,7 +5,6 @@ import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
 import './OmnuumCAManager.sol';
 
-// in future, this contract will act like internal token exchange for business
 contract OmnuumExchange is OwnableUpgradeable {
     OmnuumCAManager private caManager;
 
@@ -21,7 +20,6 @@ contract OmnuumExchange is OwnableUpgradeable {
         tmpLinkExRate = 0.0055 ether; // TODO: should change before deploy
     }
 
-    // temporary function for fixed link exchange rate -
     function getExchangeAmount(
         address _baseToken,
         address _targetToken,
@@ -31,16 +29,18 @@ contract OmnuumExchange is OwnableUpgradeable {
     }
 
     function updateTmpExchangeRate(uint256 _newRate) external {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(caManager.isRegistered(msg.sender), 'OO3');
         tmpLinkExRate = _newRate;
     }
 
-    // @dev exchange with ether, only receive token
+    /// @dev exchange with ether, only receive token
     function exchangeToken(
         address _token,
         uint256 _amount,
         address _to
     ) external payable {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(caManager.isRegistered(msg.sender), 'OO3');
 
         IERC20(_token).transfer(msg.sender, _amount);
@@ -49,6 +49,7 @@ contract OmnuumExchange is OwnableUpgradeable {
     }
 
     function withdraw() external {
+        /// @custom:error (OO3) - Only Omnuum can call
         require(caManager.isRegistered(msg.sender), 'OO3');
         payable(msg.sender).transfer(address(this).balance);
     }
