@@ -22,13 +22,11 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     address omA;
 
     uint32 public maxSupply;
-
     bool public isRevealed;
-
     string public coverUri;
 
-    event Uri(string uri);
-    event FeePaid(uint256 amount);
+    event Uri(address indexed nftContract, string indexed uri);
+    event FeePaid(address indexed payer, uint256 amount);
 
     function initialize(
         address _caManagerAddress,
@@ -68,7 +66,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
             ''
         );
 
-        emit FeePaid(paidAmount);
+        emit FeePaid(msg.sender, paidAmount);
     }
 
     function publicMint(
@@ -126,7 +124,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         require(!isRevealed, 'Already Revealed');
         _setURI(__uri);
         isRevealed = true;
-        emit Uri(__uri);
+        emit Uri(address(this), __uri);
     }
 
     function uri(uint256) public view override returns (string memory) {
