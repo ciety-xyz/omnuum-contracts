@@ -11,7 +11,7 @@ contract OmnuumExchange is Initializable {
 
     uint256 tmpLinkExRate;
 
-    event Exchange(address baseToken, address targetToken, uint256 amount, address user, address receipient);
+    event Exchange(address indexed baseToken, address indexed targetToken, uint256 amount, address user, address indexed receipient);
 
     function initialize(address _caManagerA) public initializer {
         caManager = OmnuumCAManager(_caManagerA);
