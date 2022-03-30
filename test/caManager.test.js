@@ -31,18 +31,16 @@ describe('OmnuumCAManager', () => {
 
   describe('[Method] registerContract', () => {
     it('Should register contract', async () => {
-      const { omnuumCAManager, accounts } = this;
+      const { omnuumCAManager, mockNFT: fakeContract } = this;
 
-      const contractAddress = accounts[10].address;
-
-      const tx = await omnuumCAManager.registerContract(contractAddress, Constants.ContractTopic.TEST);
+      const tx = await omnuumCAManager.registerContract(fakeContract.address, Constants.ContractTopic.TEST);
       const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.ContractTopic.TEST));
 
       await tx.wait();
 
       await expect(tx)
         .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
-        .withArgs(contractAddress, topic_hashed);
+        .withArgs(fakeContract.address, topic_hashed);
     });
     it('should override existing contract at indexedContracts if same topic', async () => {
       const { omnuumCAManager, mockNFT: mockContract, mockLink: mockContract2 } = this;
@@ -89,6 +87,7 @@ describe('OmnuumCAManager', () => {
       const { omnuumCAManager, mockNFT: mockContract } = this;
 
       await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
+      const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.ContractTopic.TEST));
 
       const before_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(before_remove).to.be.true;
@@ -98,8 +97,8 @@ describe('OmnuumCAManager', () => {
       await tx.wait();
 
       await expect(tx)
-        .to.emit(omnuumCAManager, Constants.events.CAManager.Updated)
-        .withArgs(mockContract.address, [Constants.ContractTopic.TEST, true], 'remove');
+        .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRemoved)
+        .withArgs(mockContract.address, topic_hashed);
 
       const after_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(after_remove).to.be.false;

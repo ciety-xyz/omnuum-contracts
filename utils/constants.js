@@ -18,7 +18,9 @@ module.exports = {
     CAManager: {
       RoleAdded: 'RoleAdded',
       RoleRemoved: 'RoleRemoved',
-      Updated: 'Updated',
+      ManagerContractRegistered: 'ManagerContractRegistered',
+      NftContractRegistered: 'NftContractRegistered',
+      ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
       EndDate: 'EndDate',
@@ -148,11 +150,6 @@ module.exports = {
     minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
-    tmpExchangeRate: ethers.utils.parseEther('0.0053'),
-    paymentDescription: 'Test for Payment',
-    paymentTestTopic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST')),
-    zeroOwnerAccount: { addr: ethers.constants.AddressZero, vote: 0 },
-    consensusRatio: 66,
-    minLimitForConsensus: 3,
+    tmpExchangeRate: ethers.utils.parseEther('0.0055'),
   },
 };
