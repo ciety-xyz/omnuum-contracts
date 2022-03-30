@@ -37,7 +37,7 @@ contract SenderVerifier is EIP712 {
         /// @custom:error (VR1) - False Signer
         require(_owner == signer, 'VR1');
 
-        /// @custom:error (VR2) - False Nounce
+        /// @custom:error (VR2) - False Nonce
         require(_nonce == _payload.nonce, 'VR2');
 
         /// @custom:error (VR3) - False Topic

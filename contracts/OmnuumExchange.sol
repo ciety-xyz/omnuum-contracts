@@ -22,7 +22,8 @@ contract OmnuumExchange is OwnableUpgradeable {
     event Exchange(address indexed baseToken, address indexed targetToken, uint256 amount, address user, address indexed receipient);
 
     function initialize(address _caManagerA) public initializer {
-        require(_caManagerA != address(0));
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_caManagerA != address(0), 'AE1');
 
         __Ownable_init();
 

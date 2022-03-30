@@ -16,6 +16,8 @@ module.exports = {
       PublicMint: 'PublicMint',
     },
     CAManager: {
+      RoleAdded: 'RoleAdded',
+      RoleRemoved: 'RoleRemoved',
       Updated: 'Updated',
     },
     TicketManager: {

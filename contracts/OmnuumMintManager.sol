@@ -58,7 +58,9 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @param _nftContract address of nft
     /// @param _feeRate fee rate only for nft contract
     function setSpecialFeeRate(address _nftContract, uint256 _feeRate) external onlyOwner {
-        require(_nftContract != address(0));
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_nftContract != address(0), 'AE1');
+
         /// @custom:error (NE1) - Fee rate should be lower than 100%
         require(_feeRate <= 100000, 'NE1');
         specialFeeRates[_nftContract] = _feeRate;
