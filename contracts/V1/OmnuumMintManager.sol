@@ -4,16 +4,28 @@ pragma solidity 0.8.10;
 import '../utils/OwnableUpgradeable.sol';
 import './OmnuumNFT1155.sol';
 
+/// @title OmnuumMintManager - Manage mint data and logics except ticket minting
+/// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
+/// @notice Use only purpose for Omnuum
 contract OmnuumMintManager is OwnableUpgradeable {
     uint8 public constant rateDecimal = 5;
-    uint256 public baseFeeRate;
+
+    /// @notice minting fee rate
+    uint256 public feeRate;
+
+    /// @notice minimum fee (ether)
     uint256 public minFee;
-    mapping(address => uint256) public discountRate;
 
-    event ChangeBaseFeeRate(uint256 baseFeeRate);
+    /// @notice special fee rates for exceptional contracts
+    mapping(address => uint256) public specialFeeRates;
+
+    /// @notice nft => groupId => PublicMintSchedule
+    mapping(address => mapping(uint256 => PublicMintSchedule)) public publicMintSchedules;
+
+    event ChangeFeeRate(uint256 feeRate);
+    event SetSpecialFeeRate(address indexed nftContract, uint256 discountFeeRate);
     event SetMinFee(uint256 minFee);
-    event SetDiscountRate(address indexed nftContract, uint256 discountFeeRate);
-
+    event Airdrop(address indexed nftContract, address indexed receiver, uint256 quantity);
     event SetPublicSchedule(
         address indexed nftContract,
         uint256 indexed groupId,
@@ -30,43 +42,63 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint32 maxQuantity,
         uint256 price
     );
-    event Airdrop(address indexed nftContract, address indexed receiver, uint256 quantity);
 
     struct PublicMintSchedule {
-        uint32 supply;
-        uint32 mintedTotal;
-        uint32 maxMintAtAddress;
-        mapping(address => uint32) minted;
-        uint256 endDate;
-        uint256 basePrice;
+        uint32 supply; // max possible minting amount
+        uint32 mintedTotal; // total minted amount
+        uint32 maxMintAtAddress; // max possible minting amount per address
+        mapping(address => uint32) minted; // minting count per address
+        uint256 endDate; // minting schedule end date timestamp
+        uint256 basePrice; // minting price
     }
 
-    // nft => groupId => PublicMintSchedule
-    mapping(address => mapping(uint256 => PublicMintSchedule)) public publicMintSchedules;
-
-    function initialize(uint256 _baseFeeRate) public initializer {
+    function initialize(uint256 _feeRate) public initializer {
         __Ownable_init();
-        baseFeeRate = _baseFeeRate;
+        feeRate = _feeRate;
         minFee = 0.0005 ether;
     }
 
-    function changeBaseFeeRate(uint256 _newBaseFeeRate) external onlyOwner {
-        require(_newBaseFeeRate <= 100000, 'NE1');
-        baseFeeRate = _newBaseFeeRate;
-        emit ChangeBaseFeeRate(_newBaseFeeRate);
+    /// @notice get fee rate of given nft contract
+    /// @param _nftContract address of nft contract
+    function getFeeRate(address _nftContract) public view returns (uint256) {
+        return specialFeeRates[_nftContract] == 0 ? feeRate : specialFeeRates[_nftContract];
     }
 
-    function setDiscountRate(address _nftContract, uint256 _discountRate) external onlyOwner {
-        require(_discountRate <= 100000, 'NE1');
-        discountRate[_nftContract] = _discountRate;
-        emit SetDiscountRate(_nftContract, _discountRate);
+    /// @notice change fee rate
+    /// @param _newFeeRate new fee rate
+    function changeFeeRate(uint256 _newFeeRate) external onlyOwner {
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
+        require(_newFeeRate <= 100000, 'NE1');
+        feeRate = _newFeeRate;
+        emit ChangeFeeRate(_newFeeRate);
     }
 
-    function setMinFee(uint256 _minFee) public onlyOwner {
+    /// @notice set special fee rate for exceptional case
+    /// @param _nftContract address of nft
+    /// @param _feeRate fee rate only for nft contract
+    function setSpecialFeeRate(address _nftContract, uint256 _feeRate) external onlyOwner {
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_nftContract != address(0), 'AE1');
+
+        /// @custom:error (NE1) - Fee rate should be lower than 100%
+        require(_feeRate <= 100000, 'NE1');
+        specialFeeRates[_nftContract] = _feeRate;
+        emit SetSpecialFeeRate(_nftContract, _feeRate);
+    }
+
+    function setMinFee(uint256 _minFee) external onlyOwner {
         minFee = _minFee;
         emit SetMinFee(_minFee);
     }
 
+    /// @notice add public mint schedule
+    /// @dev only nft contract owner can add mint schedule
+    /// @param _nft nft contract address
+    /// @param _groupId id of mint schedule
+    /// @param _endDate end date of schedule
+    /// @param _basePrice mint price of schedule
+    /// @param _supply max possible minting amount
+    /// @param _maxMintAtAddress max possible minting amount per address
     function setPublicMintSchedule(
         address _nft,
         uint256 _groupId,
@@ -74,8 +106,9 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 _basePrice,
         uint32 _supply,
         uint32 _maxMintAtAddress
-    ) public {
-        require(Ownable(_nft).owner() == msg.sender, 'OO1');
+    ) external {
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
+        require(OwnableUpgradeable(_nft).owner() == msg.sender, 'OO1');
 
         PublicMintSchedule storage schedule = publicMintSchedules[_nft][_groupId];
 
@@ -87,17 +120,30 @@ contract OmnuumMintManager is OwnableUpgradeable {
         emit SetPublicSchedule(_nft, _groupId, _endDate, _basePrice, _supply, _maxMintAtAddress);
     }
 
+    /// @notice before nft mint, check whether mint is possible and count new mint at mint schedule
+    /// @dev only nft contract itself can access and use its mint schedule
+    /// @param _groupId id of schedule
+    /// @param _quantity quantity to mint
+    /// @param _value value sent to mint at NFT contract, used for checking whether value is enough or not to mint
+    /// @param _minter msg.sender at NFT contract who are trying to mint
     function preparePublicMint(
         uint16 _groupId,
         uint32 _quantity,
-        uint256 value,
+        uint256 _value,
         address _minter
-    ) public {
+    ) external {
         PublicMintSchedule storage schedule = publicMintSchedules[msg.sender][_groupId];
 
+        /// @custom:error (MT8) - Minting period is ended
         require(block.timestamp <= schedule.endDate, 'MT8');
-        require(schedule.basePrice * _quantity <= value, 'MT5');
+
+        /// @custom:error (MT5) - Not enough money
+        require(schedule.basePrice * _quantity <= _value, 'MT5');
+
+        /// @custom:error (MT2) - Cannot mint more than possible amount per address
         require(schedule.minted[_minter] + _quantity <= schedule.maxMintAtAddress, 'MT2');
+
+        /// @custom:error (MT3) - Remaining token count is not enough
         require(schedule.mintedTotal + _quantity <= schedule.supply, 'MT3');
 
         schedule.minted[_minter] += _quantity;
@@ -106,31 +152,40 @@ contract OmnuumMintManager is OwnableUpgradeable {
         emit PublicMint(msg.sender, _minter, _groupId, _quantity, schedule.supply, schedule.basePrice);
     }
 
-    // mint to multiple address ex) airdrop
+    /// @notice minting multiple nfts, can be used for airdrop
+    /// @dev only nft owner can use this function
+    /// @param _nftContract address of nft contract
+    /// @param _tos list of minting target address
+    /// @param _quantitys list of minting quantity which is paired with _tos
     function mintMultiple(
-        address nftContract,
+        address _nftContract,
         address[] calldata _tos,
-        uint16[] calldata _quantities
-    ) public payable {
-        OmnuumNFT1155 targetContract = OmnuumNFT1155(nftContract);
+        uint16[] calldata _quantitys
+    ) external payable {
+        OmnuumNFT1155 targetContract = OmnuumNFT1155(_nftContract);
 
         uint256 len = _tos.length;
 
+        /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(targetContract.owner() == msg.sender, 'OO1');
-        require(len == _quantities.length, 'ARG1');
+        require(len == _quantitys.length, 'ARG1');
 
         uint256 totalQuantity;
-        for (uint256 i; i < len; i++) {
-            totalQuantity += _quantities[i];
+        for (uint256 i = 0; i < len; i++) {
+            totalQuantity += _quantitys[i];
         }
 
-        require(msg.value >= totalQuantity * minFee, 'MT5');
+        /// @custom:error (ARG3) - Not enough ether sent
+        require(msg.value >= totalQuantity * minFee, 'ARG3');
 
-        for (uint256 i; i < len; i++) {
+        /// @custom:error (ARG1) - Arguments length should be same
+        require(len == _quantitys.length, 'ARG1');
+
+        for (uint256 i = 0; i < len; i++) {
             address to = _tos[i];
-            uint16 quantity = _quantities[i];
-            targetContract.mintDirect{ value: minFee * _quantities[i] }(to, quantity);
-            emit Airdrop(nftContract, to, quantity);
+            uint16 quantity = _quantitys[i];
+            targetContract.mintDirect{ value: minFee * _quantitys[i] }(to, quantity);
+            emit Airdrop(_nftContract, to, quantity);
         }
     }
 }

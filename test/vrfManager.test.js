@@ -15,6 +15,7 @@ describe('OmnuumVRFManager', () => {
     await prepareDeploy.call(this);
     await prepareMockDeploy.call(this);
   });
+
   beforeEach(async () => {
     this.accounts = await ethers.getSigners();
     await testDeploy.call(this, this.accounts);
@@ -22,17 +23,9 @@ describe('OmnuumVRFManager', () => {
 
   describe('[Method] requestVRF', () => {
     it('Should request VRF and receive response (local mock)', async () => {
-      const {
-        omnuumVRFManager,
-        mockVrfCoords,
-        omnuumCAManager,
-        accounts: [omnuumAC],
-      } = this;
+      const { omnuumVRFManager, mockVrfCoords, mockVrfRequester } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
-
-      // omnuumAC is registered as contract on omnuumCAManager
-      await omnuumCAManager.isRegistered(omnuumAC.address); // true
 
       const requestTx = await omnuumVRFManager.requestVRF(Constants.vrfTopic.REVEAL_PFP);
 
@@ -48,7 +41,7 @@ describe('OmnuumVRFManager', () => {
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
         .withArgs(omnuumAC.address, requestEvent.args.requestId, topic_bytes32);
 
-      expect(roller).to.be.equal(omnuumAC.address);
+      expect(roller).to.be.equal(mockVrfRequester.address);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -60,7 +53,7 @@ describe('OmnuumVRFManager', () => {
       // call to EOA is always success
       await expect(responseTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.ResponseVRF)
-        .withArgs(requestId, randomNumber, topic_bytes32, true, '');
+        .withArgs(requestId, randomNumber, false, 'Transaction reverted silently');
     });
     it('Should request VRF and receive response (rinkeby)', async () => {
       // TODO: rinkeby test
@@ -70,10 +63,10 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // change link balance -> 0.05 LINK, test VRF requires 0.1 LINK
-      await mockLink.changeBalance(ethers.utils.parseEther('0.05'));
+      // change link balance -> 1 LINK, VRF requires 2 LINK
+      await mockLink.changeBalance(ethers.utils.parseEther('1'));
 
-      await expect(omnuumVRFManager.requestVRF(Constants.vrfTopic.REVEAL_PFP)).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
+      await expect(omnuumVRFManager.requestVRF()).to.be.revertedWith(Constants.reasons.code.SE7);
     });
     it('[Revert] Not Omnuum contract', async () => {
       const {
@@ -83,7 +76,7 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      await expect(omnuumVRFManager.connect(maliciousAC).requestVRF('TEST')).to.be.revertedWith(Constants.reasons.code.OO3);
+      await expect(omnuumVRFManager.connect(maliciousAC).requestVRF()).to.be.revertedWith(Constants.reasons.code.OO7);
     });
   });
 
@@ -96,7 +89,6 @@ describe('OmnuumVRFManager', () => {
       const vrfFee = Constants.chainlink.rinkeby.fee;
       const exchangeAmount = await omnuumExchange.getExchangeAmount(nullAddress, mockLink.address, vrfFee);
       const safetyRatio = await omnuumVRFManager.safetyRatio();
-      const topic_bytes32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.vrfTopic.REVEAL_PFP));
 
       // omnuumAC == omnuumNFT1155.owner()
       // request vrf (tx => reveal manager => VRF manager)
@@ -112,7 +104,7 @@ describe('OmnuumVRFManager', () => {
 
       await expect(requestTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
-        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId, topic_bytes32);
+        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -124,7 +116,7 @@ describe('OmnuumVRFManager', () => {
       // result will false because revealManager does not implement vrfResponse method
       await expect(responseTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.ResponseVRF)
-        .withArgs(requestId, randomNumber, topic_bytes32, false, Constants.reasons.RevertMessage.silent);
+        .withArgs(requestId, randomNumber, false, Constants.reasons.RevertMessage.silent);
     });
     it('Should request VRF and receive response (rinkeby)', async () => {
       // TODO: rinkeby test
@@ -137,27 +129,29 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      await expect(omnuumVRFManager.connect(not_omnuumAC).requestVRFOnce(anyAC.address, 'TEST')).to.be.revertedWith(
-        Constants.reasons.code.OO3
-      );
+      await expect(omnuumVRFManager.connect(not_omnuumAC).requestVRFOnce(anyAC.address)).to.be.revertedWith(Constants.reasons.code.OO7);
     });
     it('[Revert] When link is not enough on exchange contract (local mock)', async () => {
       const {
         omnuumVRFManager,
+        mockVrfRequester,
         mockLink,
         accounts: [anyAC],
       } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // change link balance -> 0.05 LINK, VRF requires 0.1 LINK
-      await mockLink.changeBalance(ethers.utils.parseEther('0.05'));
+      // change link balance -> 1 LINK, VRF requires 2 LINK
+      await mockLink.changeBalance(ethers.utils.parseEther('1'));
 
-      await expect(omnuumVRFManager.requestVRFOnce(anyAC.address, 'TEST')).to.be.revertedWith(Constants.reasons.vrfManager.LINK);
+      await expect(mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address)).to.be.revertedWith(
+        Constants.reasons.code.SE7,
+      );
     });
     it('[Revert] not enough ether for LINK fee (local mock)', async () => {
       const {
         omnuumVRFManager,
+        mockVrfRequester,
         omnuumExchange,
         mockLink,
         accounts: [anyAC],
@@ -171,17 +165,16 @@ describe('OmnuumVRFManager', () => {
       const lackAmount = ethers.utils.parseEther('0.00001');
 
       await expect(
-        omnuumVRFManager.requestVRFOnce(anyAC.address, {
+        mockVrfRequester.requestVRFOnce(omnuumVRFManager.address, anyAC.address, {
           value: exchangeAmount.mul(safetyRatio).div(100).sub(lackAmount),
-        })
-      ).to.be.revertedWith(Constants.reasons.vrfManager.Ether);
+        }),
+      ).to.be.revertedWith(Constants.reasons.code.ARG3);
     });
     it('[Revert] Already used address', async () => {
       const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT1155 } = this;
       const vrfFee = Constants.chainlink.rinkeby.fee;
       const exchangeAmount = await omnuumExchange.getExchangeAmount(nullAddress, mockLink.address, vrfFee);
       const safetyRatio = await omnuumVRFManager.safetyRatio();
-      const topic_bytes32 = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.vrfTopic.REVEAL_PFP));
 
       // success for first time
       const requestTx = await revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) });
@@ -196,7 +189,7 @@ describe('OmnuumVRFManager', () => {
 
       await expect(requestTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
-        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId, topic_bytes32);
+        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -206,11 +199,11 @@ describe('OmnuumVRFManager', () => {
 
       await expect(responseTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.ResponseVRF)
-        .withArgs(requestId, randomNumber, topic_bytes32, false, Constants.reasons.RevertMessage.silent);
+        .withArgs(requestId, randomNumber, false, Constants.reasons.RevertMessage.silent);
 
       // fail for second try
       await expect(revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) })).to.be.revertedWith(
-        Constants.reasons.vrfManager.Once
+        Constants.reasons.code.SE8,
       );
     });
   });
@@ -222,11 +215,10 @@ describe('OmnuumVRFManager', () => {
       const fee = ethers.utils.parseEther('2.5');
 
       const tx = await omnuumVRFManager.updateFee(fee);
-      const update_topic_hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('fee'));
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(fee, update_topic_hash);
+      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(fee, 'fee');
     });
     it('[Revert] only owner', async () => {
       const {
@@ -247,11 +239,10 @@ describe('OmnuumVRFManager', () => {
       const ratio = 120;
 
       const tx = await omnuumVRFManager.updateSafetyRatio(ratio);
-      const update_topic_hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('safetyRatio'));
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(ratio, update_topic_hash);
+      await expect(tx).to.emit(omnuumVRFManager, Constants.events.VRFManager.Updated).withArgs(ratio, 'safetyRatio');
     });
     it('[Revert] only owner', async () => {
       const {

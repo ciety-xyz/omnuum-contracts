@@ -9,21 +9,20 @@ module.exports = {
       Uri: 'Uri',
     },
     MintManager: {
-      SetDiscountRate: 'SetDiscountRate',
-      ChangeBaseFeeRate: 'ChangeBaseFeeRate',
+      SetSpecialFeeRate: 'SetSpecialFeeRate',
+      ChangeFeeRate: 'ChangeFeeRate',
       Airdrop: 'Airdrop',
-      SetPublicSchedule: 'SetPublicSchedule',
+      SetSchedule: 'SetSchedule',
       PublicMint: 'PublicMint',
-      SetMinFee: 'SetMinFee',
     },
     CAManager: {
-      ManagerContractRegistered: 'ManagerContractRegistered',
-      NftContractRegistered: 'NftContractRegistered',
-      ManagerContractRemoved: 'ManagerContractRemoved',
+      RoleAdded: 'RoleAdded',
+      RoleRemoved: 'RoleRemoved',
+      Updated: 'Updated',
     },
     TicketManager: {
-      SetTicketSchedule: 'SetTicketSchedule',
-      TicketMint: 'TicketMint',
+      EndDate: 'EndDate',
+      UseTicket: 'UseTicket',
     },
     VRFManager: {
       RequestVRF: 'RequestVRF',
@@ -45,22 +44,6 @@ module.exports = {
       initialize: 'Initializable: contract is already initialized',
       onlyOwner: 'Ownable: caller is not the owner',
     },
-    senderVerifier: {
-      nonce: 'False Nonce',
-      topic: 'False Topic',
-      sender: 'False Sender',
-      signer: 'False Signer',
-    },
-    ticketManager: {
-      signer: 'False Signer',
-      nft: 'False NFT',
-      minter: 'False Minter',
-    },
-    vrfManager: {
-      LINK: 'Not enough LINK',
-      Ether: 'Not enough Ether',
-      Once: 'Already used',
-    },
     RevertMessage: {
       silent: 'Transaction reverted silently',
     },
@@ -68,6 +51,7 @@ module.exports = {
       // Arguments Error
       ARG1: 'ARG1', // Arguments length should be same
       ARG2: 'ARG2', // Arguments are not correct
+      ARG3: 'ARG3', // Not enough ether sent
       // Only Owner Error
       OO1: 'OO1', // Ownable: Caller is not the collection owner
       OO2: 'OO2', // Only Omnuum or owner can change
@@ -75,6 +59,7 @@ module.exports = {
       OO4: 'OO4', // Only the owner of the wallet is allowed
       OO5: 'OO5', // Already the owner of the wallet
       OO6: 'OO6', // Only the requester is allowed
+      OO7: 'OO7', // Only role owner can access
       // Not Exist Error
       NX1: 'NX1', // ERC721Metadata: URI query for nonexistent token
       NX2: 'NX2', // Non-existent wallet account
@@ -91,6 +76,9 @@ module.exports = {
       SE3: 'SE3', // Already voted
       SE4: 'SE4', // Not voted
       SE5: 'SE5', // Address: unable to send value, recipient may have reverted
+      SE6: 'SE6', // NFT already revealed
+      SE7: 'SE7', // Not enough LINK at exchange contract
+      SE8: 'SE8', // Already used address
       // Mint Error
       MT1: 'MT1', // There is no available ticket
       MT2: 'MT2', // Cannot mint more than possible amount per address
@@ -98,15 +86,22 @@ module.exports = {
       MT5: 'MT5', // Not enough money
       MT7: 'MT7', // Mint is ended
       MT8: 'MT8', // Minting period is ended
-      MT9: 'MT9', // Mint subject cannot be CA
+      MT9: 'MT9', // Minter cannot be CA
       // Address Error
       AE1: 'AE1', // Zero address not acceptable
       AE2: 'AE2', // Contract address not acceptable
+      // Verification Error
+      VR1: 'VR1', // False Signer
+      VR2: 'VR2', // False Nonce
+      VR3: 'VR3', // False Topic
+      VR4: 'VR4', // False Sender
+      VR5: 'VR5', // False NFT
+      VR6: 'VR6', // False Minter
     },
   },
-  feeTopic: {
-    deploy: 'DEPLOY_FEE',
-    mint: 'MINT_FEE',
+  contractRole: {
+    exchange: 'EXCHANGE',
+    vrf: 'VRF',
   },
   payloadTopic: {
     mint: 'MINT',
@@ -114,8 +109,6 @@ module.exports = {
     ticket: 'TICKET',
   },
   ContractTopic: {
-    CAMANAGER: 'CAMANAGER',
-    DEV: 'DEV',
     VRF: 'VRF',
     NFT: 'NFT',
     VERIFIER: 'VERIFIER',
@@ -144,12 +137,16 @@ module.exports = {
     },
   },
   testValues: {
-    baseFeeRate: 5000, // converted as 0.05 (5 percent)
-    discountFeeRate: 10000, // converted as 0.1 (10 percent)
+    paymentDescription: 'Test for Payment',
+    paymentTestTopic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST')),
+    zeroOwnerAccount: { addr: ethers.constants.AddressZero, vote: 0 },
+    feeRate: 5000, // converted as 0.05 (5 percent)
+    specialFeeRate: 10000, // converted as 0.1 (10 percent)
     walletOwnersLen: 3,
     sendEthValue: '10',
+    consensusRatio: 66,
+    minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
-    minFee: ethers.utils.parseEther('0.0005'),
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0053'),
     paymentDescription: 'Test for Payment',
