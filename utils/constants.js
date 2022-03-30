@@ -24,8 +24,8 @@ module.exports = {
       ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
-      EndDate: 'EndDate',
-      UseTicket: 'UseTicket',
+      SetTicketSchedule: 'SetTicketSchedule',
+      TicketMint: 'TicketMint',
     },
     VRFManager: {
       RequestVRF: 'RequestVRF',
