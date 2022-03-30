@@ -46,9 +46,14 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
-        require(_caManagerAddress != address(0));
-        require(_omA != address(0));
-        require(_prjOwner != address(0));
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_caManagerAddress != address(0), 'AE1');
+
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_omA != address(0), 'AE1');
+
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_prjOwner != address(0), 'AE1');
 
         __ERC1155_init('');
         __ReentrancyGuard_init();

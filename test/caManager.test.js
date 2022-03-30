@@ -131,4 +131,86 @@ describe('OmnuumCAManager', () => {
       );
     });
   });
+
+  describe('[Method] addRole', () => {
+    it('Should add role to CA', async () => {
+      const { omnuumCAManager, mockNFT } = this;
+
+      const tx = await omnuumCAManager.addRole([mockNFT.address], Constants.contractRole.exchange);
+
+      await tx.wait();
+
+      await expect(tx)
+        .to.emit(omnuumCAManager, Constants.events.CAManager.RoleAdded)
+        .withArgs(mockNFT.address, Constants.contractRole.exchange);
+    });
+
+    it('[Revert] Cannot add EOA address', async () => {
+      const {
+        omnuumCAManager,
+        accounts: [notCA],
+      } = this;
+
+      await expect(omnuumCAManager.addRole([notCA.address], Constants.contractRole.exchange)).to.be.revertedWith(
+        Constants.reasons.code.AE2,
+      );
+    });
+
+    it('[Revert] Only owner can add role', async () => {
+      const {
+        omnuumCAManager,
+        mockNFT,
+        accounts: [, not_omnuum],
+      } = this;
+
+      await expect(omnuumCAManager.connect(not_omnuum).addRole([mockNFT.address], Constants.contractRole.exchange)).to.be.revertedWith(
+        Constants.reasons.common.onlyOwner,
+      );
+    });
+  });
+
+  describe('[Method] hasRole', () => {
+    it('Should check address has role', async () => {
+      const { omnuumCAManager, mockNFT } = this;
+
+      const tx = await omnuumCAManager.addRole([mockNFT.address], Constants.contractRole.exchange);
+
+      await tx.wait();
+
+      console.log(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange));
+
+      // true case
+      expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(true);
+
+      expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.vrf)).to.be.equal(false);
+    });
+  });
+
+  describe('[Method] removeRole', () => {
+    it('Should remove role from address', async () => {
+      const { omnuumCAManager, mockNFT } = this;
+
+      await (await omnuumCAManager.addRole([mockNFT.address], Constants.contractRole.exchange)).wait();
+
+      // check has role
+      expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(true);
+
+      await (await omnuumCAManager.removeRole([mockNFT.address], Constants.contractRole.exchange)).wait();
+
+      // check has role
+      expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(false);
+    });
+
+    it('[Revert] Only owner can add role', async () => {
+      const {
+        omnuumCAManager,
+        mockNFT,
+        accounts: [, not_omnuum],
+      } = this;
+
+      await expect(omnuumCAManager.connect(not_omnuum).removeRole([mockNFT.address], Constants.contractRole.exchange)).to.be.revertedWith(
+        Constants.reasons.common.onlyOwner,
+      );
+    });
+  });
 });

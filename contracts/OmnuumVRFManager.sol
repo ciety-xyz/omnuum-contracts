@@ -29,9 +29,14 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         uint256 _fee,
         address _omnuumCA
     ) VRFConsumerBase(_vrf_coord, _LINK) {
-        require(_LINK != address(0));
-        require(_vrf_coord != address(0));
-        require(_omnuumCA != address(0));
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_LINK != address(0), 'AE1');
+
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_vrf_coord != address(0), 'AE1');
+
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_omnuumCA != address(0), 'AE1');
 
         s_LINK = _LINK;
         s_key_hash = _key_hash;
@@ -74,7 +79,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     function requestVRFOnce(address _targetAddress) external payable {
         // @custom:error (OO7) - Only role owner can access
         require(caManager.hasRole(msg.sender, 'VRF'), 'OO7');
-        require(_targetAddress != address(0));
+
+        /// @custom:error (AE1) - Zero address not acceptable
+        require(_targetAddress != address(0), 'AE1');
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
@@ -103,7 +110,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @param _randomness result number of VRF
     function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
         address requestAddress = idToA[_requestId];
-        // contracts should implement vrfResponse method if they want to do specific action
+        // @dev Not required to implement, but if developer wants to do specific action at response time, he/she should implement vrfResponse method at target contract
         bytes memory payload = abi.encodeWithSignature('vrfResponse(uint256)', _randomness);
         (bool success, bytes memory returnData) = address(requestAddress).call(payload);
 
