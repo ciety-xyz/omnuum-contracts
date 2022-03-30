@@ -93,9 +93,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         SenderVerifier.Payload calldata _payload
     ) external payable nonReentrant {
         /// @custom:error (MT9) - Minter cannot be CA
-        require(msg.sender.code.length == 0, 'MT9');
-        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
+        require(!msg.sender.isContract(), 'MT9');
 
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
         mintManager.preparePublicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
@@ -128,8 +128,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _to mint destination address
     /// @param _quantity minting quantity
     function mintDirect(address _to, uint32 _quantity) external payable {
-        /// @custom:error (OO2) - Only Omnuum or owner can change
-        require(msg.sender == caManager.getContract('MINTMANAGER') || msg.sender == owner(), 'OO2');
+        /// @custom:error (OO3) - Only Omnuum or owner can change
+        require(msg.sender == address(mintManager), 'OO3');
         mintLoop(_to, _quantity);
 
         sendFee(_quantity);
@@ -141,12 +141,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     function mintLoop(address _to, uint32 _quantity) internal {
         /// @custom:error (MT3) - Remaining token count is not enough
         require(_tokenIdCounter.current() + _quantity <= maxSupply, 'MT3');
-        uint256[] memory tokenIds = new uint256[](_quantity);
         for (uint32 i = 0; i < _quantity; i++) {
             _tokenIdCounter.increment();
-            tokenIds[i] = _tokenIdCounter.current();
-
-            _mint(_to, tokenIds[i], 1, '');
+            _mint(_to, _tokenIdCounter.current(), 1, '');
         }
     }
 
@@ -155,6 +152,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     function setUri(string memory __uri) external onlyOwner {
         /// @custom:error (SE6) - NFT already revealed
         require(!isRevealed, 'SE6');
+
         _setURI(__uri);
         isRevealed = true;
         emit Uri(address(this), __uri);

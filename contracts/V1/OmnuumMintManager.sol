@@ -168,6 +168,8 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(targetContract.owner() == msg.sender, 'OO1');
+
+        /// @custom:error (ARG1) - Arguments length should be same
         require(len == _quantitys.length, 'ARG1');
 
         uint256 totalQuantity;
@@ -177,9 +179,6 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= totalQuantity * minFee, 'ARG3');
-
-        /// @custom:error (ARG1) - Arguments length should be same
-        require(len == _quantitys.length, 'ARG1');
 
         for (uint256 i = 0; i < len; i++) {
             address to = _tos[i];

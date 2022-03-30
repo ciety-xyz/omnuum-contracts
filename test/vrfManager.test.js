@@ -63,8 +63,8 @@ describe('OmnuumVRFManager', () => {
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
-      // change link balance -> 1 LINK, VRF requires 2 LINK
-      await mockLink.changeBalance(ethers.utils.parseEther('1'));
+      // change link balance -> 0.05 LINK, VRF requires 0.1 LINK
+      await mockLink.changeBalance(ethers.utils.parseEther('0.05'));
 
       await expect(mockVrfRequester.requestVRF(omnuumVRFManager.address)).to.be.revertedWith(Constants.reasons.code.SE7);
     });

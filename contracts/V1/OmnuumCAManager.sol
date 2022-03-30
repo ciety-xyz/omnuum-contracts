@@ -71,7 +71,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _target address to be checked
     /// @param _role role name to be checked with
     /// @return whether target address has specified role or not
-    function hasRole(address _target, string calldata _role) external view returns (bool) {
+    function hasRole(address _target, string calldata _role) public view returns (bool) {
         return roles[_target][keccak256(abi.encodePacked(_role))];
     }
 

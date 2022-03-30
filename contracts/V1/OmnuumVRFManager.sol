@@ -60,11 +60,11 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     function requestVRF(string calldata _topic) external {
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
-        // @custom:error (SE7) - Not enough LINK at exchange contract
-        require(LINK.balanceOf(exchangeAddress) >= 2 ether, 'SE7');
-
         // @custom:error (OO7) - Only role owner can access
         require(caManager.hasRole(msg.sender, 'VRF'), 'OO7');
+
+        // @custom:error (SE7) - Not enough LINK at exchange contract
+        require(LINK.balanceOf(exchangeAddress) >= fee, 'SE7');
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = msg.sender;
@@ -95,8 +95,8 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= (required_amount * safetyRatio) / 100, 'ARG3');
 
-        // receive link from exchange
-        OmnuumExchange(exchangeAddress).exchangeToken{ value: msg.value }(s_LINK, fee, address(this));
+        /// @custom:dev receive link from exchange, send all balance because there isn't any withdraw feature
+        OmnuumExchange(exchangeAddress).exchangeToken{ value: address(this).balance }(s_LINK, fee, address(this));
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = _targetAddress;
@@ -110,7 +110,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @param _randomness result number of VRF
     function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
         address requestAddress = idToA[_requestId];
-        /// @dev Not required to implement, but if developer wants to do specific action at response time, he/she should implement vrfResponse method at target contract
+        /// @custom:dev Not required to implement, but if developer wants to do specific action at response time, he/she should implement vrfResponse method at target contract
         bytes memory payload = abi.encodeWithSignature('vrfResponse(uint256)', _randomness);
         (bool success, bytes memory returnData) = address(requestAddress).call(payload);
 

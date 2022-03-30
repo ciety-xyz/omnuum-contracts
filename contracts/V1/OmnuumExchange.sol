@@ -60,7 +60,7 @@ contract OmnuumExchange is OwnableUpgradeable {
         uint256 _amount,
         address _to
     ) external payable {
-        /// @custom :error (OO7) - Only role owner can access
+        /// @custom:error (OO7) - Only role owner can access
         require(caManager.hasRole(msg.sender, 'EXCHANGE'), 'OO7');
 
         IERC20Upgradeable(_token).safeTransfer(msg.sender, _amount);
