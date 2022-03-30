@@ -118,13 +118,6 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    /// @notice Check whether contract address is registered
-    /// @param _CA contract address
-    /// @return isRegistered boolean
-    function isRegistered(address _CA) public view returns (bool isRegistered) {
-        return contracts[_CA].active;
-    }
-
     /// @notice Get contract address for specified topic
     /// @param _topic topic for address
     /// @return address which is registered with topic
