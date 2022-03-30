@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { go, mapC, map, range, pluck } = require('fxjs');
+const { go, mapC, map, range, pluck, add } = require('fxjs');
 
 const { addDays } = require('date-fns');
 const { deployNFT, prepareMockDeploy, prepareDeploy, testDeploy } = require('./etc/mock.js');
@@ -100,12 +100,22 @@ describe('OmnuumMintManager', () => {
       const base_price = ethers.utils.parseEther('0.2');
 
       const open_amount = 2000;
+      const max_mint_per_address = 5;
 
-      const tx = await omnuumMintManager.setPublicMintSchedule(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, 5);
+      const tx = await omnuumMintManager.setPublicMintSchedule(
+        omnuumNFT1155.address,
+        group_id,
+        end_date,
+        base_price,
+        open_amount,
+        max_mint_per_address,
+      );
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.SetSchedule).withArgs(omnuumNFT1155.address, group_id);
+      await expect(tx)
+        .to.emit(omnuumMintManager, Constants.events.MintManager.SetPublicSchedule)
+        .withArgs(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, max_mint_per_address);
     });
     it('[Revert] only owner of collection', async () => {
       const {
@@ -121,6 +131,22 @@ describe('OmnuumMintManager', () => {
       await expect(
         omnuumMintManager.connect(maliciousAC).setPublicMintSchedule(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, 5),
       ).to.be.revertedWith(Constants.reasons.code.OO1);
+    });
+  });
+
+  describe('[Method] setMinFee', () => {
+    it('Should set min fee', async () => {
+      const { omnuumMintManager } = this;
+
+      const newMinFee = ethers.utils.parseEther('0.05');
+
+      const tx = await omnuumMintManager.setMinFee(newMinFee);
+
+      await tx.wait();
+
+      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.SetMinFee).withArgs(newMinFee);
+
+      expect(await omnuumMintManager.minFee()).to.equal(newMinFee);
     });
   });
 
@@ -155,7 +181,7 @@ describe('OmnuumMintManager', () => {
 
       await expect(tx)
         .to.emit(omnuumMintManager, Constants.events.MintManager.PublicMint)
-        .withArgs(mockNFT.address, ownerAC.address, group_id, quantity);
+        .withArgs(mockNFT.address, ownerAC.address, group_id, quantity, open_amount, base_price);
     });
     it('[Revert] cannot mint after end date passed ', async () => {
       const {
@@ -304,32 +330,45 @@ describe('OmnuumMintManager', () => {
     });
   });
 
-  describe('[method] mintMultiple', () => {
+  describe('[Method] mintMultiple', () => {
     it('Airdrop to multiple address', async () => {
       const { omnuumMintManager, omnuumNFT1155, accounts } = this;
       const count = 5;
+      const airDropToAddresses = pluck('address', accounts.slice(1, count + 1));
 
       const tx = await omnuumMintManager.connect(accounts[0]).mintMultiple(
         omnuumNFT1155.address,
-        pluck('address', accounts.slice(1, count + 1)),
+        airDropToAddresses,
         go(
           range(count),
           map(() => 1),
         ),
+        {
+          value: Constants.testValues.minFee.mul(count),
+        },
       );
 
       await tx.wait();
 
-      // TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
-      await mapC(
-        (idx) =>
+      // Note: token id is started from 1, not zero.
+      await go(
+        range(count),
+        // event TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
+        mapC(async (idx) =>
           expect(tx)
             .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
-            .withArgs(omnuumMintManager.address, nullAddress, accounts[idx].address, idx, 1),
-        range(1, count + 1),
+            .withArgs(omnuumMintManager.address, nullAddress, airDropToAddresses[idx], idx + 1, 1),
+        ),
       );
-
-      await expect(tx).to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop).withArgs(omnuumNFT1155.address, 5);
+      await go(
+        range(count),
+        // event Airdrop(address indexed Contract, address indexed receiver, uint256 quantity)
+        mapC(async (idx) =>
+          expect(tx)
+            .to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop)
+            .withArgs(omnuumNFT1155.address, airDropToAddresses[idx], 1),
+        ),
+      );
     });
     it('[Revert] not owner', async () => {
       const { omnuumMintManager, omnuumNFT1155, accounts } = this;
@@ -371,8 +410,24 @@ describe('OmnuumMintManager', () => {
       });
 
       await expect(
-        omnuumMintManager.connect(accounts[0]).mintMultiple(omnuumNFT1155.address, [accounts[1].address], [12]),
+        omnuumMintManager.connect(accounts[0]).mintMultiple(omnuumNFT1155.address, [accounts[1].address], [12], {
+          value: ethers.utils.parseEther('1'), // enough ether for mint fee
+        }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
+    });
+    it('[Revert] Should pay minimum fee * quantity', async () => {
+      const { omnuumNFT1155, omnuumMintManager, accounts } = this;
+
+      const quantitys = [2, 3, 4];
+      const total_quantity = quantitys.reduce(add);
+
+      await expect(
+        omnuumMintManager
+          .connect(accounts[0])
+          .mintMultiple(omnuumNFT1155.address, [accounts[1].address, accounts[2].address, accounts[3].address], quantitys, {
+            value: Constants.testValues.minFee.mul(total_quantity - 1), // pay less money
+          }),
+      ).to.be.revertedWith(Constants.reasons.code.ARG3);
     });
   });
 });

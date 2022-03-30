@@ -12,8 +12,9 @@ module.exports = {
       SetSpecialFeeRate: 'SetSpecialFeeRate',
       ChangeFeeRate: 'ChangeFeeRate',
       Airdrop: 'Airdrop',
-      SetSchedule: 'SetSchedule',
+      SetPublicSchedule: 'SetPublicSchedule',
       PublicMint: 'PublicMint',
+      SetMinFee: 'SetMinFee',
     },
     CAManager: {
       RoleAdded: 'RoleAdded',
@@ -145,6 +146,7 @@ module.exports = {
     feeRate: 5000, // converted as 0.05 (5 percent)
     specialFeeRate: 10000, // converted as 0.1 (10 percent)
     walletOwnersLen: 3,
+    minFee: ethers.utils.parseEther('0.0005'),
     sendEthValue: '10',
     consensusRatio: 66,
     minLimitForConsensus: 3,
