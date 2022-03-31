@@ -121,6 +121,7 @@ module.exports = {
     WALLET: 'WALLET',
     TEST: 'TEST',
     REVEAL: 'REVEAL',
+    CAMANAGER: 'CAMANAGER',
   },
   vrfTopic: {
     REVEAL_PFP: 'REVEAL_PFP',

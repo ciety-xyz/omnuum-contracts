@@ -28,7 +28,28 @@ module.exports = {
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: [
+        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
+      // gasPrice: 50 * 10 ** 9,
+      gasPrice: 'auto',
+      gasLimit: 30000000,
+    },
+    ropsten: {
+      url: process.env.ROPSTEN_URL || '',
+      accounts: [
+        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
     },
   },
   paths: {
@@ -54,6 +75,6 @@ module.exports = {
     clear: true,
     flat: true,
     spacing: 2,
-    pretty: true,
+    pretty: false,
   },
 };
