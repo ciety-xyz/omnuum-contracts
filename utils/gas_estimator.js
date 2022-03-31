@@ -5,14 +5,14 @@ const { addDays } = require('date-fns');
 
 upgrades.silenceWarnings();
 
-const gas_price = 100; // in gwei
+const gas_price = 50; // in gwei
 
 const roundTo = (n, to) => Math.round(n * 10 ** to) / 10 ** to;
 const calcGasPrice = (gas) => roundTo((gas * gas_price) / 10 ** 9, 3);
 
 const { prepareDeploy, testDeploy, prepareMockDeploy } = require('../test/etc/mock.js');
 const { createTicket, signPayload, toSolDate } = require('../test/etc/util.js');
-const Constants = require('../utils/constants.js');
+const Constants = require('./constants.js');
 
 async function prepare() {
   await prepareDeploy.call(this);
