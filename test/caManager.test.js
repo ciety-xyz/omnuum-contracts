@@ -1,12 +1,13 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
+const { map, go, range, mapC } = require('fxjs');
 const Constants = require('../utils/constants.js');
 require('chai').should();
 
 Error.stackTraceLimit = Infinity;
 
 const { prepareDeploy, prepareMockDeploy, testDeploy } = require('./etc/mock.js');
-const { nullAddress } = require('./etc/util.js');
+const { nullAddress, parseStruct } = require('./etc/util.js');
 
 upgrades.silenceWarnings();
 
@@ -31,19 +32,30 @@ describe('OmnuumCAManager', () => {
 
   describe('[Method] registerContract', () => {
     it('Should register contract', async () => {
-      const { omnuumCAManager, mockNFT: fakeContract } = this;
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
 
-      const tx = await omnuumCAManager.registerContract(fakeContract.address, Constants.ContractTopic.TEST);
-      const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.ContractTopic.TEST));
+      const { mockNFT: fakeContract } = this;
+
+      const topic = Constants.ContractTopic.TEST;
+
+      const tx = await omnuumCAManager.registerContract(fakeContract.address, topic);
+      const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(topic));
 
       await tx.wait();
 
       await expect(tx)
         .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
         .withArgs(fakeContract.address, topic_hashed);
+
+      const contract = await omnuumCAManager.managerContracts(fakeContract.address);
+
+      expect(parseStruct(contract)).to.include({ topic, active: true });
     });
     it('should override existing contract at indexedContracts if same topic', async () => {
-      const { omnuumCAManager, mockNFT: mockContract, mockLink: mockContract2 } = this;
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
+      const { mockNFT: mockContract, mockLink: mockContract2 } = this;
 
       await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
 
@@ -61,8 +73,9 @@ describe('OmnuumCAManager', () => {
       expect(isExist).to.be.true;
     });
     it('[Revert] only owner can register', async () => {
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
       const {
-        omnuumCAManager,
         accounts: [, not_omnuum, fake_contract],
       } = this;
 
@@ -71,14 +84,78 @@ describe('OmnuumCAManager', () => {
       ).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
     it('[Revert] EOA should not be registered', async () => {
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
       const {
-        omnuumCAManager,
         accounts: [, fake_contract],
       } = this;
 
       await expect(omnuumCAManager.registerContract(fake_contract.address, Constants.ContractTopic.TEST)).to.be.revertedWith(
         Constants.reasons.code.AE2,
       );
+    });
+  });
+
+  describe('[Method] registerContractMultiple', () => {
+    it('Should register multiple contracts', async () => {
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
+
+      const contract_addresses = map((a) => a.address, [this.mockLink, this.mockVrfCoords, this.mockVrfRequester]);
+      const contract_topics = [Constants.ContractTopic.TEST, Constants.ContractTopic.EXCHANGE, Constants.ContractTopic.REVEAL];
+
+      const tx = await omnuumCAManager.registerContractMultiple(contract_addresses, contract_topics);
+      const hashed_topics = map((topic) => ethers.utils.keccak256(ethers.utils.toUtf8Bytes(topic)), contract_topics);
+
+      await tx.wait();
+
+      await go(
+        range(contract_addresses.length),
+        mapC(async (i) => {
+          await expect(tx)
+            .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
+            .withArgs(contract_addresses[i], hashed_topics[i]);
+
+          const contract_struct = await omnuumCAManager.managerContracts(contract_addresses[i]);
+          expect(parseStruct(contract_struct)).to.include({ topic: contract_topics[i], active: true });
+        }),
+      );
+    });
+    it('[Revert] arguments length not equal', async () => {
+      const { omnuumCAManager } = this;
+
+      const contract_addresses = map((a) => a.address, [this.mockNFT, this.mockExchange, this.mockLink]);
+      const not_enough_topics = [Constants.ContractTopic.TEST, Constants.ContractTopic.EXCHANGE];
+
+      await expect(omnuumCAManager.registerContractMultiple(contract_addresses, not_enough_topics)).to.be.revertedWith(
+        Constants.reasons.code.ARG1,
+      );
+    });
+  });
+
+  describe('[Method] registerNftContract', () => {
+    it('Should register NFT contract', async () => {
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
+
+      const target_contract_address = this.mockNFT.address;
+      const contract_owner_address = await this.mockNFT.owner();
+
+      const tx = await omnuumCAManager.registerNftContract(target_contract_address);
+
+      await tx.wait();
+
+      await expect(tx)
+        .to.emit(omnuumCAManager, Constants.events.CAManager.NftContractRegistered)
+        .withArgs(target_contract_address, contract_owner_address);
+    });
+    it('[Revert] Cannot register EOA', async () => {
+      // require clean CA manager
+      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
+
+      const eoa = this.accounts[0].address;
+
+      await expect(omnuumCAManager.registerNftContract(eoa)).to.be.revertedWith(Constants.reasons.code.AE2);
     });
   });
 
@@ -178,8 +255,6 @@ describe('OmnuumCAManager', () => {
       const tx = await omnuumCAManager.addRole([mockNFT.address], Constants.contractRole.exchange);
 
       await tx.wait();
-
-      console.log(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange));
 
       // true case
       expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(true);

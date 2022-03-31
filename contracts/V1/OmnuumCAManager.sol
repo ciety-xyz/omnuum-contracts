@@ -89,13 +89,14 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
     /// @notice Register nft contracts
     /// @param _nftContract nft contract address to register
-    /// @param _initialOwner owner of nft contract
-    function registerNftContract(address _nftContract, address _initialOwner) external onlyOwner {
+    function registerNftContract(address _nftContract) external onlyOwner {
         /// @custom:error (AE2) - Contract address not acceptable
         require(_nftContract.isContract(), 'AE2');
 
+        address initialOwner = OwnableUpgradeable(_nftContract).owner();
+
         nftContracts[_nftContract] = true;
-        emit NftContractRegistered(_nftContract, _initialOwner);
+        emit NftContractRegistered(_nftContract, initialOwner);
     }
 
     /// @notice Register contract address with topic
