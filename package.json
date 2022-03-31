@@ -8,8 +8,8 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "compile": "npx hardhat compile",
-    "test:local": "npx hardhat test",
+    "compile": "rimraf './cache' '.openzeppelin' './data' && npx hardhat compile",
+    "test": "npm run compile && npx hardhat test",
     "node": "npx hardhat node",
     "run:local": "npx hardhat --network localhost run ",
     "deploy:managers:local": "npx hardhat run scripts/deployments/index.js",
@@ -40,11 +40,10 @@
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
-    "@nomiclabs/hardhat-waffle": "^2.0.2",
     "@nomiclabs/hardhat-solhint": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.2",
     "@openzeppelin/hardhat-upgrades": "^1.14.0",
     "@openzeppelin/upgrades-core": "^1.14.1",
-    "solidity-coverage": "^0.7.20",
     "chalk": "^4.1.2",
     "date-fns": "^2.28.0",
     "dotenv": "^10.0.0",
@@ -56,7 +55,8 @@
     "hardhat-gas-reporter": "^1.0.7",
     "inquirer": "^8.2.1",
     "keccak256": "^1.0.6",
-    "solhint": "^3.3.6"
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.20"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.3.1",
@@ -81,6 +81,7 @@
     "mocha": "^9.2.0",
     "prettier": "^2.5.1",
     "prettier-eslint": "^13.0.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.13"
+    "prettier-plugin-solidity": "^1.0.0-beta.13",
+    "rimraf": "^3.0.2"
   }
 }
