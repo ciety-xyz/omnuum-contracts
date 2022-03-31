@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
+import 'hardhat/console.sol';
+
 /// @title OmnuumWallet - Allows multiple owners to agree on withdraw money, add/remove/change owners before execution
 /// @notice This contract is not managed by Omnuum admin, but for owners
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
@@ -277,7 +279,7 @@ contract OmnuumWallet {
 
     /// @notice totalVotes
     /// @dev Allows users to see how many total votes the wallet currently have
-    /// @return votes - the total number of voting rights the owners have
+    /// @return votes - The total number of voting rights the owners have
 
     function totalVotes() public view returns (uint256 votes) {
         return ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
@@ -296,7 +298,7 @@ contract OmnuumWallet {
     /// @dev Allows users to check which owner voted
     /// @param _owner - Address of the owner
     /// @param _reqId - Request id that you want to check
-    /// @return isVoted -  whether the owner voted
+    /// @return isVoted -  Whether the owner voted
 
     function isOwnerVoted(address _owner, uint256 _reqId) public view returns (bool isVoted) {
         return requests[_reqId].voters[_owner];
@@ -308,6 +310,72 @@ contract OmnuumWallet {
 
     function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
         return (totalVotes() * consensusRatio) / 100;
+    }
+
+    /// @notice getRequestIdsByExecution
+    /// @dev Allows users to see the array of request ids filtered by execution
+    /// @param _isExecuted - Whether the request was executed or not
+    /// @return requestIds - Array of request ids
+
+    function getRequestIdsByExecution(bool _isExecuted) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (_isExecuted) {
+                if (requests[i].isExecute) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if (!requests[i].isExecute) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
+    }
+
+    /// @notice getRequestIdsByOwner
+    /// @dev Allows users to see the array of request ids filtered by owner address
+    /// @param _owner - address of owner
+    /// @param _onlyNotExecuted - If you want to see only for that have not been executed, input this argument into true
+    /// @return requestIds - Array of request ids
+
+    function getRequestIdsByOwner(address _owner, bool _onlyNotExecuted) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (_onlyNotExecuted) {
+                if ((requests[i].requester == _owner) && (!requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if (requests[i].requester == _owner) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
+    }
+
+    /// @notice getRequestIdsByType
+    /// @dev Allows users to see the array of request ids filtered by request type
+    /// @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
+    /// @return requestIds - Array of request ids
+
+    function getRequestIdsByType(RequestTypes _requestType) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (requests[i].requestType == _requestType) {
+                filteredArray[counter] = i;
+                counter++;
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
     }
 
     /// @notice getLastRequestNo
@@ -381,5 +449,13 @@ contract OmnuumWallet {
     function _checkMinConsensus() private view {
         /// @custom:error (NE5) - Violate min limit for consensus
         require(requiredVotesForConsensus() >= minLimitForConsensus, 'NE5');
+    }
+
+    function _compactUintArray(uint256[] memory targetArray, uint256 length) internal pure returns (uint256[] memory array) {
+        uint256[] memory compactArray = new uint256[](length);
+        for (uint256 i = 0; i < length; i++) {
+            compactArray[i] = targetArray[i];
+        }
+        return compactArray;
     }
 }
