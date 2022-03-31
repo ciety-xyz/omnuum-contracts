@@ -5,7 +5,6 @@ require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-solhint');
 
 require('hardhat-gas-reporter');
-require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
 // require('hardhat-contract-sizer');
