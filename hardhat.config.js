@@ -5,7 +5,6 @@ require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-solhint');
 
 require('hardhat-gas-reporter');
-require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
 // require('hardhat-contract-sizer');
@@ -51,6 +50,10 @@ module.exports = {
         process.env.ACCOUNT_TESTER_E,
       ].filter((a) => a),
     },
+  },
+  optimizer: {
+    enabled: false,
+    runs: 300,
   },
   paths: {
     sources: './contracts',
