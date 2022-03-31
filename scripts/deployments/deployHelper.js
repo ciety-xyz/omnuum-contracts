@@ -24,7 +24,7 @@ const getChainName = async () => {
     case 4:
       return 'rinkeby';
     case 31337:
-      return 'local';
+      return 'localhost';
     default:
       return 'unrecognized network';
   }
@@ -87,7 +87,7 @@ const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash
       deployConsoleRow('BeaconContractAddress', beaconAddr),
       deployConsoleRow('Impl', ImplAddr),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gasUsed, txHash, blockNumber) =>
@@ -99,7 +99,7 @@ const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gas
       deployConsoleRow('Impl', ImplAddr),
       deployConsoleRow('Admin', adminAddress),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber) =>
@@ -109,7 +109,7 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
       deployConsoleRow('TxHash', txHash),
       deployConsoleRow('contractAddress', deployAddress),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
@@ -121,7 +121,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
     log && alreadyDeployedConsole(contractName, history[contractName].beaconAddress);
 
     const beacon = (await ethers.getContractFactory(UpgradeableBeacon.abi, UpgradeableBeacon.bytecode)).attach(
-      history[contractName].beaconAddress
+      history[contractName].beaconAddress,
     );
 
     return {
@@ -131,7 +131,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
@@ -175,7 +175,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
   const txResponse = await proxyContract.deployed();
@@ -192,7 +192,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       adminAddress,
       gasUsed,
       txResponse.deployTransaction.hash,
-      blockNumber
+      blockNumber,
     );
 
   await writeDeployTmpHistory({
@@ -230,7 +230,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();

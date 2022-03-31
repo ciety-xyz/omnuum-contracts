@@ -1,7 +1,7 @@
 const { ethers, config } = require('hardhat');
 const { writeFile, mkdir, rm, access } = require('fs/promises');
-const { identity } = require('fxjs');
 
+const chalk = require('chalk');
 const { deployManagers } = require('./deployments');
 const {
   prev_history_file_path,
@@ -10,17 +10,18 @@ const {
   structurizeProxyData,
   structurizeContractData,
   getChainName,
+  getRPCProvider,
 } = require('./deployHelper');
 
 !(async () => {
   try {
-    console.log(`Start deploy: ${new Date()}`);
-
     const chainName = await getChainName();
-    const [devDeployer, ownerA, ownerB, ownerC] = await ethers.getSigners();
+    const OMNUUM_DEPLOYER_WALLET = await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+
+    console.log(`${chalk.redBright(`START DEPLOYMENT to ${chainName} at ${new Date()}`)}`);
 
     const deploy_metadata = {
-      deployer: devDeployer.address,
+      deployer: OMNUUM_DEPLOYER_WALLET.address,
       solidity: {
         version: config.solidity.compilers[0].version,
       },
@@ -29,11 +30,11 @@ const {
     // write tmp history file for restore already deployed history
     await tryCatch(
       () => access(prev_history_file_path),
-      () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata))
+      () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata)),
     );
 
     const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ devDeployer, owners: [ownerA, ownerB, ownerC].filter(identity) });
+      await deployManagers({ deploySigner: OMNUUM_DEPLOYER_WALLET });
 
     const resultData = {
       caManager: structurizeProxyData(caManager),
@@ -85,7 +86,7 @@ const {
     await writeFile(
       `./scripts/deployments/deployResults/subgraphManifest/${filename}`,
       Buffer.from(JSON.stringify(subgraphManifestData)),
-      'utf-8'
+      'utf-8',
     );
   } catch (e) {
     console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);

@@ -38,7 +38,7 @@ module.exports = {
       ].filter((a) => a),
       // gasPrice: 50 * 10 ** 9,
       gasPrice: 'auto',
-      gasLimit: 30000000,
+      gasLimit: 10_000_000,
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
