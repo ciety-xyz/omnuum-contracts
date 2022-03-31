@@ -73,7 +73,7 @@ const nullCheck = (val) => {
 const getDateSuffix = () =>
   `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
-const deployConsoleRow = (title, data) => `  ${chalk.blue(title)} ${data}\n`;
+const deployConsoleRow = (title, data) => `  ${chalk.green(title)} ${data}\n`;
 
 const alreadyDeployedConsole = (contractName, addr) => {
   console.log(`\n${chalk.yellow(`<${contractName}>`)} - Skip for deployed contract (${addr})`);

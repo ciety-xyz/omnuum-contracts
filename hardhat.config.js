@@ -28,7 +28,7 @@ module.exports = {
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
       accounts: [
-        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
         process.env.ACCOUNT_TESTER_A,
         process.env.ACCOUNT_TESTER_B,
         process.env.ACCOUNT_TESTER_C,
@@ -42,7 +42,7 @@ module.exports = {
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
       accounts: [
-        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
         process.env.ACCOUNT_TESTER_A,
         process.env.ACCOUNT_TESTER_B,
         process.env.ACCOUNT_TESTER_C,

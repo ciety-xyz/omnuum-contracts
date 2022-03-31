@@ -50,6 +50,9 @@ const DEP_CONSTANTS = {
     vrfManager: 'EXCHANGE',
     revealManager: 'VRF',
   },
+  nft: {
+    topic: 'NFT',
+  },
 };
 
 module.exports = DEP_CONSTANTS;

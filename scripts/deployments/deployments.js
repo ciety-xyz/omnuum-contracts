@@ -4,15 +4,23 @@ const { ContractTopic } = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
 const { deployProxy, deployNormal, deployBeacon, getChainName } = require('./deployHelper');
 
-const deployNFT = async ({ nftBeacon, nftContractFactory, caManageProxyAddr, devDeployerAddr, maxSupply, coverUri, projectOwnerAddr }) => {
+const deployNFT = async ({
+  nftBeacon,
+  nftContractFactory,
+  caManageProxyAddr,
+  devDeployerAddr,
+  maxSupply,
+  coverUri,
+  projectOwnerAddress,
+}) => {
   /* Deploy NFT1155 Beacon Proxy */
   const nftBeaconProxy = await upgrades.deployBeaconProxy(
     nftBeacon,
     nftContractFactory,
-    [caManageProxyAddr, devDeployerAddr, maxSupply, coverUri, projectOwnerAddr],
+    [caManageProxyAddr, devDeployerAddr, maxSupply, coverUri, projectOwnerAddress],
     { pollingInterval: DEP_CONSTANTS.pollingInterval },
   );
-  const deployReceipt = await nftBeaconProxy.deployed();
+  const deployReceipt = await (await nftBeaconProxy.deployed()).deployTransaction.wait();
   return { beaconProxy: nftBeaconProxy, deployReceipt };
 };
 

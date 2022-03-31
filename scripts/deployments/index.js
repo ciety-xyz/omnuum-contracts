@@ -15,10 +15,21 @@ const {
 
 !(async () => {
   try {
+    console.log(`
+         *******   ****     **** ****     ** **     ** **     ** ****     ****
+        **/////** /**/**   **/**/**/**   /**/**    /**/**    /**/**/**   **/**
+       **     //**/**//** ** /**/**//**  /**/**    /**/**    /**/**//** ** /**
+      /**      /**/** //***  /**/** //** /**/**    /**/**    /**/** //***  /**
+      /**      /**/**  //*   /**/**  //**/**/**    /**/**    /**/**  //*   /**
+      //**     ** /**   /    /**/**   //****/**    /**/**    /**/**   /    /**
+       //*******  /**        /**/**    //***//******* //******* /**        /**
+        ///////   //         // //      ///  ///////   ///////  //         //
+    `);
+
     const chainName = await getChainName();
     const OMNUUM_DEPLOYER_WALLET = await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
 
-    console.log(`${chalk.redBright(`START DEPLOYMENT to ${chainName} at ${new Date()}`)}`);
+    console.log(`${chalk.blueBright(`START DEPLOYMENT to ${chainName} at ${new Date()}`)}`);
 
     const deploy_metadata = {
       deployer: OMNUUM_DEPLOYER_WALLET.address,
