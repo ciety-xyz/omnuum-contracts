@@ -30,6 +30,10 @@ module.exports = {
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
+  optimizer: {
+    enabled: false,
+    runs: 300,
+  },
   paths: {
     sources: './contracts',
   },
