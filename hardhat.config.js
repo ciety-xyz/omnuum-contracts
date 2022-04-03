@@ -5,10 +5,10 @@ require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-solhint');
 
 require('hardhat-gas-reporter');
-require('solidity-coverage');
 
 require('@openzeppelin/hardhat-upgrades');
 // require('hardhat-contract-sizer');
+
 require('hardhat-abi-exporter');
 require('solidity-coverage');
 
@@ -28,7 +28,7 @@ module.exports = {
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
       accounts: [
-        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
         process.env.ACCOUNT_TESTER_A,
         process.env.ACCOUNT_TESTER_B,
         process.env.ACCOUNT_TESTER_C,
@@ -37,12 +37,12 @@ module.exports = {
       ].filter((a) => a),
       // gasPrice: 50 * 10 ** 9,
       gasPrice: 'auto',
-      gasLimit: 30000000
+      gasLimit: 10_000_000
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
       accounts: [
-        process.env.ACCOUNT_DEV_DEPLOYER,
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
         process.env.ACCOUNT_TESTER_A,
         process.env.ACCOUNT_TESTER_B,
         process.env.ACCOUNT_TESTER_C,
@@ -51,8 +51,15 @@ module.exports = {
       ].filter((a) => a)
     }
   },
+  optimizer: {
+    enabled: false,
+    runs: 300
+  },
+  paths: {
+    sources: './contracts'
+  },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: process.env.REPORT_GAS ?? false,
     currency: 'USD',
     coinmarketcap: process.env.COINMARKETCAP_KEY
   },

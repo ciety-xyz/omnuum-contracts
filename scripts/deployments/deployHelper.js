@@ -1,8 +1,9 @@
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
 const { writeFile, readFile } = require('fs/promises');
-const { go } = require('fxjs');
+const { go, zip, map } = require('fxjs');
 const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
+const DEP_CONSTANTS = require('./deployConstants');
 
 const prev_history_file_path = './scripts/deployments/deployResults/tmp_history.json';
 
@@ -24,7 +25,7 @@ const getChainName = async () => {
     case 4:
       return 'rinkeby';
     case 31337:
-      return 'local';
+      return 'localhost';
     default:
       return 'unrecognized network';
   }
@@ -73,7 +74,7 @@ const nullCheck = (val) => {
 const getDateSuffix = () =>
   `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
-const deployConsoleRow = (title, data) => `  ${chalk.blue(title)} ${data}\n`;
+const deployConsoleRow = (title, data) => `  ${chalk.green(title)} ${data}\n`;
 
 const alreadyDeployedConsole = (contractName, addr) => {
   console.log(`\n${chalk.yellow(`<${contractName}>`)} - Skip for deployed contract (${addr})`);
@@ -87,7 +88,7 @@ const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash
       deployConsoleRow('BeaconContractAddress', beaconAddr),
       deployConsoleRow('Impl', ImplAddr),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gasUsed, txHash, blockNumber) =>
@@ -99,7 +100,7 @@ const deployProxyConsole = (contractName, proxyAddr, ImplAddr, adminAddress, gas
       deployConsoleRow('Impl', ImplAddr),
       deployConsoleRow('Admin', adminAddress),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber) =>
@@ -109,7 +110,7 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
       deployConsoleRow('TxHash', txHash),
       deployConsoleRow('contractAddress', deployAddress),
       deployConsoleRow('GasUsed', gasUsed),
-    ].join('')}`
+    ].join('')}`,
   );
 
 const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
@@ -121,7 +122,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
     log && alreadyDeployedConsole(contractName, history[contractName].beaconAddress);
 
     const beacon = (await ethers.getContractFactory(UpgradeableBeacon.abi, UpgradeableBeacon.bytecode)).attach(
-      history[contractName].beaconAddress
+      history[contractName].beaconAddress,
     );
 
     return {
@@ -131,11 +132,11 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const implAddress = await upgrades.beacon.getImplementationAddress(beacon.address);
   const { gasUsed, blockNumber } = deployTxReceipt;
 
@@ -175,11 +176,11 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
   const txResponse = await proxyContract.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
   const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
   const { gasUsed, blockNumber } = deployTxReceipt;
@@ -192,7 +193,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       adminAddress,
       gasUsed,
       txResponse.deployTransaction.hash,
-      blockNumber
+      blockNumber,
     );
 
   await writeDeployTmpHistory({
@@ -230,11 +231,11 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
     };
   }
 
-  log && console.log(`\n${chalk.blue('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const { gasUsed, blockNumber } = deployTxReceipt;
 
   log && deployConsole(contractName, contract.address, gasUsed, txResponse.deployTransaction.hash, blockNumber);
@@ -262,6 +263,17 @@ const isNotMainOrRinkeby = async (provider) => {
   return Number(chainId) !== 1 && Number(chainId) !== 4;
 };
 
+const createWalletOwnerAccounts = (addressArray, votesArray) => {
+  if (addressArray.length !== votesArray.length) throw new Error('Fail to create wallet owner accounts');
+  return go(
+    zip(addressArray, votesArray),
+    map(([addr, vote]) => ({
+      addr,
+      vote,
+    })),
+  );
+};
+
 module.exports = {
   structurizeProxyData,
   structurizeContractData,
@@ -275,6 +287,7 @@ module.exports = {
   getRPCProvider,
   getChainName,
   tryCatch,
+  createWalletOwnerAccounts,
   prev_history_file_path,
   writeDeployTmpHistory,
 };

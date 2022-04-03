@@ -1,4 +1,5 @@
 const { ethers } = require('hardhat');
+const { go, filter, keys, map, object } = require('fxjs');
 
 module.exports = {
   waitTx(sign) {
@@ -67,5 +68,14 @@ module.exports = {
   },
   parseEvent(ifaces, receipt) {
     return receipt.logs.map((log, idx) => ifaces[idx].parseLog(log));
+  },
+  parseStruct(struct) {
+    return go(
+      struct,
+      keys,
+      filter((k) => Number.isNaN(+k)),
+      map((k) => [k, struct[k]]),
+      object,
+    );
   },
 };

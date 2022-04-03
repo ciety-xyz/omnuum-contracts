@@ -41,7 +41,7 @@ describe('RevealManager', () => {
       // set isRevealed to true
       await (await omnuumNFT1155.setUri('mock.uri')).wait();
 
-      await expect(revealManager.vrfRequest(omnuumNFT1155.address)).to.be.revertedWith(Constants.reasons.code.ARG2);
+      await expect(revealManager.vrfRequest(omnuumNFT1155.address)).to.be.revertedWith(Constants.reasons.code.SE6);
     });
   });
 });

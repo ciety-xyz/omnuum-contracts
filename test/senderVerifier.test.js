@@ -42,7 +42,7 @@ describe('SenderVerifier', () => {
         minterAC.address, // sender
         Constants.payloadTopic.ticket, // topic
         group_id, // nonce
-        payload
+        payload,
       );
 
       expect(verify_result).to.be.deep.equal([]);
@@ -61,9 +61,9 @@ describe('SenderVerifier', () => {
           minterAC.address,
           Constants.payloadTopic.mint, // topic - false
           group_id,
-          payload
-        )
-      ).to.be.revertedWith(Constants.reasons.senderVerifier.topic);
+          payload,
+        ),
+      ).to.be.revertedWith(Constants.reasons.code.VR3);
     });
     it('[Revert] False Signer', async () => {
       const {
@@ -79,9 +79,9 @@ describe('SenderVerifier', () => {
           minterAC.address,
           Constants.payloadTopic.ticket, // topic - false
           group_id,
-          payload
-        )
-      ).to.be.revertedWith(Constants.reasons.senderVerifier.signer);
+          payload,
+        ),
+      ).to.be.revertedWith(Constants.reasons.code.VR1);
     });
     it('[Revert] False Nonce', async () => {
       const {
@@ -97,9 +97,9 @@ describe('SenderVerifier', () => {
           minterAC.address,
           Constants.payloadTopic.ticket,
           group_id + 1, // nonce - false
-          payload
-        )
-      ).to.be.revertedWith(Constants.reasons.senderVerifier.nonce);
+          payload,
+        ),
+      ).to.be.revertedWith(Constants.reasons.code.VR2);
     });
     it('[Revert] False Sender', async () => {
       const {
@@ -110,8 +110,8 @@ describe('SenderVerifier', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
 
       await expect(
-        senderVerifier.verify(omnuumAC.address, falseSenderAC.address, Constants.payloadTopic.ticket, group_id, payload)
-      ).to.be.revertedWith(Constants.reasons.senderVerifier.sender);
+        senderVerifier.verify(omnuumAC.address, falseSenderAC.address, Constants.payloadTopic.ticket, group_id, payload),
+      ).to.be.revertedWith(Constants.reasons.code.VR4);
     });
   });
 });
