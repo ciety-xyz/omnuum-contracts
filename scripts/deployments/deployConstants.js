@@ -5,6 +5,7 @@
 const { ethers } = require('hardhat');
 
 const DEP_CONSTANTS = {
+  confirmWait: 1,
   pollingInterval: 600000,
   OmnuumDeployer: process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
   mintManager: {
@@ -13,12 +14,12 @@ const DEP_CONSTANTS = {
   wallet: {
     consensusRatio: 66, // ( 2 of 3 consensus ratio)
     minLimitForConsensus: 3, // (require minimum 3 votes to reach consensus)
-    ownerAccounts: [
-      { addr: process.env.WALLET_OWNER_A_ADDR, vote: 2 },
-      { addr: process.env.WALLET_OWNER_B_ADDR, vote: 2 },
-      { addr: process.env.WALLET_OWNER_C_ADDR, vote: 1 },
-      { addr: process.env.WALLET_OWNER_D_ADDR, vote: 1 },
-      { addr: process.env.WALLET_OWNER_E_ADDR, vote: 1 },
+    ownerAddresses: [
+      process.env.WALLET_OWNER_A_ADDR,
+      process.env.WALLET_OWNER_B_ADDR,
+      process.env.WALLET_OWNER_C_ADDR,
+      process.env.WALLET_OWNER_D_ADDR,
+      process.env.WALLET_OWNER_E_ADDR,
     ],
   },
   caManager: {

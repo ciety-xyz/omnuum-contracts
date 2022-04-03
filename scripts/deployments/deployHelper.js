@@ -1,8 +1,9 @@
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
 const { writeFile, readFile } = require('fs/promises');
-const { go } = require('fxjs');
+const { go, zip, map } = require('fxjs');
 const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
+const DEP_CONSTANTS = require('./deployConstants');
 
 const prev_history_file_path = './scripts/deployments/deployResults/tmp_history.json';
 
@@ -135,7 +136,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
 
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const implAddress = await upgrades.beacon.getImplementationAddress(beacon.address);
   const { gasUsed, blockNumber } = deployTxReceipt;
 
@@ -179,7 +180,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
   const txResponse = await proxyContract.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
   const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
   const { gasUsed, blockNumber } = deployTxReceipt;
@@ -234,7 +235,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
 
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   const { gasUsed, blockNumber } = deployTxReceipt;
 
   log && deployConsole(contractName, contract.address, gasUsed, txResponse.deployTransaction.hash, blockNumber);
@@ -262,6 +263,17 @@ const isNotMainOrRinkeby = async (provider) => {
   return Number(chainId) !== 1 && Number(chainId) !== 4;
 };
 
+const createWalletOwnerAccounts = (addressArray, votesArray) => {
+  if (addressArray.length !== votesArray.length) throw new Error('Fail to create wallet owner accounts');
+  return go(
+    zip(addressArray, votesArray),
+    map(([addr, vote]) => ({
+      addr,
+      vote,
+    })),
+  );
+};
+
 module.exports = {
   structurizeProxyData,
   structurizeContractData,
@@ -275,6 +287,7 @@ module.exports = {
   getRPCProvider,
   getChainName,
   tryCatch,
+  createWalletOwnerAccounts,
   prev_history_file_path,
   writeDeployTmpHistory,
 };

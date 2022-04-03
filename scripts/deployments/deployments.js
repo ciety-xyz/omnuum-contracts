@@ -5,7 +5,7 @@ const DEP_CONSTANTS = require('./deployConstants');
 const { deployProxy, deployNormal, deployBeacon, getChainName } = require('./deployHelper');
 
 const deployNFT = async ({
-  nftBeacon,
+  nftBeaconAddress,
   nftContractFactory,
   caManageProxyAddr,
   devDeployerAddr,
@@ -15,16 +15,16 @@ const deployNFT = async ({
 }) => {
   /* Deploy NFT1155 Beacon Proxy */
   const nftBeaconProxy = await upgrades.deployBeaconProxy(
-    nftBeacon,
+    nftBeaconAddress,
     nftContractFactory,
     [caManageProxyAddr, devDeployerAddr, maxSupply, coverUri, projectOwnerAddress],
     { pollingInterval: DEP_CONSTANTS.pollingInterval },
   );
-  const deployReceipt = await (await nftBeaconProxy.deployed()).deployTransaction.wait();
+  const deployReceipt = await (await nftBeaconProxy.deployed()).deployTransaction.wait(DEP_CONSTANTS.confirmWait);
   return { beaconProxy: nftBeaconProxy, deployReceipt };
 };
 
-const deployManagers = async ({ deploySigner }) => {
+const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   /* Deploy CA Manager */
   const caManager = await deployProxy({
     contractName: 'OmnuumCAManager',
@@ -37,7 +37,7 @@ const deployManagers = async ({ deploySigner }) => {
     await caManager.proxyContract
       .connect(deploySigner)
       .registerContract(caManager.proxyContract.address, DEP_CONSTANTS.caManager.topic, { gasLimit: 10_000_000 })
-  ).wait();
+  ).wait(DEP_CONSTANTS.confirmWait);
   console.log(`\n${chalk.yellow('Complete self-registration to CA Manager')} - ${new Date()}`);
 
   /* Deploy Mint Manager */
@@ -84,7 +84,7 @@ const deployManagers = async ({ deploySigner }) => {
   const wallet = await deployNormal({
     contractName: 'OmnuumWallet',
     deploySigner,
-    args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, DEP_CONSTANTS.wallet.ownerAccounts],
+    args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
   });
 
   /* Deploy NFT1155 Beacon */
@@ -94,6 +94,7 @@ const deployManagers = async ({ deploySigner }) => {
   });
 
   /* Register CA accounts to CA Manager */
+  console.log(`\n${chalk.green('Start Contract Registrations to CA Manager...')} - ${new Date()}`);
   await (
     await caManager.proxyContract
       .connect(deploySigner)
@@ -117,19 +118,19 @@ const deployManagers = async ({ deploySigner }) => {
           ContractTopic.WALLET,
         ],
       )
-  ).wait();
-
-  console.log(`\n${chalk.yellow('Complete Contract Registrations to CA Manager')} - ${new Date()}`);
+  ).wait(DEP_CONSTANTS.confirmWait);
+  console.log(`${chalk.yellow('Complete!')} - ${new Date()}`);
 
   /* Register contract roles to CA manager */
   /* VRF manager => EXCHANGE role */
   /* Reveal manager => VRF role */
+
+  console.log(`\n${chalk.green('Start Role Additions to CA Manager...')} - ${new Date()}`);
   await (await caManager.proxyContract.connect(deploySigner).addRole([vrfManager.contract.address], DEP_CONSTANTS.roles.vrfManager)).wait();
   await (
     await caManager.proxyContract.connect(deploySigner).addRole([revealManager.contract.address], DEP_CONSTANTS.roles.revealManager)
-  ).wait();
-
-  console.log(`\n${chalk.yellow('Complete Role Additions to CA Manager')} - ${new Date()}`);
+  ).wait(DEP_CONSTANTS.confirmWait);
+  console.log(`${chalk.yellow('Complete!')} - ${new Date()}`);
 
   return {
     nft,

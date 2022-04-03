@@ -89,14 +89,17 @@ const questions = [
       console.log(chalk.green(`${`\nSTART DEPLOYMENT to ${chainName} at ${new Date()}`}`));
 
       const provider = await getRPCProvider(ethers.provider);
-      const deployerSigner = new ethers.Wallet(DEP_CONSTANTS.OmnuumDeployer, provider);
-      const devDeployerAddr = await deployerSigner.getAddress();
+      const OmnuumDeploySigner =
+        chainName === 'localhost'
+          ? (await ethers.getSigners())[0]
+          : await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, provider);
+      const devDeployerAddr = await OmnuumDeploySigner.getAddress();
       const projectOwnerSigner = new ethers.Wallet(ans.project_owner_private_key, provider);
       const projectOwnerAddress = projectOwnerSigner.address;
 
       const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.ca_manager_proxy_address);
       const wallet = (await ethers.getContractFactory('OmnuumWallet')).attach(ans.wallet_address);
-      const nftContractFactory = (await ethers.getContractFactory('OmnuumNFT1155')).connect(deployerSigner);
+      const nftContractFactory = (await ethers.getContractFactory('OmnuumNFT1155')).connect(OmnuumDeploySigner);
 
       const deployPayment = {
         topic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(DEP_CONSTANTS.nft.topic)),
@@ -117,7 +120,7 @@ const questions = [
       );
 
       const nftDeployment = await deployNFT({
-        nftBeacon: ans.nft_beacon_address,
+        nftBeaconAddress: ans.nft_beacon_address,
         nftContractFactory,
         caManageProxyAddr: ans.ca_manager_proxy_address,
         devDeployerAddr,
@@ -158,7 +161,7 @@ const questions = [
       );
 
       /* register NFT beacon proxy contract to CA manager */
-      const txRegister = await caManager.connect(deployerSigner).registerNftContract(nftDeployment.beaconProxy.address);
+      const txRegister = await caManager.connect(OmnuumDeploySigner).registerNftContract(nftDeployment.beaconProxy.address);
       const deployResponse = await txRegister.wait();
 
       console.log(

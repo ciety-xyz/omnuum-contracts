@@ -11,7 +11,9 @@ const {
   structurizeContractData,
   getChainName,
   getRPCProvider,
+  createWalletOwnerAccounts,
 } = require('./deployHelper');
+const DEP_CONSTANTS = require('./deployConstants');
 
 !(async () => {
   try {
@@ -27,12 +29,23 @@ const {
     `);
 
     const chainName = await getChainName();
-    const OMNUUM_DEPLOYER_WALLET = await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
 
-    console.log(`${chalk.blueBright(`START DEPLOYMENT to ${chainName} at ${new Date()}`)}`);
+    const OmnuumDeploySigner =
+      chainName === 'localhost'
+        ? (await ethers.getSigners())[0]
+        : await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+
+    const walletOwnerAccounts = createWalletOwnerAccounts(
+      chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
+      [2, 2, 1, 1, 1],
+    );
+
+    const deployStartTime = new Date();
+
+    console.log(`${chalk.blueBright(`START DEPLOYMENT to ${chainName} at ${deployStartTime}`)}`);
 
     const deploy_metadata = {
-      deployer: OMNUUM_DEPLOYER_WALLET.address,
+      deployer: OmnuumDeploySigner.address,
       solidity: {
         version: config.solidity.compilers[0].version,
       },
@@ -45,9 +58,12 @@ const {
     );
 
     const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ deploySigner: OMNUUM_DEPLOYER_WALLET });
+      await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts });
 
     const resultData = {
+      network: chainName,
+      deployStartAt: deployStartTime,
+      deployer: OmnuumDeploySigner.address,
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
       exchanger: structurizeProxyData(exchanger),
