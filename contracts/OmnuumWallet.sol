@@ -7,10 +7,10 @@ pragma solidity 0.8.10;
 
 contract OmnuumWallet {
     /// @notice - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
-    uint256 public immutable consensusRatio;
+    uint256 public constant consensusRatio = 66;
 
     /// @notice - Minimum limit of required number of votes for consensus
-    uint8 public immutable minLimitForConsensus;
+    uint8 public constant minLimitForConsensus = 3;
 
     /// @notice - Withdraw = 0
     /// @notice - Add = 1
@@ -59,19 +59,14 @@ contract OmnuumWallet {
      *   Constructor
      * - set consensus ratio, minimum votes limit for consensus, and initial accounts
      * *****************************************************************************/
-    constructor(
-        uint256 _consensusRatio,
-        uint8 _minLimitForConsensus,
-        OwnerAccount[] memory _initialOwnerAccounts
-    ) {
-        consensusRatio = _consensusRatio;
-        minLimitForConsensus = _minLimitForConsensus;
-
+    constructor(OwnerAccount[] memory _initialOwnerAccounts) {
         for (uint256 i; i < _initialOwnerAccounts.length; i++) {
             OwnerVotes _vote = _initialOwnerAccounts[i].vote;
             ownerVote[_initialOwnerAccounts[i].addr] = _vote;
             ownerCounter[_vote]++;
         }
+
+        _checkMinConsensus();
     }
 
     /* *****************************************************************************

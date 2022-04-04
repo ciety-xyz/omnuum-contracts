@@ -56,11 +56,7 @@ module.exports = {
       map(([vote, signer]) => ({ addr: signer.address, vote })),
     );
 
-    this.omnuumWallet = await this.OmnuumWallet.deploy(
-      testValues.consensusRatio,
-      testValues.minLimitForConsensus,
-      this.walletOwnerAccounts,
-    );
+    this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwnerAccounts);
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
     [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester, this.mockExchange] = await go(
       [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords, this.MockVrfRequester, this.MockExchange],
