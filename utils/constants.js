@@ -108,7 +108,6 @@ module.exports = {
   },
   payloadTopic: {
     mint: 'MINT',
-    vrf: 'VRF',
     ticket: 'TICKET',
   },
   ContractTopic: {
