@@ -16,7 +16,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     /// @notice (omnuum contract address => (bytes32 topic => hasRole))
-    mapping(address => mapping(bytes32 => bool)) public roles;
+    mapping(address => mapping(string => bool)) public roles;
 
     /// @notice (omnuum contract address => (topic, active))
     mapping(address => Contract) public contracts;
@@ -25,9 +25,9 @@ contract OmnuumCAManager is OwnableUpgradeable {
     mapping(string => address) public indexedContracts;
 
     // actionType: register, remove
-    event Updated(address indexed contractAccount, Contract, string indexed actionType);
-    event RoleAdded(address ca, string role);
-    event RoleRemoved(address ca, string role);
+    event Updated(address indexed contractAccount, Contract, string actionType);
+    event RoleAdded(address indexed ca, string role);
+    event RoleRemoved(address indexed ca, string role);
 
     function initialize() public initializer {
         __Ownable_init();
@@ -44,9 +44,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
             require(_CAs[i].isContract(), 'AE2');
         }
 
-        bytes32 role = keccak256(abi.encodePacked(_role));
         for (uint256 i = 0; i < len; i++) {
-            roles[_CAs[i]][role] = true;
+            roles[_CAs[i]][_role] = true;
             emit RoleAdded(_CAs[i], _role);
         }
     }
@@ -56,9 +55,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _role role name to be removed
     function removeRole(address[] calldata _CAs, string calldata _role) external onlyOwner {
         uint256 len = _CAs.length;
-        bytes32 role = keccak256(abi.encodePacked(_role));
         for (uint256 i = 0; i < len; i++) {
-            roles[_CAs[i]][role] = false;
+            roles[_CAs[i]][_role] = false;
             emit RoleRemoved(_CAs[i], _role);
         }
     }
@@ -68,7 +66,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _role role name to be checked with
     /// @return whether target address has specified role or not
     function hasRole(address _target, string calldata _role) external view returns (bool) {
-        return roles[_target][keccak256(abi.encodePacked(_role))];
+        return roles[_target][_role];
     }
 
     /// @notice Register multiple addresses at once

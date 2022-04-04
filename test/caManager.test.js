@@ -177,8 +177,6 @@ describe('OmnuumCAManager', () => {
 
       await tx.wait();
 
-      console.log(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange));
-
       // true case
       expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(true);
 
