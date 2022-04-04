@@ -16,7 +16,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     }
 
     /// @notice (omnuum contract address => (bytes32 topic => hasRole))
-    mapping(address => mapping(bytes32 => bool)) public roles;
+    mapping(address => mapping(string => bool)) public roles;
 
     /// @notice (nft contract address => is registered)
     mapping(address => bool) public nftContracts;
@@ -28,8 +28,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     mapping(string => address) public indexedContracts;
 
     event NftContractRegistered(address indexed nftContract, address indexed nftOwner);
-    event ManagerContractRegistered(address indexed managerContract, bytes32 indexed topic);
-    event ManagerContractRemoved(address indexed managerContract, bytes32 indexed topic);
+    event ManagerContractRegistered(address indexed managerContract, string topic);
+    event ManagerContractRemoved(address indexed managerContract, string topic);
     event RoleAdded(address ca, string role);
     event RoleRemoved(address ca, string role);
 
@@ -48,9 +48,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
             require(_CAs[i].isContract(), 'AE2');
         }
 
-        bytes32 role = keccak256(abi.encodePacked(_role));
         for (uint256 i = 0; i < len; i++) {
-            roles[_CAs[i]][role] = true;
+            roles[_CAs[i]][_role] = true;
             emit RoleAdded(_CAs[i], _role);
         }
     }
@@ -60,9 +59,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _role role name to be removed
     function removeRole(address[] calldata _CAs, string calldata _role) external onlyOwner {
         uint256 len = _CAs.length;
-        bytes32 role = keccak256(abi.encodePacked(_role));
         for (uint256 i = 0; i < len; i++) {
-            roles[_CAs[i]][role] = false;
+            roles[_CAs[i]][_role] = false;
             emit RoleRemoved(_CAs[i], _role);
         }
     }
@@ -72,7 +70,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @param _role role name to be checked with
     /// @return whether target address has specified role or not
     function hasRole(address _target, string calldata _role) public view returns (bool) {
-        return roles[_target][keccak256(abi.encodePacked(_role))];
+        return roles[_target][_role];
     }
 
     /// @notice Register multiple addresses at once
@@ -111,7 +109,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
         managerContracts[_CA] = Contract(_topic, true);
         indexedContracts[_topic] = _CA;
-        emit ManagerContractRegistered(_CA, keccak256(abi.encodePacked(_topic)));
+        emit ManagerContractRegistered(_CA, _topic);
     }
 
     /// @notice Check whether contract address is registered
@@ -131,7 +129,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
             delete indexedContracts[topic];
         }
 
-        emit ManagerContractRemoved(_CA, keccak256(abi.encodePacked(topic)));
+        emit ManagerContractRemoved(_CA, topic);
     }
 
     /// @notice Get contract address for specified topic

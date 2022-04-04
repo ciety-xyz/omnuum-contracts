@@ -31,7 +31,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     string private coverUri;
     address private omA;
 
-    event Uri(address indexed nftContract, string indexed uri);
+    event Uri(address indexed nftContract, string uri);
     event FeePaid(address indexed payer, uint256 amount);
 
     /// @notice constructor function for upgradeable
@@ -75,10 +75,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
         uint256 feePayment = calculatedFee > minimumFee ? calculatedFee : minimumFee;
 
-        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }(
-            keccak256(abi.encodePacked('MINT_FEE')),
-            ''
-        );
+        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }('MINT_FEE', '');
 
         emit FeePaid(msg.sender, feePayment);
     }
