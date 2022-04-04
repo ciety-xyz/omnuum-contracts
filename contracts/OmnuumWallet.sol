@@ -72,7 +72,7 @@ contract OmnuumWallet {
     /* *****************************************************************************
      *   Events
      * *****************************************************************************/
-    event PaymentReceived(address indexed sender, bytes32 indexed topic, string description);
+    event PaymentReceived(address indexed sender, string topic, string description);
     event EtherReceived(address indexed sender);
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
@@ -159,7 +159,7 @@ contract OmnuumWallet {
      *   Methods - Public, External
      * *****************************************************************************/
 
-    function makePayment(bytes32 _topic, string calldata _description) external payable {
+    function makePayment(string calldata _topic, string calldata _description) external payable {
         /// @custom:error (NE3) - A zero payment is not acceptable
         require(msg.value > 0, 'NE3');
         emit PaymentReceived(msg.sender, _topic, _description);
