@@ -54,14 +54,20 @@ describe('Omnuum Multi-sig Wallet', () => {
         }),
       );
     });
-    it('Register consensusRatio correctly', async () => {
-      expect(await Wallet.consensusRatio()).to.equal(testValues.consensusRatio);
-    });
-    it('Register minLimitForConsensus correctly', async () => {
-      expect(await Wallet.minLimitForConsensus()).to.equal(testValues.minLimitForConsensus);
-    });
     it('[Revert] Registered only owners, not other account', async () => {
       expect(await Wallet.ownerVote(accounts[0].address)).to.equal(0);
+    });
+    it('[Revert] Cannot register owners which cannot fulfill minLimitForConsensus', async () => {
+      const { OmnuumWallet } = this;
+
+      // total 2 * 0.66 = 1.32 := 1; which is lower than minLimitForConsensus 3
+      const owners = go(
+        this.accounts.slice(0, 2),
+        zip([1, 1]),
+        map(([vote, signer]) => ({ addr: signer.address, vote })),
+      );
+
+      await expect(OmnuumWallet.deploy(owners)).to.be.revertedWith(reasons.code.NE5);
     });
   });
 
