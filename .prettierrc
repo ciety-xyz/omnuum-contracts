@@ -5,13 +5,5 @@
   "bracketSpacing": true,
   "formatOnSave": true,
   "semi": true,
-  "explicitTypes": "always",
-  "overrides": [
-    {
-      "files": "hardhat.config.js",
-      "options": {
-        "trailingComma": "none"
-      }
-    }
-  ]
+  "explicitTypes": "always"
 }
