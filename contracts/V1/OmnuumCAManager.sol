@@ -60,6 +60,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     function removeRole(address[] calldata _CAs, string calldata _role) external onlyOwner {
         uint256 len = _CAs.length;
         for (uint256 i = 0; i < len; i++) {
+            /// @custom:error (NX4) - Non-existent role to CA
+            require(roles[_CAs[i]][_role], 'NX4');
             roles[_CAs[i]][_role] = false;
             emit RoleRemoved(_CAs[i], _role);
         }
