@@ -47,12 +47,12 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     mapping(bytes32 => address) public idToA;
 
     /// @notice request ID to topic
-    mapping(bytes32 => bytes32) public idToTopic;
+    mapping(bytes32 => string) public idToTopic;
 
     /// @dev actionType: fee, safetyRatio
-    event Updated(uint256 value, bytes32 actionType);
-    event RequestVRF(address indexed roller, bytes32 indexed requestId, bytes32 topic);
-    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, bytes32 topic, bool success, string reason);
+    event Updated(uint256 value, string actionType);
+    event RequestVRF(address indexed roller, bytes32 indexed requestId, string topic);
+    event ResponseVRF(bytes32 indexed requestId, uint256 randomness, string topic, bool success, string reason);
 
     /// @notice request vrf call
     /// @dev only allowed contract which has VRF role
@@ -68,9 +68,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = msg.sender;
-        idToTopic[requestId] = keccak256(abi.encodePacked(_topic));
+        idToTopic[requestId] = _topic;
 
-        emit RequestVRF(msg.sender, requestId, idToTopic[requestId]);
+        emit RequestVRF(msg.sender, requestId, _topic);
     }
 
     /// @notice request vrf call
@@ -100,9 +100,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = _targetAddress;
-        idToTopic[requestId] = keccak256(abi.encodePacked(_topic));
+        idToTopic[requestId] = _topic;
 
-        emit RequestVRF(_targetAddress, requestId, idToTopic[requestId]);
+        emit RequestVRF(_targetAddress, requestId, _topic);
     }
 
     /// @notice hook function which called when vrf response received
@@ -126,7 +126,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @param _fee fee of ChainLink VRF
     function updateFee(uint256 _fee) external onlyOwner {
         fee = _fee;
-        emit Updated(_fee, keccak256(abi.encodePacked('fee')));
+        emit Updated(_fee, 'fee');
     }
 
     /// @notice update safety ratio
@@ -135,6 +135,6 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
         /// @custom:error (NE6) - Margin rate should above or equal 100
         require(_safetyRatio >= 100, 'NE6');
         safetyRatio = _safetyRatio;
-        emit Updated(_safetyRatio, keccak256(abi.encodePacked('safetyRatio')));
+        emit Updated(_safetyRatio, 'safetyRatio');
     }
 }

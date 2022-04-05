@@ -40,13 +40,10 @@ describe('OmnuumCAManager', () => {
       const topic = Constants.ContractTopic.TEST;
 
       const tx = await omnuumCAManager.registerContract(fakeContract.address, topic);
-      const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(topic));
 
       await tx.wait();
 
-      await expect(tx)
-        .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
-        .withArgs(fakeContract.address, topic_hashed);
+      await expect(tx).to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered).withArgs(fakeContract.address, topic);
 
       const contract = await omnuumCAManager.managerContracts(fakeContract.address);
 
@@ -105,7 +102,6 @@ describe('OmnuumCAManager', () => {
       const contract_topics = [Constants.ContractTopic.TEST, Constants.ContractTopic.EXCHANGE, Constants.ContractTopic.REVEAL];
 
       const tx = await omnuumCAManager.registerContractMultiple(contract_addresses, contract_topics);
-      const hashed_topics = map((topic) => ethers.utils.keccak256(ethers.utils.toUtf8Bytes(topic)), contract_topics);
 
       await tx.wait();
 
@@ -114,7 +110,7 @@ describe('OmnuumCAManager', () => {
         mapC(async (i) => {
           await expect(tx)
             .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
-            .withArgs(contract_addresses[i], hashed_topics[i]);
+            .withArgs(contract_addresses[i], contract_topics[i]);
 
           const contract_struct = await omnuumCAManager.managerContracts(contract_addresses[i]);
           expect(parseStruct(contract_struct)).to.include({ topic: contract_topics[i], active: true });
@@ -164,7 +160,6 @@ describe('OmnuumCAManager', () => {
       const { omnuumCAManager, mockNFT: mockContract } = this;
 
       await (await omnuumCAManager.registerContract(mockContract.address, Constants.ContractTopic.TEST)).wait();
-      const topic_hashed = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(Constants.ContractTopic.TEST));
 
       const before_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(before_remove).to.be.true;
@@ -175,7 +170,7 @@ describe('OmnuumCAManager', () => {
 
       await expect(tx)
         .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRemoved)
-        .withArgs(mockContract.address, topic_hashed);
+        .withArgs(mockContract.address, Constants.ContractTopic.TEST);
 
       const after_remove = await omnuumCAManager.checkRegistration(mockContract.address);
       expect(after_remove).to.be.false;
