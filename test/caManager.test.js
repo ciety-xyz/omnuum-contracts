@@ -284,5 +284,17 @@ describe('OmnuumCAManager', () => {
         Constants.reasons.common.onlyOwner,
       );
     });
+
+    it('[Revert] if try to remove role that is not register to contract', async () => {
+      const { omnuumCAManager, mockNFT } = this;
+
+      await (await omnuumCAManager.addRole([mockNFT.address], Constants.contractRole.exchange)).wait();
+
+      // check has role
+      expect(await omnuumCAManager.hasRole(mockNFT.address, Constants.contractRole.exchange)).to.be.equal(true);
+
+      // remove role that is different
+      await expect(omnuumCAManager.removeRole([mockNFT.address], 'blah')).to.be.revertedWith(Constants.reasons.code.NX4);
+    });
   });
 });

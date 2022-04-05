@@ -67,6 +67,7 @@ module.exports = {
       NX1: 'NX1', // ERC721Metadata: URI query for nonexistent token
       NX2: 'NX2', // Non-existent wallet account
       NX3: 'NX3', // Non-existent owner request
+      NX4: 'NX4', // Non-existent role to CA
       // Number Error
       NE1: 'NE1', // Fee rate should be lower than 100%
       NE2: 'NE2', // Not reach consensus
