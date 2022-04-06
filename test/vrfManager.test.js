@@ -216,7 +216,7 @@ describe('OmnuumVRFManager', () => {
       const fee = ethers.utils.parseEther('2.5');
 
       const tx = await omnuumVRFManager.updateFee(fee);
-      const topic = 'fee';
+      const topic = 'vrfFee';
 
       await tx.wait();
 

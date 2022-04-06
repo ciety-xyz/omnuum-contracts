@@ -19,7 +19,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     OmnuumCAManager private caManager;
 
     /// @notice safety margin ratio of LINK/ETH exchange rate to prevent risk of price volatility
-    /// @dev 2 decimal (150 == 1.5)
+    /// @dev 2 decimals (150 == 1.5)
     uint16 public safetyRatio = 150;
 
     constructor(
@@ -126,7 +126,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @param _fee fee of ChainLink VRF
     function updateFee(uint256 _fee) external onlyOwner {
         fee = _fee;
-        emit Updated(_fee, 'fee');
+        emit Updated(_fee, 'vrfFee');
     }
 
     /// @notice update safety ratio
