@@ -52,7 +52,7 @@ const DEP_CONSTANTS = {
     revealManager: 'VRF',
   },
   nft: {
-    topic: 'NFT',
+    topic: 'DEPLOY_COL',
   },
 };
 

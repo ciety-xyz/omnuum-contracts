@@ -32,7 +32,6 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   });
 
   /* Register CA Manager itself */
-
   await (
     await caManager.proxyContract
       .connect(deploySigner)

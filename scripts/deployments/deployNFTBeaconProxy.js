@@ -73,16 +73,16 @@ const questions = [
   upgrades.silenceWarnings();
 
   console.log(`
-   
-   ****     ** ******** **********
-  /**/**   /**/**///// /////**///
-  /**//**  /**/**          /**
-  /** //** /**/*******     /**
-  /**  //**/**/**////      /**
-  /**   //****/**          /**
-  /**    //***/**          /**    
-  //      /// //           //
+   ****     **    ********   **********
+  /**/**   /**   /**/////   /////**///
+  /**//**  /**   /**            /**
+  /** //** /**   /*******       /**
+  /**  //**/**   /**////        /**
+  /**   //****   /**            /**
+  /**    //***   /**            /**
+  //      ///    //             //
   `);
+
   inquirer.prompt(questions).then(async (ans) => {
     try {
       const chainName = await getChainName();
@@ -102,7 +102,7 @@ const questions = [
       const nftContractFactory = (await ethers.getContractFactory('OmnuumNFT1155')).connect(OmnuumDeploySigner);
 
       const deployPayment = {
-        topic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(DEP_CONSTANTS.nft.topic)),
+        topic: DEP_CONSTANTS.nft.topic,
         description: ans.nft_collection_id, // collection_id for deployment
         value: { value: ethers.utils.parseEther(ans.payment_value) },
       };

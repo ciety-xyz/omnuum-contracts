@@ -170,6 +170,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
     log && alreadyDeployedConsole(contractName, history[contractName].proxyAddress);
 
     return {
+      skip: true,
       proxyContract: contractFactory.attach(history[contractName].proxyAddress),
       contractFactory,
       ...history[contractName],

@@ -43,7 +43,7 @@ const questions = [
   {
     name: inquirerParams.groupId,
     type: 'input',
-    message: '🤔 Ticket schedule group id is...(uint: dec)',
+    message: '🤔 Public schedule group id is...(uint: dec)',
     validate: nullCheck,
   },
   {
@@ -55,7 +55,7 @@ const questions = [
   {
     name: inquirerParams.publicPrice,
     type: 'input',
-    message: '🤔 Mint Price at public is...(unit: ETH)',
+    message: '🤔 Mint Price at public is...(must be greater or equal to public base price) (unit: ETH)',
     validate: nullCheck,
   },
   {
