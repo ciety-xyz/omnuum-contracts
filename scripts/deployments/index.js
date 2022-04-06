@@ -15,7 +15,7 @@ const {
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
 
-!(async () => {
+async function main(deployer_private_key) {
   try {
     console.log(`
          *******   ****     **** ****     ** **     ** **     ** ****     ****
@@ -33,7 +33,7 @@ const DEP_CONSTANTS = require('./deployConstants');
     const OmnuumDeploySigner =
       chainName === 'localhost'
         ? (await ethers.getSigners())[0]
-        : await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+        : await new ethers.Wallet(deployer_private_key || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
 
     const walletOwnerAccounts = createWalletOwnerAccounts(
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
@@ -118,4 +118,6 @@ const DEP_CONSTANTS = require('./deployConstants');
   } catch (e) {
     console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
   }
-})();
+}
+
+// main();

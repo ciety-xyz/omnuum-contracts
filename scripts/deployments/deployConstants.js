@@ -12,8 +12,6 @@ const DEP_CONSTANTS = {
     feeRate: 5000, // feeRate: 5.000 % (default)
   },
   wallet: {
-    consensusRatio: 66, // ( 2 of 3 consensus ratio)
-    minLimitForConsensus: 3, // (require minimum 3 votes to reach consensus)
     ownerAddresses: [
       process.env.WALLET_OWNER_A_ADDR,
       process.env.WALLET_OWNER_B_ADDR,

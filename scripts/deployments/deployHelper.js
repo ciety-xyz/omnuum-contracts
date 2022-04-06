@@ -58,11 +58,23 @@ const structurizeContractData = (deployObj) => ({
 
 const isLocalNetwork = async (provider) => {
   const { chainId } = await provider.getNetwork();
-  return Number(chainId) !== 1 && Number(chainId) !== 4;
+  return ![1, 2, 3, 4, 5].includes(+chainId);
 };
 
-const getRPCProvider = async (provider) =>
-  (await isLocalNetwork(provider)) ? new ethers.providers.JsonRpcProvider() : new ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
+const getRPCProvider = async () => {
+  const chainName = await getChainName();
+
+  const jsonRpcProvider =
+    chainName == 'localhost'
+      ? null
+      : chainName == 'rinkeby'
+      ? process.env.RINKEBY_URL
+      : chainName == 'ropsten'
+      ? process.env.ROPSTEN_URL
+      : null;
+
+  return new ethers.providers.JsonRpcProvider(jsonRpcProvider);
+};
 
 const nullCheck = (val) => {
   if (!(val === '')) {
@@ -72,7 +84,7 @@ const nullCheck = (val) => {
 };
 
 const getDateSuffix = () =>
-  `${new Date().toLocaleDateString().replaceAll('/', '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
+  `${new Date().toLocaleDateString().replace(/\//g, '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
 const deployConsoleRow = (title, data) => `  ${chalk.green(title)} ${data}\n`;
 
