@@ -10,7 +10,7 @@ const gas_price = 50; // in gwei
 const roundTo = (n, to) => Math.round(n * 10 ** to) / 10 ** to;
 const calcGasPrice = (gas) => roundTo((gas * gas_price) / 10 ** 9, 3);
 
-const { prepareDeploy, testDeploy, prepareMockDeploy } = require('../test/etc/mock.js');
+const { prepareDeploy, testDeploy, prepareMockDeploy, deployNFT } = require('../test/etc/mock.js');
 const { createTicket, signPayload, toSolDate } = require('../test/etc/util.js');
 const Constants = require('./constants.js');
 
@@ -93,7 +93,7 @@ async function createPublicMintCase(quantity) {
   console.log(`Public Minting Gas (${chalk.yellow(quantity)}): ${chalk.green(gas)}, ${chalk.green(calcGasPrice(gas))} ether`);
 }
 
-async function main() {
+async function estimateMintGas() {
   const quantity_cases = [1, 2, 3, 5, 10, 20, 50, 100];
 
   console.log('Ticket Case ----------');
@@ -104,4 +104,19 @@ async function main() {
   console.log('\n\n');
 }
 
-main();
+async function estimateNFTProxyDeploymentGas() {
+  await prepare();
+
+  const { NFTbeacon, OmnuumNFT1155, omnuumCAManager } = this;
+
+  const { deployTransaction } = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
+    caManagerAddress: omnuumCAManager.address,
+  });
+
+  const gas = await getGas(deployTransaction);
+
+  console.log(`NFT Proxy Deployment Minting Gas: ${chalk.green(gas)}, ${chalk.green(calcGasPrice(gas))} ether`);
+}
+
+// estimateMintGas();
+estimateNFTProxyDeploymentGas();
