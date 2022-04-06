@@ -105,19 +105,20 @@ async function main(deployer_private_key) {
     const filename = `${chainName}_${getDateSuffix()}.json`;
 
     await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
-    await writeFile(`./scripts/deployments/deployResults/managers/${filename}`, Buffer.from(JSON.stringify(resultData)), 'utf8');
+    await writeFile(`./scripts/deployments/deployResults/managers/${filename}`, JSON.stringify(resultData), 'utf8');
 
     await rm(prev_history_file_path); // delete tmp deploy history file
 
     await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
-    await writeFile(
-      `./scripts/deployments/deployResults/subgraphManifest/${filename}`,
-      Buffer.from(JSON.stringify(subgraphManifestData)),
-      'utf-8',
-    );
+    await writeFile(`./scripts/deployments/deployResults/subgraphManifest/${filename}`, JSON.stringify(subgraphManifestData), 'utf-8');
+
+    return resultData;
   } catch (e) {
     console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
+    return null;
   }
 }
 
 // main();
+
+module.exports = main;

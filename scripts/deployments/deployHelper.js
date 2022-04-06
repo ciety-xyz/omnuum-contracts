@@ -47,10 +47,12 @@ const structurizeProxyData = (deployObj) => ({
   admin: deployObj.adminAddress,
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
   blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
+  address: deployObj.proxyContract.address,
 });
 
 const structurizeContractData = (deployObj) => ({
   contract: deployObj.contract.address,
+  address: deployObj.contract.address,
   gasUsed: ethers.BigNumber.from(deployObj.gasUsed).toNumber(),
   blockNumber: ethers.BigNumber.from(deployObj.blockNumber).toNumber(),
   args: deployObj.args || [],
