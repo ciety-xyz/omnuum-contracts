@@ -45,7 +45,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   });
 
   /* Deploy Exchange */
-  const exchanger = await deployProxy({
+  const exchange = await deployProxy({
     contractName: 'OmnuumExchange',
     deploySigner,
     args: [caManager.proxyContract.address],
@@ -98,7 +98,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
       .registerContractMultiple(
         [
           mintManager.proxyContract.address,
-          exchanger.proxyContract.address,
+          exchange.proxyContract.address,
           ticketManager.contract.address,
           revealManager.contract.address,
           senderVerifier.contract.address,
@@ -134,7 +134,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
     vrfManager,
     mintManager,
     caManager,
-    exchanger,
+    exchange,
     ticketManager,
     senderVerifier,
     revealManager,

@@ -57,7 +57,7 @@ async function main(deployer_private_key) {
       () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata)),
     );
 
-    const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } =
+    const { nft, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
       await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts });
 
     const resultData = {
@@ -66,7 +66,7 @@ async function main(deployer_private_key) {
       deployer: OmnuumDeploySigner.address,
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
-      exchanger: structurizeProxyData(exchanger),
+      exchange: structurizeProxyData(exchange),
       wallet: structurizeContractData(wallet),
       ticketManager: structurizeContractData(ticketManager),
       vrfManager: structurizeContractData(vrfManager),
