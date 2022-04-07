@@ -15,7 +15,7 @@ const {
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
 
-!(async () => {
+async function main(deployer_private_key) {
   try {
     console.log(`
          *******   ****     **** ****     ** **     ** **     ** ****     ****
@@ -30,10 +30,14 @@ const DEP_CONSTANTS = require('./deployConstants');
 
     const chainName = await getChainName();
 
+    // prepare deploy result directory structure
+    await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
+    await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
+
     const OmnuumDeploySigner =
       chainName === 'localhost'
         ? (await ethers.getSigners())[0]
-        : await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+        : await new ethers.Wallet(deployer_private_key || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
 
     const walletOwnerAccounts = createWalletOwnerAccounts(
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
@@ -57,7 +61,7 @@ const DEP_CONSTANTS = require('./deployConstants');
       () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata)),
     );
 
-    const { nft, vrfManager, mintManager, caManager, exchanger, ticketManager, senderVerifier, revealManager, wallet } =
+    const { nft, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
       await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts });
 
     const resultData = {
@@ -66,7 +70,7 @@ const DEP_CONSTANTS = require('./deployConstants');
       deployer: OmnuumDeploySigner.address,
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
-      exchanger: structurizeProxyData(exchanger),
+      exchange: structurizeProxyData(exchange),
       wallet: structurizeContractData(wallet),
       ticketManager: structurizeContractData(ticketManager),
       vrfManager: structurizeContractData(vrfManager),
@@ -104,18 +108,17 @@ const DEP_CONSTANTS = require('./deployConstants');
 
     const filename = `${chainName}_${getDateSuffix()}.json`;
 
-    await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
-    await writeFile(`./scripts/deployments/deployResults/managers/${filename}`, Buffer.from(JSON.stringify(resultData)), 'utf8');
-
+    await writeFile(`./scripts/deployments/deployResults/managers/${filename}`, JSON.stringify(resultData), 'utf8');
     await rm(prev_history_file_path); // delete tmp deploy history file
+    await writeFile(`./scripts/deployments/deployResults/subgraphManifest/${filename}`, JSON.stringify(subgraphManifestData), 'utf-8');
 
-    await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
-    await writeFile(
-      `./scripts/deployments/deployResults/subgraphManifest/${filename}`,
-      Buffer.from(JSON.stringify(subgraphManifestData)),
-      'utf-8',
-    );
+    return resultData;
   } catch (e) {
     console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
+    return null;
   }
-})();
+}
+
+// main();
+
+module.exports = main;

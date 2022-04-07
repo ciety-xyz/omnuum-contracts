@@ -57,7 +57,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @notice request vrf call
     /// @dev only allowed contract which has VRF role
     /// @param _topic contract which will use this vrf result
-    function requestVRF(string calldata _topic) external {
+    function requestVRF(string calldata _topic) external payable {
         address exchangeAddress = caManager.getContract('EXCHANGE');
 
         // @custom:error (OO7) - Only role owner can access
@@ -65,6 +65,9 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
         // @custom:error (SE7) - Not enough LINK at exchange contract
         require(LINK.balanceOf(exchangeAddress) >= fee, 'SE7');
+
+        /// @custom:dev receive link from exchange, send all balance because there isn't any withdraw feature
+        OmnuumExchange(exchangeAddress).exchangeToken{ value: address(this).balance }(s_LINK, fee, address(this));
 
         bytes32 requestId = requestRandomness(s_key_hash, fee);
         idToA[requestId] = msg.sender;
@@ -79,13 +82,13 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
     /// @param _targetAddress contract which will use this vrf result
     /// @param _topic contract which will use this vrf result
     function requestVRFOnce(address _targetAddress, string calldata _topic) external payable {
-        // @custom:error (OO7) - Only role owner can access
-        require(caManager.hasRole(msg.sender, 'VRF'), 'OO7');
-
         /// @custom:error (SE8) - Already used address
         require(aToId[_targetAddress] == '', 'SE8');
 
         address exchangeAddress = caManager.getContract('EXCHANGE');
+
+        // @custom:error (OO7) - Only role owner can access
+        require(caManager.hasRole(msg.sender, 'VRF'), 'OO7');
 
         /// @custom:error (SE7) - Not enough LINK at exchange contract
         require(LINK.balanceOf(exchangeAddress) >= fee, 'SE7');

@@ -33,9 +33,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
 
   /* Register CA Manager itself */
   await (
-    await caManager.proxyContract
-      .connect(deploySigner)
-      .registerContract(caManager.proxyContract.address, DEP_CONSTANTS.caManager.topic, { gasLimit: 10_000_000 })
+    await caManager.proxyContract.connect(deploySigner).registerContract(caManager.proxyContract.address, DEP_CONSTANTS.caManager.topic)
   ).wait(DEP_CONSTANTS.confirmWait);
   console.log(`\n${chalk.yellow('Complete self-registration to CA Manager')} - ${new Date()}`);
 
@@ -47,7 +45,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   });
 
   /* Deploy Exchange */
-  const exchanger = await deployProxy({
+  const exchange = await deployProxy({
     contractName: 'OmnuumExchange',
     deploySigner,
     args: [caManager.proxyContract.address],
@@ -83,7 +81,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   const wallet = await deployNormal({
     contractName: 'OmnuumWallet',
     deploySigner,
-    args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
+    args: [walletOwnerAccounts],
   });
 
   /* Deploy NFT1155 Beacon */
@@ -100,7 +98,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
       .registerContractMultiple(
         [
           mintManager.proxyContract.address,
-          exchanger.proxyContract.address,
+          exchange.proxyContract.address,
           ticketManager.contract.address,
           revealManager.contract.address,
           senderVerifier.contract.address,
@@ -136,7 +134,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
     vrfManager,
     mintManager,
     caManager,
-    exchanger,
+    exchange,
     ticketManager,
     senderVerifier,
     revealManager,
