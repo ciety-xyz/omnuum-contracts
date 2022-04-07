@@ -7,6 +7,8 @@ module.exports = {
       Ticket: 'Ticket',
       Public: 'Public',
       Uri: 'Uri',
+      TransferBalance: 'TransferBalance',
+      EtherReceived: 'EtherReceived',
     },
     MintManager: {
       SetSpecialFeeRate: 'SetSpecialFeeRate',

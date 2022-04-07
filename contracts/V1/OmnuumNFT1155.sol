@@ -33,6 +33,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     event Uri(address indexed nftContract, string uri);
     event FeePaid(address indexed payer, uint256 amount);
+    event TransferBalance(uint256 value, address indexed receiver);
+    event EtherReceived(address indexed sender);
 
     /// @notice constructor function for upgradeable
     /// @param _caManagerAddress ca manager address
@@ -160,8 +162,22 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         return !isRevealed ? coverUri : super.uri(1);
     }
 
-    /// @notice withdraw balance
-    function withdraw() external onlyOwner {
-        payable(msg.sender).sendValue(address(this).balance);
+    /// @notice transfer balance of the contract to someone (maybe the project team member), including project owner him or herself
+    /// @param _value - the amount of value to transfer
+    /// @param _to - receiver
+    function transferBalance(uint256 _value, address _to) external onlyOwner {
+        /// @custom:error (NE4) - Insufficient balance
+        require(_value <= address(this).balance, 'NE4');
+        (bool withdrawn, ) = payable(_to).call{ value: _value }('');
+
+        /// @custom:error (SE5) - Address: unable to send value, recipient may have reverted
+        require(withdrawn, 'SE5');
+
+        emit TransferBalance(_value, _to);
+    }
+
+    /// @notice a function to donate to support the project owner. Hooray~!
+    receive() external payable {
+        emit EtherReceived(msg.sender);
     }
 }

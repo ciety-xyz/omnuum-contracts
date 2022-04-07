@@ -158,7 +158,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @param _tos list of minting target address
     /// @param _quantitys list of minting quantity which is paired with _tos
     function mintMultiple(
-        address _nftContract,
+        address payable _nftContract,
         address[] calldata _tos,
         uint16[] calldata _quantitys
     ) external payable {

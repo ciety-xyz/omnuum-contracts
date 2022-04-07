@@ -36,7 +36,7 @@ contract MockNFT is Ownable {
     }
 
     function publicContractMint(
-        address _target,
+        address payable _target,
         uint16 _groupId,
         uint32 _quantity,
         SenderVerifier.Payload calldata _payload
@@ -45,7 +45,7 @@ contract MockNFT is Ownable {
     }
 
     function ticketContractMint(
-        address _target,
+        address payable _target,
         uint32 _quantity,
         TicketManager.Ticket calldata _ticket,
         SenderVerifier.Payload calldata _payload
