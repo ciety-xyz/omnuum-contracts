@@ -7,6 +7,7 @@ require('chai').should();
 
 const { createNftContractArgs, prepareDeploy, testDeploy, deployNFT, prepareMockDeploy } = require('./etc/mock.js');
 const { signPayload, nullAddress, toSolDate, calcGasFeeInEther, createTicket } = require('./etc/util.js');
+const { reasons, events } = require('../utils/constants');
 
 const nonce = 1;
 const end_date = toSolDate(addDays(new Date(), 2));
@@ -812,10 +813,10 @@ describe('OmnuumNFT', () => {
     });
   });
 
-  describe('[Method] withdraw', () => {
-    it('Should withdraw balance', async () => {
+  describe('[Method] transferBalance', () => {
+    it('Should transfer the contract balance (to owner himself or somebody)', async () => {
       const {
-        accounts: [omnuumAC, minterAC, prjOwnerAC],
+        accounts: [omnuumAC, minterAC, prjOwnerAC, somebodyAC],
         senderVerifier,
         NFTbeacon,
         OmnuumNFT1155,
@@ -828,48 +829,93 @@ describe('OmnuumNFT', () => {
         prjOwner: prjOwnerAC.address,
       });
 
-      const ticketCount = 2;
-
-      const price = ethers.utils.parseEther('0.2');
-
+      // Ticketing
+      const ticketCount = 5;
+      const price = ethers.utils.parseEther('1');
       const ticket = await createTicket(
         { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: ticketCount },
         omnuumAC,
         ticketManager.address,
       );
       await (await ticketManager.connect(prjOwnerAC).setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
-
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, omnuumAC, senderVerifier.address);
-
-      const prev_bal = await prjOwnerAC.getBalance();
-
-      // send money
       await (
         await omnuumNFT1155.connect(minterAC).ticketMint(ticketCount, ticket, payload, {
           value: price.mul(ticketCount),
         })
       ).wait();
 
-      const receipt = await (await omnuumNFT1155.connect(prjOwnerAC).withdraw()).wait();
+      // Event emit check
+      const testValue = ethers.utils.parseEther('0.123');
+      await expect(omnuumNFT1155.connect(prjOwnerAC).transferBalance(testValue, prjOwnerAC.address))
+        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferBalance)
+        .withArgs(testValue, prjOwnerAC.address);
 
-      const gas_fee = calcGasFeeInEther(receipt);
+      // Transfer Ether to Owner himself, then check the change of balances between OmnuumNFT1155 (decrement) and project Owner (increment)
+      const transferEtherToOwnerSelf = ethers.utils.parseEther('1.492874');
+      const transferBalanceTx = omnuumNFT1155.connect(prjOwnerAC).transferBalance(transferEtherToOwnerSelf, prjOwnerAC.address);
+      await expect(() => transferBalanceTx).to.changeEtherBalance(omnuumNFT1155, transferEtherToOwnerSelf.mul('-1'));
+      await expect(() => transferBalanceTx).to.changeEtherBalance(prjOwnerAC, transferEtherToOwnerSelf);
 
-      const cur_bal = await prjOwnerAC.getBalance();
+      // Transfer Ether to someone, then check the change of balances between OmnuumNFT1155 (decrement) and someone (increment)
+      const transferEtherToSomebody = ethers.utils.parseEther('0.7389724');
+      const transferBalanceSomebodyTx = omnuumNFT1155.connect(prjOwnerAC).transferBalance(transferEtherToSomebody, somebodyAC.address);
+      await expect(() => transferBalanceSomebodyTx).to.changeEtherBalance(omnuumNFT1155, transferEtherToSomebody.mul('-1'));
+      await expect(() => transferBalanceSomebodyTx).to.changeEtherBalance(somebodyAC, transferEtherToSomebody);
+    });
 
-      const mint_fee = price
-        .mul(ticketCount)
-        .mul(Constants.testValues.feeRate)
-        .div(10 ** 5);
-
-      expect(cur_bal).to.be.equal(prev_bal.add(price.mul(ticketCount).sub(mint_fee).sub(gas_fee)));
-    }).timeout(5000);
     it('[Revert] only owner', async () => {
       const {
         omnuumNFT1155,
         accounts: [, not_omnuumAC],
       } = this;
 
-      await expect(omnuumNFT1155.connect(not_omnuumAC).withdraw()).to.be.revertedWith(Constants.reasons.common.onlyOwner);
+      await expect(
+        omnuumNFT1155.connect(not_omnuumAC).transferBalance(ethers.utils.parseEther('0'), not_omnuumAC.address),
+      ).to.be.revertedWith(Constants.reasons.common.onlyOwner);
+    });
+
+    it('[Revert] owner, but insufficient balance', async () => {
+      const {
+        accounts: [prjOwnerAC, somebodyAC],
+        NFTbeacon,
+        OmnuumNFT1155,
+        omnuumCAManager,
+      } = this;
+
+      const omnuumNFT1155 = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
+        caManagerAddress: omnuumCAManager.address,
+        prjOwner: prjOwnerAC.address,
+      });
+
+      await expect(
+        omnuumNFT1155.connect(prjOwnerAC).transferBalance(ethers.utils.parseEther('999999'), somebodyAC.address),
+      ).to.be.revertedWith(Constants.reasons.code.NE4);
+    });
+  });
+  describe('[Method] receive', () => {
+    it('can receive Ether', async () => {
+      const {
+        accounts: [prjOwnerAC, madFan],
+        NFTbeacon,
+        OmnuumNFT1155,
+        omnuumCAManager,
+      } = this;
+      const omnuumNFT1155 = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
+        caManagerAddress: omnuumCAManager.address,
+        prjOwner: prjOwnerAC.address,
+      });
+
+      const donation = ethers.utils.parseEther('10');
+
+      const sendEtherTx = madFan.sendTransaction({
+        to: omnuumNFT1155.address,
+        value: donation,
+      });
+
+      await expect(() => sendEtherTx).to.changeEtherBalance(omnuumNFT1155, donation);
+
+      await expect(sendEtherTx).to.emit(omnuumNFT1155, Constants.events.NFT.EtherReceived).withArgs(madFan.address);
     });
   });
 });
