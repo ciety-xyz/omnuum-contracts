@@ -38,7 +38,7 @@ const questions = [
   {
     name: inquirerParams.nftOwnerPrivateKey,
     type: 'input',
-    message: '🤔 NFT project owner private key is ...',
+    message: '🤔 NFT owner private key is ...',
     validate: nullCheck,
   },
   {
@@ -71,12 +71,10 @@ const questions = [
         data: 0x0,
       };
 
-      console.log(...Object.values(inputs));
-
       const nftContract = new ethers.Contract(
         ans.nftContractAddress,
         ['function safeTransferFrom(address, address, uint256, uint256, bytes memory)'],
-        nftOwnerSigner
+        nftOwnerSigner,
       );
 
       const txResponse = await nftContract.connect(nftOwnerSigner).safeTransferFrom(...Object.values(inputs));
@@ -86,7 +84,7 @@ const questions = [
 
       console.log(txReceipt);
       console.log(
-        `💋 SafeTransfer of Token ${ans.tokenId} from Collection ${ans.nftContractAddress} is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`
+        `💋 SafeTransfer of Token ${ans.tokenId} from Collection ${ans.nftContractAddress} is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`,
       );
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
