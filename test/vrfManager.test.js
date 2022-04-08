@@ -23,15 +23,16 @@ describe('OmnuumVRFManager', () => {
 
   describe('[Method] requestVRF', () => {
     it('Should request VRF and receive response (local mock)', async () => {
-      const { omnuumVRFManager, mockVrfCoords, mockVrfRequester } = this;
+      const { omnuumVRFManager, mockVrfCoords, mockVrfRequester, omnuumExchange } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
       const requestTx = await mockVrfRequester.requestVRF(omnuumVRFManager.address);
 
-      const iface = omnuumVRFManager.interface;
+      const vrfIface = omnuumVRFManager.interface;
+      const exchangeIface = omnuumExchange.interface;
 
-      const [requestEvent] = parseEvent([iface], await requestTx.wait());
+      const [, requestEvent] = parseEvent([exchangeIface, vrfIface], await requestTx.wait());
       const {
         args: { requestId, roller },
       } = requestEvent;
