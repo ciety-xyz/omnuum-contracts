@@ -23,7 +23,6 @@ const questions = [
     name: inquirerParams.dev_deployer_private_key,
     type: 'input',
     message: '🤔 Dev deployer private key is ...',
-    validate: nullCheck,
   },
   {
     name: inquirerParams.project_owner_private_key,
