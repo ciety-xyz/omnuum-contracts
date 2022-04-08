@@ -18,16 +18,12 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @notice (omnuum contract address => (bytes32 topic => hasRole))
     mapping(address => mapping(string => bool)) public roles;
 
-    /// @notice (nft contract address => is registered)
-    mapping(address => bool) public nftContracts;
-
     /// @notice (omnuum contract address => (topic, active))
     mapping(address => Contract) public managerContracts;
 
     // @notice topic indexed mapping, (string topic => omnuum contract address)
     mapping(string => address) public indexedContracts;
 
-    event NftContractRegistered(address indexed nftContract, address indexed nftOwner);
     event ManagerContractRegistered(address indexed managerContract, string topic);
     event ManagerContractRemoved(address indexed managerContract, string topic);
     event RoleAdded(address indexed ca, string role);
@@ -85,18 +81,6 @@ contract OmnuumCAManager is OwnableUpgradeable {
         for (uint256 i = 0; i < len; i++) {
             registerContract(_CAs[i], _topics[i]);
         }
-    }
-
-    /// @notice Register nft contracts
-    /// @param _nftContract nft contract address to register
-    function registerNftContract(address _nftContract) external onlyOwner {
-        /// @custom:error (AE2) - Contract address not acceptable
-        require(_nftContract.isContract(), 'AE2');
-
-        address initialOwner = OwnableUpgradeable(_nftContract).owner();
-
-        nftContracts[_nftContract] = true;
-        emit NftContractRegistered(_nftContract, initialOwner);
     }
 
     /// @notice Register contract address with topic

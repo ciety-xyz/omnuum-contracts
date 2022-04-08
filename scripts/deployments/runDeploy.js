@@ -5,14 +5,21 @@ const main = require('./index');
 const { nullCheck } = require('./deployHelper');
 
 const inquirerParams = {
-  dev_deployer_private_key: 'dev_deployer_private_key',
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  signatureSignerAddress: 'signatureSignerAddress',
 };
 
 const questions = [
   {
-    name: inquirerParams.dev_deployer_private_key,
+    name: inquirerParams.devDeployerPrivateKey,
     type: 'input',
     message: '🤔 Dev deployer private key is ...',
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.signatureSignerAddress,
+    type: 'input',
+    message: '🤔 Sinature signer address is ...',
     validate: nullCheck,
   },
 ];
@@ -20,7 +27,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      await main(ans.dev_deployer_private_key);
+      await main(ans.devDeployerPrivateKey, ans.signatureSignerAddress);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

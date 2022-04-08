@@ -1,30 +1,48 @@
-const { upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 const chalk = require('chalk');
-const { ContractTopic } = require('../../utils/constants');
+const { go } = require('fxjs');
+const CONSTANTS = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
 const { deployProxy, deployNormal, deployBeacon, getChainName } = require('./deployHelper');
+const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
 
 const deployNFT = async ({
-  nftBeaconAddress,
-  nftContractFactory,
-  caManageProxyAddr,
-  devDeployerAddr,
+  projectOwnerSigner,
+  signerPrivateKey,
+  senderVerifierAddress,
   maxSupply,
   coverUri,
-  projectOwnerAddress,
+  nftFactoryAddress,
+  collectionId,
 }) => {
   /* Deploy NFT1155 Beacon Proxy */
-  const nftBeaconProxy = await upgrades.deployBeaconProxy(
-    nftBeaconAddress,
-    nftContractFactory,
-    [caManageProxyAddr, devDeployerAddr, maxSupply, coverUri, projectOwnerAddress],
-    { pollingInterval: DEP_CONSTANTS.pollingInterval },
-  );
-  const deployReceipt = await (await nftBeaconProxy.deployed()).deployTransaction.wait(DEP_CONSTANTS.confirmWait);
-  return { beaconProxy: nftBeaconProxy, deployReceipt };
+  const NftFactory = await ethers.getContractFactory('NftFactory');
+
+  // in this case, minterAddress means nft project owner
+  const payload = await getPayloadWithSignature({
+    senderVerifierAddress,
+    minterAddress: projectOwnerSigner.address,
+    payloadTopic: CONSTANTS.payloadTopic.deployNFT,
+    groupId: collectionId,
+    signerPrivateKey,
+  });
+
+  // 배포 메소드 호출
+  const txResponse = await NftFactory.attach(nftFactoryAddress)
+    .connect(projectOwnerSigner)
+    .deploy(maxSupply, coverUri, collectionId, payload);
+  const deployReceipt = await txResponse.wait();
+
+  const { logs } = deployReceipt;
+
+  const {
+    args: { nftContract: beaconProxyAddress },
+  } = NftFactory.interface.parseLog(logs[logs.length - 1]);
+
+  return { beaconProxyAddress, deployReceipt };
 };
 
-const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
+const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts }) => {
   /* Deploy CA Manager */
   const caManager = await deployProxy({
     contractName: 'OmnuumCAManager',
@@ -90,6 +108,12 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
     deploySigner,
   });
 
+  const nftFactory = await deployNormal({
+    contractName: 'NftFactory',
+    deploySigner,
+    args: [caManager.proxyContract.address, nft.beacon.address, signatureSignerAddress],
+  });
+
   /* Register CA accounts to CA Manager */
   console.log(`\n${chalk.green('Start Contract Registrations to CA Manager...')} - ${new Date()}`);
   await (
@@ -104,15 +128,17 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
           senderVerifier.contract.address,
           vrfManager.contract.address,
           wallet.contract.address,
+          nftFactory.contract.address,
         ],
         [
-          ContractTopic.MINTMANAGER,
-          ContractTopic.EXCHANGE,
-          ContractTopic.TICKET,
-          ContractTopic.REVEAL,
-          ContractTopic.VERIFIER,
-          ContractTopic.VRF,
-          ContractTopic.WALLET,
+          CONSTANTS.ContractTopic.MINTMANAGER,
+          CONSTANTS.ContractTopic.EXCHANGE,
+          CONSTANTS.ContractTopic.TICKET,
+          CONSTANTS.ContractTopic.REVEAL,
+          CONSTANTS.ContractTopic.VERIFIER,
+          CONSTANTS.ContractTopic.VRF,
+          CONSTANTS.ContractTopic.WALLET,
+          CONSTANTS.ContractTopic.NFTFACTORY,
         ],
       )
   ).wait(DEP_CONSTANTS.confirmWait);
@@ -131,6 +157,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
 
   return {
     nft,
+    nftFactory,
     vrfManager,
     mintManager,
     caManager,

@@ -15,7 +15,7 @@ const {
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
 
-async function main(deployer_private_key) {
+async function main(deployerPrivateKey, signatureSignerAddress) {
   try {
     console.log(`
          *******   ****     **** ****     ** **     ** **     ** ****     ****
@@ -37,7 +37,7 @@ async function main(deployer_private_key) {
     const OmnuumDeploySigner =
       chainName === 'localhost'
         ? (await ethers.getSigners())[0]
-        : await new ethers.Wallet(deployer_private_key || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+        : await new ethers.Wallet(deployerPrivateKey || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
 
     const walletOwnerAccounts = createWalletOwnerAccounts(
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
@@ -61,8 +61,8 @@ async function main(deployer_private_key) {
       () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata)),
     );
 
-    const { nft, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts });
+    const { nft, nftFactory, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
+      await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts, signatureSignerAddress });
 
     const resultData = {
       network: chainName,
@@ -80,6 +80,7 @@ async function main(deployer_private_key) {
         impl: nft.implAddress,
         beacon: nft.beacon.address,
       },
+      nftFactory: structurizeContractData(nftFactory),
     };
 
     const subgraphManifestData = {

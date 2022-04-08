@@ -112,6 +112,7 @@ module.exports = {
   payloadTopic: {
     mint: 'MINT',
     ticket: 'TICKET',
+    deployNFT: 'DEPLOY_NFT',
   },
   ContractTopic: {
     VRF: 'VRF',
@@ -124,6 +125,7 @@ module.exports = {
     TEST: 'TEST',
     REVEAL: 'REVEAL',
     CAMANAGER: 'CAMANAGER',
+    NFTFACTORY: 'NFTFACTORY',
   },
   vrfTopic: {
     REVEAL_PFP: 'REVEAL_PFP',

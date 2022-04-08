@@ -18,7 +18,7 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        count: 100,
+        count: 10,
       },
       mining: {
         auto: true,
