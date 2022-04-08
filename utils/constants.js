@@ -21,9 +21,9 @@ module.exports = {
     CAManager: {
       RoleAdded: 'RoleAdded',
       RoleRemoved: 'RoleRemoved',
-      ManagerContractRegistered: 'ManagerContractRegistered',
+      ContractRegistered: 'ContractRegistered',
+      ContractRemoved: 'ContractRemoved',
       NftContractRegistered: 'NftContractRegistered',
-      ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
       SetTicketSchedule: 'SetTicketSchedule',
@@ -112,6 +112,7 @@ module.exports = {
   payloadTopic: {
     mint: 'MINT',
     ticket: 'TICKET',
+    deployNFT: 'DEPLOY_NFT',
   },
   ContractTopic: {
     VRF: 'VRF',
@@ -124,6 +125,7 @@ module.exports = {
     TEST: 'TEST',
     REVEAL: 'REVEAL',
     CAMANAGER: 'CAMANAGER',
+    NFTFACTORY: 'NFTFACTORY',
   },
   vrfTopic: {
     REVEAL_PFP: 'REVEAL_PFP',
@@ -156,5 +158,6 @@ module.exports = {
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
+    collectionId: 71,
   },
 };

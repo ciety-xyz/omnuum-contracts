@@ -201,7 +201,8 @@ describe('TicketManager', () => {
         omnuumNFT1155,
         ticketManager,
         senderVerifier,
-        accounts: [omnuumAC, minterAC],
+        accounts: [, minterAC],
+        signatureSigner,
       } = this;
 
       const price = ethers.utils.parseEther('0.1');
@@ -217,12 +218,12 @@ describe('TicketManager', () => {
           price,
           quantity,
         },
-        omnuumAC,
+        signatureSigner,
         ticketManager.address,
       );
       await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, omnuumAC, senderVerifier.address);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, signatureSigner, senderVerifier.address);
 
       const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity, ticket, payload, {
         value: price.mul(use_quantity),
@@ -236,7 +237,8 @@ describe('TicketManager', () => {
         omnuumNFT1155,
         ticketManager,
         senderVerifier,
-        accounts: [omnuumAC, minterAC],
+        accounts: [, minterAC],
+        signatureSigner,
       } = this;
 
       const price = ethers.utils.parseEther('0.1');
@@ -255,12 +257,12 @@ describe('TicketManager', () => {
           price,
           quantity,
         },
-        omnuumAC,
+        signatureSigner,
         ticketManager.address,
       );
       await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
 
-      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, omnuumAC, senderVerifier.address);
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, nonce, signatureSigner, senderVerifier.address);
 
       const tx1 = await omnuumNFT1155.connect(minterAC).ticketMint(use_quantity1, ticket, payload, {
         value: price.mul(use_quantity1),

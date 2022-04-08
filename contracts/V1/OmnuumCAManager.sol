@@ -18,18 +18,14 @@ contract OmnuumCAManager is OwnableUpgradeable {
     /// @notice (omnuum contract address => (bytes32 topic => hasRole))
     mapping(address => mapping(string => bool)) public roles;
 
-    /// @notice (nft contract address => is registered)
-    mapping(address => bool) public nftContracts;
-
     /// @notice (omnuum contract address => (topic, active))
     mapping(address => Contract) public managerContracts;
 
     // @notice topic indexed mapping, (string topic => omnuum contract address)
     mapping(string => address) public indexedContracts;
 
-    event NftContractRegistered(address indexed nftContract, address indexed nftOwner);
-    event ManagerContractRegistered(address indexed managerContract, string topic);
-    event ManagerContractRemoved(address indexed managerContract, string topic);
+    event ContractRegistered(address indexed managerContract, string topic);
+    event ContractRemoved(address indexed managerContract, string topic);
     event RoleAdded(address indexed ca, string role);
     event RoleRemoved(address indexed ca, string role);
 
@@ -87,18 +83,6 @@ contract OmnuumCAManager is OwnableUpgradeable {
         }
     }
 
-    /// @notice Register nft contracts
-    /// @param _nftContract nft contract address to register
-    function registerNftContract(address _nftContract) external onlyOwner {
-        /// @custom:error (AE2) - Contract address not acceptable
-        require(_nftContract.isContract(), 'AE2');
-
-        address initialOwner = OwnableUpgradeable(_nftContract).owner();
-
-        nftContracts[_nftContract] = true;
-        emit NftContractRegistered(_nftContract, initialOwner);
-    }
-
     /// @notice Register contract address with topic
     /// @param _CA contract address
     /// @param _topic topic for address
@@ -111,7 +95,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
         managerContracts[_CA] = Contract(_topic, true);
         indexedContracts[_topic] = _CA;
-        emit ManagerContractRegistered(_CA, _topic);
+        emit ContractRegistered(_CA, _topic);
     }
 
     /// @notice Check whether contract address is registered
@@ -131,7 +115,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
             delete indexedContracts[topic];
         }
 
-        emit ManagerContractRemoved(_CA, topic);
+        emit ContractRemoved(_CA, topic);
     }
 
     /// @notice Get contract address for specified topic
