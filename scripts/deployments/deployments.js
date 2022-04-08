@@ -81,7 +81,7 @@ const deployManagers = async ({ deploySigner, walletOwnerAccounts }) => {
   const wallet = await deployNormal({
     contractName: 'OmnuumWallet',
     deploySigner,
-    args: [walletOwnerAccounts],
+    args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
   });
 
   /* Deploy NFT1155 Beacon */

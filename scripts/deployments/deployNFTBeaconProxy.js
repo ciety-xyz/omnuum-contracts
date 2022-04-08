@@ -20,6 +20,11 @@ const inquirerParams = {
 
 const questions = [
   {
+    name: inquirerParams.dev_deployer_private_key,
+    type: 'input',
+    message: '🤔 Dev deployer private key is ...',
+  },
+  {
     name: inquirerParams.project_owner_private_key,
     type: 'input',
     message: '🤔 Project owner private key who become owner is...',
@@ -92,7 +97,7 @@ const questions = [
       const OmnuumDeploySigner =
         chainName === 'localhost'
           ? (await ethers.getSigners())[0]
-          : await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, provider);
+          : await new ethers.Wallet(ans.dev_deployer_private_key || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, provider);
       const devDeployerAddr = await OmnuumDeploySigner.getAddress();
       const projectOwnerSigner = new ethers.Wallet(ans.project_owner_private_key, provider);
       const projectOwnerAddress = projectOwnerSigner.address;

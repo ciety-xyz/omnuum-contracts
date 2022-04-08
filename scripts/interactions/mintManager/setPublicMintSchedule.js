@@ -82,7 +82,7 @@ const questions = [
           toSolDate(addHours(new Date(), Number(ans.end_day_from_now))),
           ethers.utils.parseEther(ans.base_price),
           Number(ans.supply),
-          Number(ans.max_mint_at_address)
+          Number(ans.max_mint_at_address),
         );
 
       const txReceipt = await txResponse.wait();
