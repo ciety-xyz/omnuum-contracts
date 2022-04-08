@@ -417,8 +417,7 @@ describe('OmnuumMintManager', () => {
     it('[Revert] NFT remaining quantity is less than requested', async () => {
       const { omnuumMintManager, accounts } = this;
 
-      const omnuumNFT1155 = await deployNFT(this.NFTbeacon, this.OmnuumNFT1155, this, {
-        caManagerAddress: this.omnuumCAManager.address,
+      const omnuumNFT1155 = await deployNFT(this, {
         maxSupply: 10,
       });
 
