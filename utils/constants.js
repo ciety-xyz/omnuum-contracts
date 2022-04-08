@@ -158,5 +158,6 @@ module.exports = {
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
+    collectionId: 71,
   },
 };
