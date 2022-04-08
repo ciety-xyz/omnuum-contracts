@@ -151,7 +151,7 @@ module.exports = {
     walletOwnersLen: 3,
     minFee: ethers.utils.parseEther('0.0005'),
     sendEthValue: '10',
-    consensusRatio: 66,
+    consensusRatio: 55,
     minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',

@@ -56,15 +56,19 @@ module.exports = {
       map(([vote, signer]) => ({ addr: signer.address, vote })),
     );
 
-    this.omnuumWallet = await this.OmnuumWallet.deploy(this.walletOwnerAccounts);
+    this.omnuumWallet = await this.OmnuumWallet.deploy(
+      testValues.consensusRatio,
+      testValues.minLimitForConsensus,
+      this.walletOwnerAccounts,
+    );
     this.revealManager = await this.RevealManager.deploy(this.omnuumCAManager.address);
-    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester, this.mockExchange]  = await go(
+    [this.senderVerifier, this.ticketManager, this.mockLink, this.mockVrfCoords, this.mockVrfRequester, this.mockExchange] = await go(
       [this.SenderVerifier, this.TicketManager, this.MockLink, this.MockVrfCoords, this.MockVrfRequester, this.MockExchange],
       mapC(async (conFactory) => {
         const contract = await conFactory.deploy();
         await contract.deployed();
         return contract;
-      })
+      }),
     );
 
     /* Deploy VRF Manager */
@@ -73,7 +77,7 @@ module.exports = {
       this.mockVrfCoords.address,
       chainlink.rinkeby.hash,
       chainlink.rinkeby.fee,
-      this.omnuumCAManager.address
+      this.omnuumCAManager.address,
     );
 
     /* Register CA accounts to CA Manager */

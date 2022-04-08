@@ -6,8 +6,8 @@ import '../V1/OmnuumVRFManager.sol';
 contract MockVrfRequester {
     constructor() {}
 
-    function requestVRF(address _vrfManager) public {
-        OmnuumVRFManager(_vrfManager).requestVRF('REVEAL_PFP');
+    function requestVRF(address _vrfManager) public payable {
+        OmnuumVRFManager(_vrfManager).requestVRF{ value: msg.value }('REVEAL_PFP');
     }
 
     function requestVRFOnce(address _vrfManager, address _targetAddress) public payable {

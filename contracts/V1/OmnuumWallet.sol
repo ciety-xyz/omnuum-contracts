@@ -5,12 +5,14 @@ pragma solidity 0.8.10;
 /// @notice This contract is not managed by Omnuum admin, but for owners
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 
+import '@openzeppelin/contracts/utils/math/Math.sol';
+
 contract OmnuumWallet {
     /// @notice - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
-    uint256 public constant consensusRatio = 66;
+    uint256 public immutable consensusRatio;
 
     /// @notice - Minimum limit of required number of votes for consensus
-    uint8 public constant minLimitForConsensus = 3;
+    uint8 public immutable minLimitForConsensus;
 
     /// @notice - Withdraw = 0
     /// @notice - Add = 1
@@ -59,7 +61,13 @@ contract OmnuumWallet {
      *   Constructor
      * - set consensus ratio, minimum votes limit for consensus, and initial accounts
      * *****************************************************************************/
-    constructor(OwnerAccount[] memory _initialOwnerAccounts) {
+    constructor(
+        uint256 _consensusRatio,
+        uint8 _minLimitForConsensus,
+        OwnerAccount[] memory _initialOwnerAccounts
+    ) {
+        consensusRatio = _consensusRatio;
+        minLimitForConsensus = _minLimitForConsensus;
         for (uint256 i; i < _initialOwnerAccounts.length; i++) {
             OwnerVotes vote = _initialOwnerAccounts[i].vote;
             ownerVote[_initialOwnerAccounts[i].addr] = vote;
@@ -302,7 +310,7 @@ contract OmnuumWallet {
     /// @return votesForConsensus - the number of votes required to reach a consensus
 
     function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
-        return (totalVotes() * consensusRatio) / 100;
+        return Math.ceilDiv((totalVotes() * consensusRatio), 100);
     }
 
     /// @notice getRequestIdsByExecution
