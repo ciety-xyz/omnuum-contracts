@@ -24,8 +24,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
     // @notice topic indexed mapping, (string topic => omnuum contract address)
     mapping(string => address) public indexedContracts;
 
-    event ManagerContractRegistered(address indexed managerContract, string topic);
-    event ManagerContractRemoved(address indexed managerContract, string topic);
+    event ContractRegistered(address indexed managerContract, string topic);
+    event ContractRemoved(address indexed managerContract, string topic);
     event RoleAdded(address indexed ca, string role);
     event RoleRemoved(address indexed ca, string role);
 
@@ -95,7 +95,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
         managerContracts[_CA] = Contract(_topic, true);
         indexedContracts[_topic] = _CA;
-        emit ManagerContractRegistered(_CA, _topic);
+        emit ContractRegistered(_CA, _topic);
     }
 
     /// @notice Check whether contract address is registered
@@ -115,7 +115,7 @@ contract OmnuumCAManager is OwnableUpgradeable {
             delete indexedContracts[topic];
         }
 
-        emit ManagerContractRemoved(_CA, topic);
+        emit ContractRemoved(_CA, topic);
     }
 
     /// @notice Get contract address for specified topic

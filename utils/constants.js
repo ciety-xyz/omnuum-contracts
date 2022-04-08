@@ -21,9 +21,9 @@ module.exports = {
     CAManager: {
       RoleAdded: 'RoleAdded',
       RoleRemoved: 'RoleRemoved',
-      ManagerContractRegistered: 'ManagerContractRegistered',
+      ContractRegistered: 'ContractRegistered',
+      ContractRemoved: 'ContractRemoved',
       NftContractRegistered: 'NftContractRegistered',
-      ManagerContractRemoved: 'ManagerContractRemoved',
     },
     TicketManager: {
       SetTicketSchedule: 'SetTicketSchedule',

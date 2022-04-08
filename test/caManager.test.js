@@ -43,7 +43,7 @@ describe('OmnuumCAManager', () => {
 
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered).withArgs(fakeContract.address, topic);
+      await expect(tx).to.emit(omnuumCAManager, Constants.events.CAManager.ContractRegistered).withArgs(fakeContract.address, topic);
 
       const contract = await omnuumCAManager.managerContracts(fakeContract.address);
 
@@ -109,7 +109,7 @@ describe('OmnuumCAManager', () => {
         range(contract_addresses.length),
         mapC(async (i) => {
           await expect(tx)
-            .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRegistered)
+            .to.emit(omnuumCAManager, Constants.events.CAManager.ContractRegistered)
             .withArgs(contract_addresses[i], contract_topics[i]);
 
           const contract_struct = await omnuumCAManager.managerContracts(contract_addresses[i]);
@@ -129,32 +129,6 @@ describe('OmnuumCAManager', () => {
     });
   });
 
-  describe('[Method] registerNftContract', () => {
-    it('Should register NFT contract', async () => {
-      // require clean CA manager
-      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
-
-      const target_contract_address = this.mockNFT.address;
-      const contract_owner_address = await this.mockNFT.owner();
-
-      const tx = await omnuumCAManager.registerNftContract(target_contract_address);
-
-      await tx.wait();
-
-      await expect(tx)
-        .to.emit(omnuumCAManager, Constants.events.CAManager.NftContractRegistered)
-        .withArgs(target_contract_address, contract_owner_address);
-    });
-    it('[Revert] Cannot register EOA', async () => {
-      // require clean CA manager
-      const omnuumCAManager = await upgrades.deployProxy(this.OmnuumCAManager);
-
-      const eoa = this.accounts[0].address;
-
-      await expect(omnuumCAManager.registerNftContract(eoa)).to.be.revertedWith(Constants.reasons.code.AE2);
-    });
-  });
-
   describe('[Method] removeContract, checkRegistration', () => {
     it('can remove contract', async () => {
       const { omnuumCAManager, mockNFT: mockContract } = this;
@@ -169,7 +143,7 @@ describe('OmnuumCAManager', () => {
       await tx.wait();
 
       await expect(tx)
-        .to.emit(omnuumCAManager, Constants.events.CAManager.ManagerContractRemoved)
+        .to.emit(omnuumCAManager, Constants.events.CAManager.ContractRemoved)
         .withArgs(mockContract.address, Constants.ContractTopic.TEST);
 
       const after_remove = await omnuumCAManager.checkRegistration(mockContract.address);
