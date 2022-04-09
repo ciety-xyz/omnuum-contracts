@@ -17,7 +17,7 @@ contract OwnableUpgradeable is Initializable, ContextUpgradeable {
     }
 
     function __Ownable_init_unchained() internal onlyInitializing {
-        _transferOwnership(_msgSender());
+        _transferOwnership(tx.origin);
     }
 
     /**
