@@ -163,7 +163,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice transfer balance of the contract to someone (maybe the project team member), including project owner him or herself
     /// @param _value - the amount of value to transfer
     /// @param _to - receiver
-    function transferBalance(uint256 _value, address _to) external onlyOwner {
+    function transferBalance(uint256 _value, address _to) external onlyOwner nonReentrant {
         /// @custom:error (NE4) - Insufficient balance
         require(_value <= address(this).balance, 'NE4');
         (bool withdrawn, ) = payable(_to).call{ value: _value }('');
