@@ -15,5 +15,5 @@ module.exports.compile = async ({ quiet, force }) => {
     await clean();
   }
 
-  await run('comile', { force, quiet });
+  await run('compile', { force, quiet });
 };
