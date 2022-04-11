@@ -756,4 +756,81 @@ describe('Omnuum Multi-sig Wallet', () => {
       await expect(Wallet.connect(requestOwnerSigner).execute(await Wallet.getLastRequestNo())).to.be.revertedWith(reasons.code.NE5);
     });
   });
+  describe('[Method] getRequestIdsByExecution', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+
+      // 5 withdrawal requests by requester
+      await go(
+        range(5),
+        mapC((_) => request({ walletContract: Wallet.connect(requester) })),
+      );
+
+      // execute request id "1" and "3"
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByExecution(true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByExecution(false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+    });
+  });
+  describe('[Method] getRequestIdsByOwner', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+
+      // 5 withdrawal requests by requester
+      await go(
+        range(5),
+        mapC((_) => request({ walletContract: Wallet.connect(requester) })),
+      );
+
+      // another 5 withdrawal requests by approver
+      await go(
+        range(5, 10),
+        mapC((_) => request({ walletContract: Wallet.connect(approver) })),
+      );
+
+      // execute request id "1" and "3"
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByOwner(requester.address, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(requester.address, false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+
+      expect(await Wallet.getRequestIdsByOwner(approver.address, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(approver.address, false)).to.deep.eq(range(5, 10).map((x) => ethers.BigNumber.from(x)));
+    });
+  });
+
+  describe('[Method] getRequestIdsByType', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+      const requestTypes = [0, 0, 0, 0, 2, 0, 1, 2, 1, 3];
+
+      // 5 withdrawal requests by requester
+      await go(
+        requestTypes,
+        mapC((type) => request({ requestType: type, walletContract: Wallet.connect(requester) })),
+      );
+
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByType(0, false)).to.deep.eq([0, 2, 5].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(0, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(1, false)).to.deep.eq([6, 8].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, false)).to.deep.eq([4, 7].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(3, false)).to.deep.eq([9].map((x) => ethers.BigNumber.from(x)));
+    });
+  });
 });
