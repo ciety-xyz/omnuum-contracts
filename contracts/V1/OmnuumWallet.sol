@@ -340,20 +340,20 @@ contract OmnuumWallet {
     /// @notice getRequestIdsByOwner
     /// @dev Allows users to see the array of request ids filtered by owner address
     /// @param _owner - address of owner
-    /// @param _onlyNotExecuted - If you want to see only for that have not been executed, input this argument into true
+    /// @param _isExecuted - If you want to see only for that have not been executed, input this argument into true
     /// @return requestIds - Array of request ids
 
-    function getRequestIdsByOwner(address _owner, bool _onlyNotExecuted) public view returns (uint256[] memory requestIds) {
+    function getRequestIdsByOwner(address _owner, bool _isExecuted) public view returns (uint256[] memory requestIds) {
         uint256[] memory filteredArray = new uint256[](requests.length);
         uint256 counter = 0;
         for (uint256 i = 0; i < requests.length; i++) {
-            if (_onlyNotExecuted) {
-                if ((requests[i].requester == _owner) && (!requests[i].isExecute)) {
+            if (_isExecuted) {
+                if ((requests[i].requester == _owner) && (requests[i].isExecute)) {
                     filteredArray[counter] = i;
                     counter++;
                 }
             } else {
-                if (requests[i].requester == _owner) {
+                if ((requests[i].requester == _owner) && (!requests[i].isExecute)) {
                     filteredArray[counter] = i;
                     counter++;
                 }
@@ -367,13 +367,20 @@ contract OmnuumWallet {
     /// @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
     /// @return requestIds - Array of request ids
 
-    function getRequestIdsByType(RequestTypes _requestType) public view returns (uint256[] memory requestIds) {
+    function getRequestIdsByType(RequestTypes _requestType, bool _isExecuted) public view returns (uint256[] memory requestIds) {
         uint256[] memory filteredArray = new uint256[](requests.length);
         uint256 counter = 0;
         for (uint256 i = 0; i < requests.length; i++) {
-            if (requests[i].requestType == _requestType) {
-                filteredArray[counter] = i;
-                counter++;
+            if (_isExecuted) {
+                if ((requests[i].requestType == _requestType) && (requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if ((requests[i].requestType == _requestType) && (!requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
             }
         }
         return _compactUintArray(filteredArray, counter);
