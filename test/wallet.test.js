@@ -60,14 +60,16 @@ describe('Omnuum Multi-sig Wallet', () => {
     it('[Revert] Cannot register owners which cannot fulfill minLimitForConsensus', async () => {
       const { OmnuumWallet } = this;
 
-      // total 2 * 0.66 = 1.32 := 1; which is lower than minLimitForConsensus 3
+      // total 3 * 0.55 = 1.65 := 2; which is lower than minLimitForConsensus 3
       const owners = go(
         this.accounts.slice(0, 2),
-        zip([1, 1]),
+        zip([2, 1]),
         map(([vote, signer]) => ({ addr: signer.address, vote })),
       );
 
-      await expect(OmnuumWallet.deploy(owners)).to.be.revertedWith(reasons.code.NE5);
+      await expect(OmnuumWallet.deploy(testValues.consensusRatio, testValues.minLimitForConsensus, owners)).to.be.revertedWith(
+        reasons.code.NE5,
+      );
     });
   });
 
@@ -690,24 +692,41 @@ describe('Omnuum Multi-sig Wallet', () => {
       await expect(Wallet.connect(requestOwnerSigner).execute(requestId)).to.be.revertedWith(reasons.code.AE2);
     });
     it('[Revert] if execute the change of owner level that does not satisfy the min number of votes for consensus', async () => {
-      const changeAccount = walletOwnerAccounts[0]; // Level two
-      const changeAccountTobe = { ...walletOwnerAccounts[0], vote: 1 }; // Level one
-
+      // Removal 2 level owner [2, 2, 1, 1, 1] => [2, 1, 1, 1]
       await request({
-        walletContract: Wallet.connect(requestOwnerSigner),
-        requestType: 3, // Change
-        currentAccount: changeAccount,
-        newAccount: changeAccountTobe,
+        walletContract: Wallet.connect(walletOwnerSigners[0]),
+        requestType: 2, // Remove
+        currentAccount: walletOwnerAccounts[0], // level two
+        newAccount: testValues.zeroOwnerAccount, // level one
       });
 
-      const lastRequestId = await Wallet.getLastRequestNo();
-      await Wallet.connect(approverOwnerSigner).approve(lastRequestId);
+      // removal of level 2 owner
+      await Wallet.connect(walletOwnerSigners[1]).approve(await Wallet.getLastRequestNo());
+      await Wallet.connect(walletOwnerSigners[0]).execute(await Wallet.getLastRequestNo());
 
-      // Removal of vote two level owner
-      const removalRequestId = 2;
-      await Wallet.connect(requestOwnerSigner).execute(removalRequestId);
+      // Removal 1 level owner [2, 1, 1, 1] => [2, 1, 1]
+      await request({
+        walletContract: Wallet.connect(walletOwnerSigners[1]),
+        requestType: 2, // Remove
+        currentAccount: walletOwnerAccounts[4], // level two
+        newAccount: testValues.zeroOwnerAccount, // level one
+      });
 
-      await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NE5);
+      // removal of level 2 owner
+      await Wallet.connect(walletOwnerSigners[4]).approve(await Wallet.getLastRequestNo());
+      await Wallet.connect(walletOwnerSigners[1]).execute(await Wallet.getLastRequestNo());
+
+      // change owner level 2 -> 1 request
+      await request({
+        walletContract: Wallet.connect(walletOwnerSigners[1]),
+        requestType: 3, // Change
+        currentAccount: walletOwnerAccounts[1], // level two
+        newAccount: { ...walletOwnerAccounts[1], vote: 1 }, // level one
+      });
+
+      await Wallet.connect(walletOwnerSigners[2]).approve(await Wallet.getLastRequestNo());
+
+      await expect(Wallet.connect(walletOwnerSigners[1]).execute(await Wallet.getLastRequestNo())).to.be.revertedWith(reasons.code.NE5);
     });
     it('[Revert] if execute the removal of owner that does not exist', async () => {
       await request({
@@ -721,19 +740,97 @@ describe('Omnuum Multi-sig Wallet', () => {
       await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NX2);
     });
     it('[Revert] if execute the removal of owner that does not satisfy the min number of votes for consensus', async () => {
+      // First level-2 removal [2, 2, 1, 1, 1] => [2, 1, 1, 1]
       const removalRequestId = 2;
       await Wallet.connect(requestOwnerSigner).execute(removalRequestId);
 
+      // Second level-2 removal [2, 1, 1, 1] => [1, 1, 1]: revert
       await request({
         walletContract: Wallet.connect(requestOwnerSigner),
         requestType: 2, // Remove
-        currentAccount: walletOwnerAccounts[walletOwnerAccounts.length - 1],
+        currentAccount: walletOwnerAccounts[0],
         newAccount: testValues.zeroOwnerAccount,
       });
-      const lastRequestId = await Wallet.getLastRequestNo();
-      await Wallet.connect(walletOwnerSigners[walletOwnerSigners.length - 2]).approve(lastRequestId);
+      await Wallet.connect(walletOwnerSigners[2]).approve(await Wallet.getLastRequestNo());
 
-      await expect(Wallet.connect(requestOwnerSigner).execute(lastRequestId)).to.be.revertedWith(reasons.code.NE5);
+      await expect(Wallet.connect(requestOwnerSigner).execute(await Wallet.getLastRequestNo())).to.be.revertedWith(reasons.code.NE5);
+    });
+  });
+  describe('[Method] getRequestIdsByExecution', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+
+      // 5 withdrawal requests by requester
+      await go(
+        range(5),
+        mapC((_) => request({ walletContract: Wallet.connect(requester) })),
+      );
+
+      // execute request id "1" and "3"
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByExecution(true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByExecution(false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+    });
+  });
+  describe('[Method] getRequestIdsByOwner', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+
+      // 5 withdrawal requests by requester
+      await go(
+        range(5),
+        mapC((_) => request({ walletContract: Wallet.connect(requester) })),
+      );
+
+      // another 5 withdrawal requests by approver
+      await go(
+        range(5, 10),
+        mapC((_) => request({ walletContract: Wallet.connect(approver) })),
+      );
+
+      // execute request id "1" and "3"
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByOwner(requester.address, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(requester.address, false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+
+      expect(await Wallet.getRequestIdsByOwner(approver.address, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(approver.address, false)).to.deep.eq(range(5, 10).map((x) => ethers.BigNumber.from(x)));
+    });
+  });
+
+  describe('[Method] getRequestIdsByType', () => {
+    it('get ids', async () => {
+      const requester = walletOwnerSigners[0];
+      const approver = walletOwnerSigners[1];
+      const requestTypes = [0, 0, 0, 0, 2, 0, 1, 2, 1, 3];
+
+      // 5 withdrawal requests by requester
+      await go(
+        requestTypes,
+        mapC((type) => request({ requestType: type, walletContract: Wallet.connect(requester) })),
+      );
+
+      await Wallet.connect(approver).approve(1);
+      await Wallet.connect(approver).approve(3);
+      await Wallet.connect(requester).execute(1);
+      await Wallet.connect(requester).execute(3);
+
+      expect(await Wallet.getRequestIdsByType(0, false)).to.deep.eq([0, 2, 5].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(0, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(1, false)).to.deep.eq([6, 8].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, false)).to.deep.eq([4, 7].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(3, false)).to.deep.eq([9].map((x) => ethers.BigNumber.from(x)));
     });
   });
 });

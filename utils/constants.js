@@ -141,7 +141,7 @@ module.exports = {
     specialFeeRate: 10000, // converted as 0.1 (10 percent)
     walletOwnersLen: 3,
     sendEthValue: '10',
-    consensusRatio: 66,
+    consensusRatio: 55,
     minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://testCover.com',
