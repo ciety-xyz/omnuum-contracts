@@ -13,7 +13,7 @@ const inquirerParams = {
   minterAddress: 'minterAddress',
   minterPrivateKey: 'minterPrivateKey',
   groupId: 'groupId',
-  OmSignerPrivateKey: 'OmSignerPrivateKey',
+  OmSignatureSignerPrivateKey: 'OmSignatureSignerPrivateKey',
   ticketPrice: 'ticketPrice',
   ticketQuantity: 'ticketQuantity',
   mintQuantity: 'mintQuantity',
@@ -57,9 +57,9 @@ const questions = [
     validate: nullCheck,
   },
   {
-    name: inquirerParams.OmSignerPrivateKey,
+    name: inquirerParams.OmSignatureSignerPrivateKey,
     type: 'input',
-    message: '🤔 Omnuum Dev Deployer Signer PrivateKey is...',
+    message: '🤔 Omnuum Signature Signer PrivateKey is...',
     validate: nullCheck,
   },
   {
@@ -94,7 +94,7 @@ const questions = [
         groupId: ans.groupId,
         ether_price: ans.ticketPrice,
         quantity: ans.ticketQuantity,
-        signerPrivateKey: ans.OmSignerPrivateKey,
+        signerPrivateKey: ans.OmSignatureSignerPrivateKey,
       });
 
       const payload = await getPayloadWithSignature({
@@ -102,7 +102,7 @@ const questions = [
         minterAddress: ans.minterAddress,
         payloadTopic: payloadTopic.ticket,
         groupId: ans.groupId,
-        signerPrivateKey: ans.OmSignerPrivateKey,
+        signerPrivateKey: ans.OmSignatureSignerPrivateKey,
       });
 
       const sendValue = ethers.utils.parseEther(ans.ticketPrice).mul(Number(ans.mintQuantity));

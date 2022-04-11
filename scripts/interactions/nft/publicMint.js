@@ -10,7 +10,7 @@ const inquirerParams = {
   minterAddress: 'minterAddress',
   minterPrivateKey: 'minterPrivateKey',
   groupId: 'groupId',
-  OmSignerPrivateKey: 'OmSignerPrivateKey',
+  OmSignatureSignerPrivateKey: 'OmSignatureSignerPrivateKey',
   publicPrice: 'publicPrice',
   mintQuantity: 'mintQuantity',
 };
@@ -47,9 +47,9 @@ const questions = [
     validate: nullCheck,
   },
   {
-    name: inquirerParams.OmSignerPrivateKey,
+    name: inquirerParams.OmSignatureSignerPrivateKey,
     type: 'input',
-    message: '🤔 Omnuum Dev Deployer Signer PrivateKey is...',
+    message: '🤔 Omnuum Signature Signer PrivateKey is...',
     validate: nullCheck,
   },
   {
@@ -76,7 +76,7 @@ const questions = [
         minterAddress: ans.minterAddress,
         payloadTopic: payloadTopic.mint,
         groupId: ans.groupId,
-        signerPrivateKey: ans.OmSignerPrivateKey,
+        signerPrivateKey: ans.OmSignatureSignerPrivateKey,
       });
 
       const sendValue = ethers.utils.parseEther(ans.publicPrice).mul(Number(ans.mintQuantity));

@@ -19,7 +19,7 @@ const questions = [
   {
     name: inquirerParams.signatureSignerAddress,
     type: 'input',
-    message: '🤔 Sinature signer address is ...',
+    message: '🤔 Signature signer address is (not private key, just address)...',
     validate: nullCheck,
   },
 ];

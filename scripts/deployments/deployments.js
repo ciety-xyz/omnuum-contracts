@@ -27,7 +27,6 @@ const deployNFT = async ({
     signerPrivateKey,
   });
 
-  // 배포 메소드 호출
   const txResponse = await NftFactory.attach(nftFactoryAddress)
     .connect(projectOwnerSigner)
     .deploy(maxSupply, coverUri, collectionId, payload);

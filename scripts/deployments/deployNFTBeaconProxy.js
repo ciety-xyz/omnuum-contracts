@@ -10,10 +10,8 @@ const inquirerParams = {
   signer_privateKey: 'signer_privateKey',
   sender_verifier_address: 'sender_verifier_address',
   nft_factory_address: 'nft_factory_address',
-  wallet_address: 'wallet_address',
   max_supply: 'max_supply',
   cover_uri: 'cover_uri',
-  payment_value: 'payment_value',
   nft_collection_id: 'nft_collection_id',
 };
 

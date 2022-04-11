@@ -105,6 +105,10 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
         address: wallet.contract.address,
         startBlock: `${wallet.blockNumber}`,
       },
+      nftFactory: {
+        address: nftFactory.contract.address,
+        startBlock: `${nftFactory.blockNumber}`,
+      },
     };
 
     const filename = `${chainName}_${getDateSuffix()}.json`;
