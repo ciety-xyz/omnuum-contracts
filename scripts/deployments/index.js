@@ -71,7 +71,7 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
 
     const resultData = {
       network: chainName,
-      deployStartAt: deployStartTime,
+      deployStartAt: deployStartTime.toLocaleTimeString(),
       deployer: OmnuumDeploySigner.address,
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
@@ -90,7 +90,7 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
 
     const subgraphManifestData = {
       network: chainName,
-      deployStartAt: deployStartTime,
+      deployStartAt: deployStartTime.toLocaleTimeString(),
       deployer: OmnuumDeploySigner.address,
       caManager: {
         address: caManager.proxyContract.address,
