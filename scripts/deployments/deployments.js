@@ -22,7 +22,7 @@ const deployNFT = async ({
   const payload = await getPayloadWithSignature({
     senderVerifierAddress,
     minterAddress: projectOwnerSigner.address,
-    payloadTopic: CONSTANTS.payloadTopic.deployNFT,
+    payloadTopic: CONSTANTS.payloadTopic.deployCol,
     groupId: collectionId,
     signerPrivateKey,
   });

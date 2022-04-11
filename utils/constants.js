@@ -112,7 +112,7 @@ module.exports = {
   payloadTopic: {
     mint: 'MINT',
     ticket: 'TICKET',
-    deployNFT: 'DEPLOY_NFT',
+    deployCol: 'DEPLOY_COL',
   },
   ContractTopic: {
     VRF: 'VRF',
