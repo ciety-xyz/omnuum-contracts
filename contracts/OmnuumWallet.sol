@@ -5,18 +5,20 @@ pragma solidity 0.8.10;
 /// @notice This contract is not managed by Omnuum admin, but for owners
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 
+import '@openzeppelin/contracts/utils/math/Math.sol';
+
 contract OmnuumWallet {
     /// @notice - consensusRatio : Ratio of votes to reach consensus as a percentage of total votes
-    uint256 public constant consensusRatio = 66;
+    uint256 public immutable consensusRatio;
 
     /// @notice - Minimum limit of required number of votes for consensus
-    uint8 public constant minLimitForConsensus = 3;
+    uint8 public immutable minLimitForConsensus;
 
-    /// @notice - Withdraw = 0
-    /// @notice - Add = 1
-    /// @notice - Remove = 2
-    /// @notice - Change = 3
-    /// @notice - Cancel = 4
+    /// @notice Withdraw = 0
+    /// @notice Add = 1
+    /// @notice Remove = 2
+    /// @notice Change = 3
+    /// @notice Cancel = 4
     enum RequestTypes {
         Withdraw,
         Add,
@@ -25,9 +27,9 @@ contract OmnuumWallet {
         Cancel
     }
 
-    /// @notice - F = 0 (F-Level: Not owner)
-    /// @notice - D = 1 (D-Level: own 1 vote)
-    /// @notice - C = 2 (C-Level: own 2 votes)
+    /// @notice F = 0 (F-Level: Not owner)
+    /// @notice D = 1 (D-Level: own 1 vote)
+    /// @notice C = 2 (C-Level: own 2 votes)
     enum OwnerVotes {
         F,
         D,
@@ -59,11 +61,17 @@ contract OmnuumWallet {
      *   Constructor
      * - set consensus ratio, minimum votes limit for consensus, and initial accounts
      * *****************************************************************************/
-    constructor(OwnerAccount[] memory _initialOwnerAccounts) {
+    constructor(
+        uint256 _consensusRatio,
+        uint8 _minLimitForConsensus,
+        OwnerAccount[] memory _initialOwnerAccounts
+    ) {
+        consensusRatio = _consensusRatio;
+        minLimitForConsensus = _minLimitForConsensus;
         for (uint256 i; i < _initialOwnerAccounts.length; i++) {
-            OwnerVotes _vote = _initialOwnerAccounts[i].vote;
-            ownerVote[_initialOwnerAccounts[i].addr] = _vote;
-            ownerCounter[_vote]++;
+            OwnerVotes vote = _initialOwnerAccounts[i].vote;
+            ownerVote[_initialOwnerAccounts[i].addr] = vote;
+            ownerCounter[vote]++;
         }
 
         _checkMinConsensus();
@@ -173,10 +181,10 @@ contract OmnuumWallet {
     /// @dev Allows an owner to request for an agenda that wants to proceed
     /// @dev The owner can make multiple requests even if the previous one is unresolved
     /// @dev The requester is automatically voted for the request
-    /// @param _requestType - Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
-    /// @param _currentAccount - Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
-    /// @param _newAccount - Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
-    /// @param _withdrawalAmount - amount of Ether to be withdrawal (use for Request Type as Withdrawal)
+    /// @param _requestType Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
+    /// @param _currentAccount Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
+    /// @param _newAccount Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
+    /// @param _withdrawalAmount Amount of Ether to be withdrawal (use for Request Type as Withdrawal)
 
     function request(
         RequestTypes _requestType,
@@ -184,16 +192,16 @@ contract OmnuumWallet {
         OwnerAccount calldata _newAccount,
         uint256 _withdrawalAmount
     ) external onlyOwner(msg.sender) {
-        address _requester = msg.sender;
+        address requester = msg.sender;
 
-        Request storage _request = requests.push();
-        _request.requester = _requester;
-        _request.requestType = _requestType;
-        _request.currentOwner = OwnerAccount({ addr: _currentAccount.addr, vote: _currentAccount.vote });
-        _request.newOwner = OwnerAccount({ addr: _newAccount.addr, vote: _newAccount.vote });
-        _request.withdrawalAmount = _withdrawalAmount;
-        _request.voters[_requester] = true;
-        _request.votes = uint8(ownerVote[_requester]);
+        Request storage request_ = requests.push();
+        request_.requester = requester;
+        request_.requestType = _requestType;
+        request_.currentOwner = OwnerAccount({ addr: _currentAccount.addr, vote: _currentAccount.vote });
+        request_.newOwner = OwnerAccount({ addr: _newAccount.addr, vote: _newAccount.vote });
+        request_.withdrawalAmount = _withdrawalAmount;
+        request_.voters[requester] = true;
+        request_.votes = uint8(ownerVote[requester]);
 
         emit Requested(msg.sender, requests.length - 1, _requestType);
     }
@@ -201,7 +209,7 @@ contract OmnuumWallet {
     /// @notice approve
     /// @dev Allows owners to approve the request
     /// @dev The owner can revoke the approval whenever the request is still in progress (not executed or canceled)
-    /// @param _reqId - Request id that the owner wants to approve
+    /// @param _reqId Request id that the owner wants to approve
 
     function approve(uint256 _reqId)
         external
@@ -211,16 +219,16 @@ contract OmnuumWallet {
         notVoted(msg.sender, _reqId)
     {
         OwnerVotes _vote = ownerVote[msg.sender];
-        Request storage _request = requests[_reqId];
-        _request.voters[msg.sender] = true;
-        _request.votes += uint8(_vote);
+        Request storage request_ = requests[_reqId];
+        request_.voters[msg.sender] = true;
+        request_.votes += uint8(_vote);
 
         emit Approved(msg.sender, _reqId, _vote);
     }
 
     /// @notice revoke
     /// @dev Allow an approver(owner) to revoke the approval
-    /// @param _reqId - Request id that the owner wants to revoke
+    /// @param _reqId Request id that the owner wants to revoke
 
     function revoke(uint256 _reqId)
         external
@@ -229,18 +237,18 @@ contract OmnuumWallet {
         notExecutedOrCanceled(_reqId)
         voted(msg.sender, _reqId)
     {
-        OwnerVotes _vote = ownerVote[msg.sender];
-        Request storage _request = requests[_reqId];
-        delete _request.voters[msg.sender];
-        _request.votes -= uint8(_vote);
+        OwnerVotes vote = ownerVote[msg.sender];
+        Request storage request_ = requests[_reqId];
+        delete request_.voters[msg.sender];
+        request_.votes -= uint8(vote);
 
-        emit Revoked(msg.sender, _reqId, _vote);
+        emit Revoked(msg.sender, _reqId, vote);
     }
 
     /// @notice cancel
     /// @dev Allows a requester(owner) to cancel the own request
     /// @dev After proceeding, it cannot revert the cancellation. Be cautious
-    /// @param _reqId - Request id requested by the requester
+    /// @param _reqId Request id requested by the requester
 
     function cancel(uint256 _reqId) external reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) {
         requests[_reqId].requestType = RequestTypes.Cancel;
@@ -251,28 +259,28 @@ contract OmnuumWallet {
     /// @notice execute
     /// @dev Allow an requester(owner) to execute the request
     /// @dev After proceeding, it cannot revert the execution. Be cautious
-    /// @param _reqId - Request id that the requester wants to execute
+    /// @param _reqId Request id that the requester wants to execute
 
     function execute(uint256 _reqId) external reqExists(_reqId) notExecutedOrCanceled(_reqId) onlyRequester(_reqId) reachConsensus(_reqId) {
-        Request storage _request = requests[_reqId];
-        uint8 _type = uint8(_request.requestType);
-        _request.isExecute = true;
+        Request storage request_ = requests[_reqId];
+        uint8 type_ = uint8(request_.requestType);
+        request_.isExecute = true;
 
-        if (_type == uint8(RequestTypes.Withdraw)) {
-            _withdraw(_request.withdrawalAmount, _request.requester);
-        } else if (_type == uint8(RequestTypes.Add)) {
-            _addOwner(_request.newOwner);
-        } else if (_type == uint8(RequestTypes.Remove)) {
-            _removeOwner(_request.currentOwner);
-        } else if (_type == uint8(RequestTypes.Change)) {
-            _changeOwner(_request.currentOwner, _request.newOwner);
+        if (type_ == uint8(RequestTypes.Withdraw)) {
+            _withdraw(request_.withdrawalAmount, request_.requester);
+        } else if (type_ == uint8(RequestTypes.Add)) {
+            _addOwner(request_.newOwner);
+        } else if (type_ == uint8(RequestTypes.Remove)) {
+            _removeOwner(request_.currentOwner);
+        } else if (type_ == uint8(RequestTypes.Change)) {
+            _changeOwner(request_.currentOwner, request_.newOwner);
         }
-        emit Executed(msg.sender, _reqId, _request.requestType);
+        emit Executed(msg.sender, _reqId, request_.requestType);
     }
 
     /// @notice totalVotes
     /// @dev Allows users to see how many total votes the wallet currently have
-    /// @return votes - the total number of voting rights the owners have
+    /// @return votes The total number of voting rights the owners have
 
     function totalVotes() public view returns (uint256 votes) {
         return ownerCounter[OwnerVotes.D] + 2 * ownerCounter[OwnerVotes.C];
@@ -280,8 +288,8 @@ contract OmnuumWallet {
 
     /// @notice isOwner
     /// @dev Allows users to verify registered owners in the wallet
-    /// @param _owner - Address of the owner that you want to verify
-    /// @return isVerified - Verification result of whether the owner is correct
+    /// @param _owner Address of the owner that you want to verify
+    /// @return isVerified Verification result of whether the owner is correct
 
     function isOwner(address _owner) public view returns (bool isVerified) {
         return uint8(ownerVote[_owner]) > 0;
@@ -289,9 +297,9 @@ contract OmnuumWallet {
 
     /// @notice isOwnerVoted
     /// @dev Allows users to check which owner voted
-    /// @param _owner - Address of the owner
-    /// @param _reqId - Request id that you want to check
-    /// @return isVoted -  whether the owner voted
+    /// @param _owner Address of the owner
+    /// @param _reqId Request id that you want to check
+    /// @return isVoted Whether the owner voted
 
     function isOwnerVoted(address _owner, uint256 _reqId) public view returns (bool isVoted) {
         return requests[_reqId].voters[_owner];
@@ -302,12 +310,85 @@ contract OmnuumWallet {
     /// @return votesForConsensus - the number of votes required to reach a consensus
 
     function requiredVotesForConsensus() public view returns (uint256 votesForConsensus) {
-        return (totalVotes() * consensusRatio) / 100;
+        return Math.ceilDiv((totalVotes() * consensusRatio), 100);
+    }
+
+    /// @notice getRequestIdsByExecution
+    /// @dev Allows users to see the array of request ids filtered by execution
+    /// @param _isExecuted Whether the request was executed or not
+    /// @return requestIds Array of request ids
+
+    function getRequestIdsByExecution(bool _isExecuted) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (_isExecuted) {
+                if (requests[i].isExecute) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if (!requests[i].isExecute) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
+    }
+
+    /// @notice getRequestIdsByOwner
+    /// @dev Allows users to see the array of request ids filtered by owner address
+    /// @param _owner address of owner
+    /// @param _isExecuted If you want to see only for that have not been executed, input this argument into true
+    /// @return requestIds Array of request ids
+
+    function getRequestIdsByOwner(address _owner, bool _isExecuted) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (_isExecuted) {
+                if ((requests[i].requester == _owner) && (requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if ((requests[i].requester == _owner) && (!requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
+    }
+
+    /// @notice getRequestIdsByType
+    /// @dev Allows users to see the array of request ids filtered by request type
+    /// @param _requestType Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
+    /// @return requestIds Array of request ids
+
+    function getRequestIdsByType(RequestTypes _requestType, bool _isExecuted) public view returns (uint256[] memory requestIds) {
+        uint256[] memory filteredArray = new uint256[](requests.length);
+        uint256 counter = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (_isExecuted) {
+                if ((requests[i].requestType == _requestType) && (requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            } else {
+                if ((requests[i].requestType == _requestType) && (!requests[i].isExecute)) {
+                    filteredArray[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        return _compactUintArray(filteredArray, counter);
     }
 
     /// @notice getLastRequestNo
     /// @dev Allows users to get the last request number
-    /// @dev requestNo - last request number
+    /// @dev requestNo last request number
 
     function getLastRequestNo() public view returns (uint256 requestNo) {
         return requests.length - 1;
@@ -319,8 +400,8 @@ contract OmnuumWallet {
 
     /// @notice _withdraw
     /// @dev Withdraw Ethers from the wallet
-    /// @param _value - Withdraw amount
-    /// @param _to - Withdrawal recipient
+    /// @param _value Withdraw amount
+    /// @param _to Withdrawal recipient
 
     function _withdraw(uint256 _value, address _to) private {
         /// @custom:error (NE4) - Insufficient balance
@@ -333,17 +414,17 @@ contract OmnuumWallet {
 
     /// @notice _addOwner
     /// @dev Add a new Owner to the wallet
-    /// @param _newAccount - New owner account to be added
+    /// @param _newAccount New owner account to be added
 
     function _addOwner(OwnerAccount memory _newAccount) private notOwner(_newAccount.addr) isValidAddress(_newAccount.addr) {
-        OwnerVotes _vote = _newAccount.vote;
-        ownerVote[_newAccount.addr] = _vote;
-        ownerCounter[_vote]++;
+        OwnerVotes vote = _newAccount.vote;
+        ownerVote[_newAccount.addr] = vote;
+        ownerCounter[vote]++;
     }
 
     /// @notice _removeOwner
     /// @dev Remove existing owner form the wallet
-    /// @param _removalAccount - Current owner account to be removed
+    /// @param _removalAccount Current owner account to be removed
 
     function _removeOwner(OwnerAccount memory _removalAccount) private isOwnerAccount(_removalAccount) {
         ownerCounter[_removalAccount.vote]--;
@@ -353,8 +434,8 @@ contract OmnuumWallet {
 
     /// @notice _changeOwner
     /// @dev Allows changing the existing owner to the new one. It also includes the functionality to change the existing owner's level
-    /// @param _currentAccount - Current owner account to be changed
-    /// @param _newAccount - New owner account to be applied
+    /// @param _currentAccount Current owner account to be changed
+    /// @param _newAccount New owner account to be applied
 
     function _changeOwner(OwnerAccount memory _currentAccount, OwnerAccount memory _newAccount) private {
         OwnerVotes _currentVote = _currentAccount.vote;
@@ -376,5 +457,13 @@ contract OmnuumWallet {
     function _checkMinConsensus() private view {
         /// @custom:error (NE5) - Violate min limit for consensus
         require(requiredVotesForConsensus() >= minLimitForConsensus, 'NE5');
+    }
+
+    function _compactUintArray(uint256[] memory targetArray, uint256 length) internal pure returns (uint256[] memory array) {
+        uint256[] memory compactArray = new uint256[](length);
+        for (uint256 i = 0; i < length; i++) {
+            compactArray[i] = targetArray[i];
+        }
+        return compactArray;
     }
 }
