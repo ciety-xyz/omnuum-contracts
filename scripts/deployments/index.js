@@ -46,7 +46,7 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
 
     const walletOwnerAccounts = createWalletOwnerAccounts(
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
-      [2, 2, 1, 1, 1],
+      DEP_CONSTANTS.wallet.ownerLevels,
     );
 
     const deployStartTime = new Date();
@@ -90,6 +90,8 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
 
     const subgraphManifestData = {
       network: chainName,
+      deployStartAt: deployStartTime,
+      deployer: OmnuumDeploySigner.address,
       caManager: {
         address: caManager.proxyContract.address,
         startBlock: `${caManager.blockNumber}`,
@@ -97,6 +99,14 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
       mintManager: {
         address: mintManager.proxyContract.address,
         startBlock: `${mintManager.blockNumber}`,
+      },
+      exchange: {
+        address: exchange.proxyContract.address,
+        startBlock: `${exchange.blockNumber}`,
+      },
+      wallet: {
+        address: wallet.contract.address,
+        startBlock: `${wallet.blockNumber}`,
       },
       ticketManager: {
         address: ticketManager.contract.address,
@@ -106,9 +116,18 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
         address: vrfManager.contract.address,
         startBlock: `${vrfManager.blockNumber}`,
       },
-      wallet: {
-        address: wallet.contract.address,
-        startBlock: `${wallet.blockNumber}`,
+      revealManager: {
+        address: revealManager.contract.address,
+        startBlock: `${revealManager.blockNumber}`,
+      },
+      senderVerifier: {
+        address: senderVerifier.contract.address,
+        startBlock: `${senderVerifier.blockNumber}`,
+      },
+      nft1155: {
+        impl: nft.implAddress,
+        beacon: nft.beacon.address,
+        startBlock: `${nft.blockNumber}`,
       },
       nftFactory: {
         address: nftFactory.contract.address,

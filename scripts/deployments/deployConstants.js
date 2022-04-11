@@ -14,6 +14,7 @@ const DEP_CONSTANTS = {
   wallet: {
     consensusRatio: 55,
     minLimitForConsensus: 3,
+    ownerLevels: [2, 2, 1, 1, 1],
     ownerAddresses: [
       process.env.WALLET_OWNER_A_ADDR,
       process.env.WALLET_OWNER_B_ADDR,
