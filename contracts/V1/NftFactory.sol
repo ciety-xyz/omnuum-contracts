@@ -41,7 +41,7 @@ contract NftFactory is Ownable {
         SenderVerifier.Payload calldata _payload
     ) external {
         address senderVerifier = OmnuumCAManager(caManager).getContract('VERIFIER');
-        SenderVerifier(senderVerifier).verify(omnuumSigner, msg.sender, 'DEPLOY_NFT', _collectionId, _payload);
+        SenderVerifier(senderVerifier).verify(omnuumSigner, msg.sender, 'DEPLOY_COL', _collectionId, _payload);
 
         bytes memory data = abi.encodeWithSignature(
             'initialize(address,address,uint32,string,address)',
