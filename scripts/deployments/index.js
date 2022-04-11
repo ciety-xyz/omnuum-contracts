@@ -1,5 +1,7 @@
-const { ethers, config } = require('hardhat');
+const { ethers, upgrades, config, run } = require('hardhat');
 const { writeFile, mkdir, rm, access } = require('fs/promises');
+
+upgrades.silenceWarnings();
 
 const chalk = require('chalk');
 const { deployManagers } = require('./deployments');
@@ -14,6 +16,7 @@ const {
   createWalletOwnerAccounts,
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
+const { compile } = require('../../utils/hardhat.js');
 
 async function main(deployerPrivateKey, signatureSignerAddress) {
   try {
@@ -27,6 +30,8 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
        //*******  /**        /**/**    //***//******* //******* /**        /**
         ///////   //         // //      ///  ///////   ///////  //         //
     `);
+
+    await compile({ force: true, quiet: true });
 
     const chainName = await getChainName();
 
