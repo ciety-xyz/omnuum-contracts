@@ -302,6 +302,7 @@ module.exports = {
   getRPCProvider,
   getChainName,
   tryCatch,
+  deployConsole,
   createWalletOwnerAccounts,
   prev_history_file_path,
   writeDeployTmpHistory,

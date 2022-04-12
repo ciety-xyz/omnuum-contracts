@@ -1,5 +1,4 @@
 const inquirer = require('inquirer');
-const { ethers } = require('hardhat');
 const main = require('./index');
 
 const { nullCheck } = require('./deployHelper');
