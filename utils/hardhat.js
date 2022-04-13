@@ -7,7 +7,7 @@ const clean = async () => {
   const targets = ['artifacts', 'cache', '.openzeppelin', 'data'];
   await go(
     targets,
-    mapC((target) => rm(path.join(__dirname, `./${target}`), { recursive: true, force: true })),
+    mapC((target) => rm(path.join(__dirname, `../${target}`), { recursive: true, force: true })),
   );
 };
 
