@@ -52,8 +52,7 @@ module.exports = {
     },
   },
   optimizer: {
-    enabled: false,
-    runs: 300,
+    enabled: true,
   },
   paths: {
     sources: './contracts',
