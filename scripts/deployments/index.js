@@ -93,6 +93,7 @@ async function main(deployerPrivateKey, signatureSignerAddress, gasPrices) {
       nft1155: {
         impl: nft.implAddress,
         beacon: nft.beacon.address,
+        address: nft.beacon.address,
       },
       nftFactory: structurizeContractData(nftFactory),
     };
