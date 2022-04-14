@@ -29,7 +29,7 @@ contract OmnuumExchange is OwnableUpgradeable {
 
         caManager = OmnuumCAManager(_caManagerA);
 
-        tmpLinkExRate = 0.0055 ether; // TODO: should change before deploy
+        tmpLinkExRate = 0.01466666666 ether;
     }
 
     /// @notice calculate amount when given amount of token is swapped to target token
