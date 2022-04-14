@@ -147,9 +147,6 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice set uri for reveal
     /// @param __uri uri of revealed metadata
     function setUri(string memory __uri) external onlyOwner {
-        /// @custom:error (SE6) - NFT already revealed
-        require(!isRevealed, 'SE6');
-
         _setURI(__uri);
         isRevealed = true;
         emit Uri(address(this), __uri);
