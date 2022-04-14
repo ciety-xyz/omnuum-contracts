@@ -18,7 +18,7 @@ const {
 const DEP_CONSTANTS = require('./deployConstants');
 const { compile } = require('../../utils/hardhat.js');
 
-async function main(deployerPrivateKey, signatureSignerAddress) {
+async function main(deployerPrivateKey, signatureSignerAddress, gasPrices) {
   try {
     console.log(`
          *******   ****     **** ****     ** **     ** **     ** ****     ****
@@ -39,10 +39,19 @@ async function main(deployerPrivateKey, signatureSignerAddress) {
     await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
     await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
 
+    const FEE_DATA = {
+      maxFeePerGas: ethers.utils.parseUnits(gasPrices.maxFeePerGas, 'gwei'),
+      maxPriorityFeePerGas: ethers.utils.parseUnits(gasPrices.maxPriorityFeePerGas, 'gwei'),
+    };
+
+    // Wrap the provider so we can override fee data.
+    const provider = new ethers.providers.FallbackProvider([await getRPCProvider(ethers.provider)], 1);
+    provider.getFeeData = async () => FEE_DATA;
+
     const OmnuumDeploySigner =
       chainName === 'localhost'
         ? (await ethers.getSigners())[0]
-        : await new ethers.Wallet(deployerPrivateKey || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+        : await new ethers.Wallet(deployerPrivateKey || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, provider);
 
     const walletOwnerAccounts = createWalletOwnerAccounts(
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
