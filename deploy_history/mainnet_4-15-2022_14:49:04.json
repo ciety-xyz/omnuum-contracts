@@ -1,0 +1,96 @@
+{
+  "network": "mainnet",
+  "deployStartAt": "2:46:59 PM",
+  "deployer": "0x84803BBd4269f596D94e88fA4E697b21C39370d2",
+  "caManager": {
+    "proxy": "0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab",
+    "impl": "0x995f1452E0c7EF28aEDB03e645De8F71B765c19C",
+    "admin": "0x6d82f1895bdAe7B6FEA3c57F44fc281AbB6BB649",
+    "gasUsed": 643213,
+    "blockNumber": 14588099,
+    "address": "0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab"
+  },
+  "mintManager": {
+    "proxy": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492",
+    "impl": "0xC723122f3809A89c2cdB17bE89B4Ac851352C400",
+    "admin": "0x6d82f1895bdAe7B6FEA3c57F44fc281AbB6BB649",
+    "gasUsed": 688045,
+    "blockNumber": 14588127,
+    "address": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492"
+  },
+  "exchange": {
+    "proxy": "0x680756B2794B4d4Ad265040B18539f19f90F13CC",
+    "impl": "0x6C65f1B9a3039dee9eaC97bBCae79357Aa07c40A",
+    "admin": "0x6d82f1895bdAe7B6FEA3c57F44fc281AbB6BB649",
+    "gasUsed": 688369,
+    "blockNumber": 14588133,
+    "address": "0x680756B2794B4d4Ad265040B18539f19f90F13CC"
+  },
+  "wallet": {
+    "contract": "0x85ed922D503Eb40D962A6c82CE7480e9bf0a87c8",
+    "address": "0x85ed922D503Eb40D962A6c82CE7480e9bf0a87c8",
+    "gasUsed": 3698819,
+    "blockNumber": 14588144,
+    "args": [
+      55,
+      3,
+      [
+        { "addr": "0x95254b0F9eFc20295AE423373cd105EE8b5a717F", "vote": 2 },
+        { "addr": "0x0bb5708C4f71439DB00027F85D87f0232acDeEfA", "vote": 2 },
+        { "addr": "0x734724b6bAaF3C407298d24d98ece1E0fA077ffd", "vote": 1 },
+        { "addr": "0xDfe2eFA72E86397728c885D91A8786aA9FdE7A24", "vote": 1 },
+        { "addr": "0x4E2d208C5f7DB881Ee871F5DF4a23DFDb0e77b58", "vote": 1 }
+      ]
+    ]
+  },
+  "ticketManager": {
+    "contract": "0x80ba159a1D187A4C4F8722F1262316Aa3976eec0",
+    "address": "0x80ba159a1D187A4C4F8722F1262316Aa3976eec0",
+    "gasUsed": 1509528,
+    "blockNumber": 14588135,
+    "args": []
+  },
+  "vrfManager": {
+    "contract": "0x1795c86d5e52EeF689981f89D3276C70a3e61149",
+    "address": "0x1795c86d5e52EeF689981f89D3276C70a3e61149",
+    "gasUsed": 2383391,
+    "blockNumber": 14588139,
+    "args": [
+      "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+      "0xf0d54349aDdcf704F77AE15b96510dEA15cb7952",
+      "0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445",
+      { "type": "BigNumber", "hex": "0x1bc16d674ec80000" },
+      "0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab"
+    ]
+  },
+  "revealManager": {
+    "contract": "0x618be88829Be3e29ebEF719dAFfb3037C20A8f64",
+    "address": "0x618be88829Be3e29ebEF719dAFfb3037C20A8f64",
+    "gasUsed": 428364,
+    "blockNumber": 14588136,
+    "args": ["0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab"]
+  },
+  "senderVerifier": {
+    "contract": "0x4b0997358df0F6428ACD252FeEBC3469790f1774",
+    "address": "0x4b0997358df0F6428ACD252FeEBC3469790f1774",
+    "gasUsed": 1093362,
+    "blockNumber": 14588137,
+    "args": []
+  },
+  "nft1155": {
+    "impl": "0x853A06b944aBEF31984c08beAB9ad2Bf43F00c4F",
+    "beacon": "0x25a374f03B20ba168F723630cc1850A8D1A9767a",
+    "address": "0x25a374f03B20ba168F723630cc1850A8D1A9767a"
+  },
+  "nftFactory": {
+    "contract": "0x21AF6949Ec33cd7CEd838Db2CF5875905CE82CEf",
+    "address": "0x21AF6949Ec33cd7CEd838Db2CF5875905CE82CEf",
+    "gasUsed": 1990745,
+    "blockNumber": 14588171,
+    "args": [
+      "0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab",
+      "0x25a374f03B20ba168F723630cc1850A8D1A9767a",
+      "0x81876853baef4001B844B11dF010E9647b7c9a2b"
+    ]
+  }
+}
