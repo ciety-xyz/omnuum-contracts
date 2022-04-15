@@ -45,7 +45,7 @@ async function main(deployerPrivateKey, signatureSignerAddress, gasPrices) {
     };
 
     // Wrap the provider so we can override fee data.
-    const provider = new ethers.providers.FallbackProvider([await getRPCProvider(ethers.provider)], 1);
+    const provider = new ethers.providers.FallbackProvider([ethers.provider], 1);
     provider.getFeeData = async () => FEE_DATA;
 
     const OmnuumDeploySigner =
