@@ -131,7 +131,7 @@ module.exports = {
     await (await this.omnuumCAManager.addRole([this.revealManager.address, this.mockVrfRequester.address], contractRole.vrf)).wait();
 
     /* Deploy NFT beacon proxy */
-    this.omnuumNFT1155 = await module.exports.deployNFT(this, ...overrides);
+    this.omnuumNFT1155 = await module.exports.deployNFT(this, overrides);
 
     /* Deploy Mock NFT */
     this.mockNFT = await (await this.MockNFT.deploy(this.senderVerifier.address, this.ticketManager.address)).deployed();
