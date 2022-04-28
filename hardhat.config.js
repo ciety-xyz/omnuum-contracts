@@ -25,6 +25,9 @@ module.exports = {
         interval: process.env.MINING_INTERVAL !== undefined ? Number(process.env.MINING_INTERVAL) : 0,
       },
     },
+    mainnet: {
+      url: process.env.MAINNET_URL,
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
       accounts: [
