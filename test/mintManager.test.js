@@ -27,7 +27,9 @@ describe('OmnuumMintManager', () => {
     it('[Revert] Should not initialize after deploy', async () => {
       const { omnuumMintManager, accounts } = this;
 
-      await expect(omnuumMintManager.connect(accounts[0]).initialize(1)).to.be.revertedWith(Constants.reasons.common.initialize);
+      await expect(omnuumMintManager.connect(accounts[0]).initialize(1, accounts[0].address)).to.be.revertedWith(
+        Constants.reasons.common.initialize,
+      );
     });
   });
 

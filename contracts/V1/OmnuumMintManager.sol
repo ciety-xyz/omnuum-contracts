@@ -3,6 +3,8 @@ pragma solidity 0.8.10;
 
 import '../utils/OwnableUpgradeable.sol';
 import './OmnuumNFT1155.sol';
+import './OmnuumCAManager.sol';
+import './OmnuumWallet.sol';
 
 /// @title OmnuumMintManager - Manage mint data and logics except ticket minting
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
@@ -15,6 +17,9 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
     /// @notice minimum fee (ether)
     uint256 public minFee;
+
+    /// @notice omnuum ca manager address
+    address private caManager;
 
     /// @notice special fee rates for exceptional contracts
     mapping(address => uint256) public specialFeeRates;
@@ -52,9 +57,10 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 basePrice; // minting price
     }
 
-    function initialize(uint256 _feeRate) public initializer {
+    function initialize(uint256 _feeRate, address _caManager) public initializer {
         __Ownable_init();
         feeRate = _feeRate;
+        caManager = _caManager;
         minFee = 0.0005 ether;
     }
 
@@ -180,11 +186,22 @@ contract OmnuumMintManager is OwnableUpgradeable {
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= totalQuantity * minFee, 'ARG3');
 
+        OmnuumWallet wallet = OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET')));
+
+        wallet.makePayment{ value: totalQuantity * minFee }('MINT_FEE', '');
+
         for (uint256 i = 0; i < len; i++) {
             address to = _tos[i];
             uint16 quantity = _quantitys[i];
-            targetContract.mintDirect{ value: minFee * _quantitys[i] }(to, quantity);
+            targetContract.mintDirect(to, quantity);
             emit Airdrop(_nftContract, to, quantity);
         }
+    }
+
+    function withdraw() public onlyOwner {
+        (bool result, ) = payable(msg.sender).call{ value: address(this).balance }('');
+
+        /// @custom:error (SE5) - Address: unable to send value, recipient may have reverted
+        require(result, 'SE5');
     }
 }

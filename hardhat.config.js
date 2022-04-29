@@ -9,7 +9,7 @@ require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 // require('hardhat-contract-sizer');
 
-require('hardhat-abi-exporter');
+// require('hardhat-abi-exporter');
 require('solidity-coverage');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
       },
     },
     mainnet: {
-      url: process.env.MAINNET_URL,
+      url: process.env.MAINNET_URL || '',
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',

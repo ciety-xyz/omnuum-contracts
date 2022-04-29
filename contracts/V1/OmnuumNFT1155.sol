@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 import '../utils/OwnableUpgradeable.sol';
@@ -17,8 +16,6 @@ import './OmnuumWallet.sol';
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
-    using CountersUpgradeable for CountersUpgradeable.Counter;
-    CountersUpgradeable.Counter private _tokenIdCounter;
 
     OmnuumCAManager private caManager;
     OmnuumMintManager private mintManager;
@@ -30,6 +27,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     bool public isRevealed;
     string private coverUri;
     address private omA;
+    uint256 lastTokenId;
 
     event Uri(address indexed nftContract, string uri);
     event FeePaid(address indexed payer, uint256 amount);
@@ -124,12 +122,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice direct mint, neither public nor ticket
     /// @param _to mint destination address
     /// @param _quantity minting quantity
-    function mintDirect(address _to, uint32 _quantity) external payable {
+    function mintDirect(address _to, uint32 _quantity) external {
         /// @custom:error (OO3) - Only Omnuum or owner can change
         require(msg.sender == address(mintManager), 'OO3');
         mintLoop(_to, _quantity);
-
-        sendFee(_quantity);
     }
 
     /// @dev minting utility function, manage token id
@@ -137,10 +133,9 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _quantity minting quantity
     function mintLoop(address _to, uint32 _quantity) internal {
         /// @custom:error (MT3) - Remaining token count is not enough
-        require(_tokenIdCounter.current() + _quantity <= maxSupply, 'MT3');
+        require(lastTokenId + _quantity <= maxSupply, 'MT3');
         for (uint32 i = 0; i < _quantity; i++) {
-            _tokenIdCounter.increment();
-            _mint(_to, _tokenIdCounter.current(), 1, '');
+            _mint(_to, ++lastTokenId, 1, '');
         }
     }
 

@@ -97,7 +97,7 @@ describe('NftFactory', () => {
         uniq,
         (addresses) => expect(addresses.length).to.be.equal(collectionCount),
       );
-    });
+    }).timeout(1000 * 60);
 
     it('[Revert] false signature', async () => {
       const {
