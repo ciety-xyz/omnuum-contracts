@@ -27,7 +27,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     bool public isRevealed;
     address private omA;
     string private coverUri;
-    uint256 lastTokenId;
+    uint256 public lastTokenId;
 
     event Uri(address indexed nftContract, string uri);
     event FeePaid(address indexed payer, uint256 amount);
