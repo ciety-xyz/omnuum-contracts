@@ -8,6 +8,7 @@ const inquirerParams = {
   signatureSignerAddress: 'signatureSignerAddress',
   maxPriorityFeePerGas: 'maxPriorityFeePerGas',
   maxFeePerGas: 'maxFeePerGas',
+  eip1559: 'eip1559',
 };
 
 const questions = [
@@ -23,6 +24,15 @@ const questions = [
     message: '🤔 Signature signer address is (not private key, just address)...',
     validate: nullCheck,
   },
+  {
+    name: inquirerParams.eip1559,
+    type: 'list',
+    message: '🤔 You wanna gas fee customizable?',
+    choices: ['normal', 'eip1559'],
+  },
+];
+
+const gasQuestions = [
   {
     name: inquirerParams.maxFeePerGas,
     type: 'input',
@@ -40,10 +50,16 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      await main(ans.devDeployerPrivateKey, ans.signatureSignerAddress, {
-        maxFeePerGas: ans.maxFeePerGas,
-        maxPriorityFeePerGas: ans.maxPriorityFeePerGas,
-      });
+      if (ans.eip1559 === 'normal') {
+        await main(ans.devDeployerPrivateKey, ans.signatureSignerAddress);
+      } else {
+        inquirer.prompt(gasQuestions).then(async (gasAns) => {
+          await main(ans.devDeployerPrivateKey, ans.signatureSignerAddress, {
+            maxFeePerGas: gasAns.maxFeePerGas,
+            maxPriorityFeePerGas: gasAns.maxPriorityFeePerGas,
+          });
+        });
+      }
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

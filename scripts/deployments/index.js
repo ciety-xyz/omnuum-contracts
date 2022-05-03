@@ -39,14 +39,18 @@ async function main(deployerPrivateKey, signatureSignerAddress, gasPrices) {
     await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
     await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
 
-    const FEE_DATA = {
-      maxFeePerGas: ethers.utils.parseUnits(gasPrices.maxFeePerGas, 'gwei'),
-      maxPriorityFeePerGas: ethers.utils.parseUnits(gasPrices.maxPriorityFeePerGas, 'gwei'),
-    };
-
-    // Wrap the provider so we can override fee data.
-    const provider = new ethers.providers.FallbackProvider([ethers.provider], 1);
-    provider.getFeeData = async () => FEE_DATA;
+    let provider;
+    if (gasPrices) {
+      // Wrap the provider so we can override fee data.
+      provider = new ethers.providers.FallbackProvider([ethers.provider], 1);
+      const FEE_DATA = {
+        maxFeePerGas: ethers.utils.parseUnits(gasPrices.maxFeePerGas, 'gwei'),
+        maxPriorityFeePerGas: ethers.utils.parseUnits(gasPrices.maxPriorityFeePerGas, 'gwei'),
+      };
+      provider.getFeeData = async () => FEE_DATA;
+    } else {
+      provider = await getRPCProvider(ethers.provider);
+    }
 
     const OmnuumDeploySigner =
       chainName === 'localhost'

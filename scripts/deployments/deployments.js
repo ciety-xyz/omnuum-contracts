@@ -58,7 +58,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const mintManager = await deployProxy({
     contractName: 'OmnuumMintManager',
     deploySigner,
-    args: [DEP_CONSTANTS.mintManager.feeRate],
+    args: [DEP_CONSTANTS.mintManager.feeRate, caManager.proxyContract.address],
   });
 
   /* Deploy Exchange */
