@@ -40,6 +40,7 @@
     "itx:revoke": "npx hardhat run scripts/interactions/wallet/revoke.js --network rinkeby",
     "itx:sendEther": "npx hardhat run scripts/interactions/wallet/sendEther.js --network rinkeby",
     "itx:payment": "npx hardhat run scripts/interactions/wallet/payment.js --network rinkeby",
+    "upgrade:mintManager": "npx hardhat run scripts/upgrades/mintManager.js --network rinkeby",
     "coverage": "npx hardhat coverage --network hardhat"
   },
   "dependencies": {

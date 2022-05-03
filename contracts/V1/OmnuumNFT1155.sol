@@ -21,7 +21,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     OmnuumMintManager private mintManager;
 
     /// @notice max amount can be minted
-    uint32 public maxSupply;
+    uint32 public totalSupply;
 
     /// @notice whether revealed or not
     bool public isRevealed;
@@ -37,13 +37,13 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice constructor function for upgradeable
     /// @param _caManagerAddress ca manager address
     /// @param _omA omnuum company address
-    /// @param _maxSupply max amount can be minted
+    /// @param _totalSupply max amount can be minted
     /// @param _coverUri metadata uri for before reveal
     /// @param _prjOwner project owner address to transfer ownership
     function initialize(
         address _caManagerAddress,
         address _omA, // omnuum deployer
-        uint32 _maxSupply,
+        uint32 _totalSupply,
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
@@ -55,7 +55,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         __ReentrancyGuard_init();
         __Ownable_init();
 
-        maxSupply = _maxSupply;
+        totalSupply = _totalSupply;
         omA = _omA;
 
         caManager = OmnuumCAManager(_caManagerAddress);
@@ -118,7 +118,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _quantity minting quantity
     function mintLoop(address _to, uint256 _quantity) internal {
         /// @custom:error (MT3) - Remaining token count is not enough
-        require(lastTokenId + _quantity <= maxSupply, 'MT3');
+        require(lastTokenId + _quantity <= totalSupply, 'MT3');
         for (uint256 i = 0; i < _quantity; i++) {
             _mint(_to, ++lastTokenId, 1, '');
         }
