@@ -169,7 +169,6 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint16[] calldata _quantitys
     ) external payable {
         OmnuumNFT1155 targetContract = OmnuumNFT1155(_nftContract);
-
         uint256 len = _tos.length;
 
         /// @custom:error (OO1) - Ownable: Caller is not the collection owner
@@ -180,28 +179,15 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         uint256 totalQuantity;
         for (uint256 i = 0; i < len; i++) {
-            totalQuantity += _quantitys[i];
+            address to = _tos[i];
+            uint16 quantity = _quantitys[i];
+            totalQuantity += quantity;
+            targetContract.mintDirect(to, quantity);
+            emit Airdrop(_nftContract, to, quantity);
         }
 
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= totalQuantity * minFee, 'ARG3');
-
-        OmnuumWallet wallet = OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET')));
-
-        wallet.makePayment{ value: totalQuantity * minFee }('MINT_FEE', '');
-
-        for (uint256 i = 0; i < len; i++) {
-            address to = _tos[i];
-            uint16 quantity = _quantitys[i];
-            targetContract.mintDirect(to, quantity);
-            emit Airdrop(_nftContract, to, quantity);
-        }
-    }
-
-    function withdraw() public onlyOwner {
-        (bool result, ) = payable(msg.sender).call{ value: address(this).balance }('');
-
-        /// @custom:error (SE5) - Address: unable to send value, recipient may have reverted
-        require(result, 'SE5');
+        OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET'))).makePayment{ value: msg.value }('MINT_FEE', '');
     }
 }
