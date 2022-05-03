@@ -25,8 +25,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
 
     /// @notice whether revealed or not
     bool public isRevealed;
-    string private coverUri;
     address private omA;
+    string private coverUri;
     uint256 lastTokenId;
 
     event Uri(address indexed nftContract, string uri);
@@ -63,28 +63,13 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         coverUri = _coverUri;
     }
 
-    /// @dev send fee to omnuum wallet
-    function sendFee(uint32 _quantity) internal {
-        uint8 rateDecimal = mintManager.rateDecimal();
-        uint256 minFee = mintManager.minFee();
-        uint256 feeRate = mintManager.getFeeRate(address(this));
-        uint256 calculatedFee = (msg.value * feeRate) / 10**rateDecimal;
-        uint256 minimumFee = _quantity * minFee;
-
-        uint256 feePayment = calculatedFee > minimumFee ? calculatedFee : minimumFee;
-
-        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }('MINT_FEE', '');
-
-        emit FeePaid(msg.sender, feePayment);
-    }
-
     /// @notice public minting function
     /// @param _quantity minting quantity
     /// @param _groupId public minting schedule id
     /// @param _payload payload for authenticate that mint call happen through omnuum server to guarantee exact schedule time
     function publicMint(
         uint32 _quantity,
-        uint16 _groupId,
+        uint256 _groupId,
         SenderVerifier.Payload calldata _payload
     ) external payable nonReentrant {
         /// @custom:error (MT9) - Minter cannot be CA
@@ -122,19 +107,19 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice direct mint, neither public nor ticket
     /// @param _to mint destination address
     /// @param _quantity minting quantity
-    function mintDirect(address _to, uint32 _quantity) external {
+    function mintDirect(address _to, uint256 _quantity) external {
         /// @custom:error (OO3) - Only Omnuum or owner can change
         require(msg.sender == address(mintManager), 'OO3');
         mintLoop(_to, _quantity);
     }
 
-    /// @dev minting utility function, manage token id
+    /// @notice minting utility function, manage token id
     /// @param _to mint destination address
     /// @param _quantity minting quantity
-    function mintLoop(address _to, uint32 _quantity) internal {
+    function mintLoop(address _to, uint256 _quantity) internal {
         /// @custom:error (MT3) - Remaining token count is not enough
         require(lastTokenId + _quantity <= maxSupply, 'MT3');
-        for (uint32 i = 0; i < _quantity; i++) {
+        for (uint256 i = 0; i < _quantity; i++) {
             _mint(_to, ++lastTokenId, 1, '');
         }
     }
@@ -153,8 +138,8 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     }
 
     /// @notice transfer balance of the contract to someone (maybe the project team member), including project owner him or herself
-    /// @param _value - the amount of value to transfer
-    /// @param _to - receiver
+    /// @param _value The amount of value to transfer
+    /// @param _to Receiver who receive the value
     function transferBalance(uint256 _value, address _to) external onlyOwner nonReentrant {
         /// @custom:error (NE4) - Insufficient balance
         require(_value <= address(this).balance, 'NE4');
@@ -169,5 +154,21 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice a function to donate to support the project owner. Hooray~!
     receive() external payable {
         emit EtherReceived(msg.sender);
+    }
+
+    /// @notice send fee to omnuum wallet
+    /// @param _quantity Mint quantity
+    function sendFee(uint256 _quantity) internal {
+        uint8 rateDecimal = mintManager.rateDecimal();
+        uint256 minFee = mintManager.minFee();
+        uint256 feeRate = mintManager.getFeeRate(address(this));
+        uint256 calculatedFee = (msg.value * feeRate) / 10**rateDecimal;
+        uint256 minimumFee = _quantity * minFee;
+
+        uint256 feePayment = calculatedFee > minimumFee ? calculatedFee : minimumFee;
+
+        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }('MINT_FEE', '');
+
+        emit FeePaid(msg.sender, feePayment);
     }
 }

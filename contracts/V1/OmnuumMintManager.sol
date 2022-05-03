@@ -133,7 +133,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @param _value value sent to mint at NFT contract, used for checking whether value is enough or not to mint
     /// @param _minter msg.sender at NFT contract who are trying to mint
     function preparePublicMint(
-        uint16 _groupId,
+        uint256 _groupId,
         uint32 _quantity,
         uint256 _value,
         address _minter
@@ -166,7 +166,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     function mintMultiple(
         address payable _nftContract,
         address[] calldata _tos,
-        uint16[] calldata _quantitys
+        uint256[] calldata _quantitys
     ) external payable {
         OmnuumNFT1155 targetContract = OmnuumNFT1155(_nftContract);
         uint256 len = _tos.length;
@@ -180,7 +180,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 totalQuantity;
         for (uint256 i = 0; i < len; i++) {
             address to = _tos[i];
-            uint16 quantity = _quantitys[i];
+            uint256 quantity = _quantitys[i];
             totalQuantity += quantity;
             targetContract.mintDirect(to, quantity);
             emit Airdrop(_nftContract, to, quantity);

@@ -55,7 +55,7 @@
     "dotenv": "^10.0.0",
     "ethers": "^5.5.4",
     "fxjs": "^0.21.3",
-    "hardhat": "^2.9.2",
+    "hardhat": "^2.9.3",
     "hardhat-abi-exporter": "^2.8.0",
     "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",

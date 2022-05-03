@@ -174,9 +174,9 @@ async function estimateNFTAirdropGas() {
     // await estimateCase(100, [1]);
     // await estimateCase(100, [2]);
     await estimateCase(200, [1]);
-    await estimateCase(300, [1]);
-    await estimateCase(400, [1]);
-    await estimateCase(500, [1]);
+    // await estimateCase(300, [1]);
+    // await estimateCase(400, [1]);
+    // await estimateCase(500, [1]);
     // await estimateCase(1000, [1]);
     // await estimateCase(1000, [2]);
 
