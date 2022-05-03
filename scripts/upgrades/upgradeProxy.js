@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 const { nullCheck, getRPCProvider } = require('../deployments/deployHelper');
-const DEP_CONSTANTS = require('../deployments/deployConstants');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',

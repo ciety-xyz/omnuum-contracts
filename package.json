@@ -41,6 +41,7 @@
     "itx:sendEther": "npx hardhat run scripts/interactions/wallet/sendEther.js --network rinkeby",
     "itx:payment": "npx hardhat run scripts/interactions/wallet/payment.js --network rinkeby",
     "upgrade:proxy": "npx hardhat run scripts/upgrades/upgradeProxy.js --network rinkeby",
+    "upgrade:beacon": "npx hardhat run scripts/upgrades/upgradeBeacon.js --network rinkeby",
     "coverage": "npx hardhat coverage --network hardhat",
     "forceImport": "npx hardhat run scripts/upgrades/forceImport.js"
   },

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
+import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 import '../utils/OwnableUpgradeable.sol';
@@ -16,18 +17,19 @@ import './OmnuumWallet.sol';
 contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    CountersUpgradeable.Counter public _tokenIdCounter;
 
     OmnuumCAManager private caManager;
     OmnuumMintManager private mintManager;
 
     /// @notice max amount can be minted
-    uint32 public totalSupply;
+    uint32 public maxSupply;
 
     /// @notice whether revealed or not
     bool public isRevealed;
-    address private omA;
     string private coverUri;
-    uint256 public lastTokenId;
+    address private omA;
 
     event Uri(address indexed nftContract, string uri);
     event FeePaid(address indexed payer, uint256 amount);
@@ -37,13 +39,13 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @notice constructor function for upgradeable
     /// @param _caManagerAddress ca manager address
     /// @param _omA omnuum company address
-    /// @param _totalSupply max amount can be minted
+    /// @param _maxSupply max amount can be minted
     /// @param _coverUri metadata uri for before reveal
     /// @param _prjOwner project owner address to transfer ownership
     function initialize(
         address _caManagerAddress,
         address _omA, // omnuum deployer
-        uint32 _totalSupply,
+        uint32 _maxSupply,
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
@@ -55,7 +57,7 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
         __ReentrancyGuard_init();
         __Ownable_init();
 
-        totalSupply = _totalSupply;
+        maxSupply = _maxSupply;
         omA = _omA;
 
         caManager = OmnuumCAManager(_caManagerAddress);
@@ -118,9 +120,10 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _quantity minting quantity
     function mintLoop(address _to, uint256 _quantity) internal {
         /// @custom:error (MT3) - Remaining token count is not enough
-        require(lastTokenId + _quantity <= totalSupply, 'MT3');
+        require(_tokenIdCounter.current() + _quantity <= maxSupply, 'MT3');
         for (uint256 i = 0; i < _quantity; i++) {
-            _mint(_to, ++lastTokenId, 1, '');
+            _tokenIdCounter.increment();
+            _mint(_to, _tokenIdCounter.current(), 1, '');
         }
     }
 

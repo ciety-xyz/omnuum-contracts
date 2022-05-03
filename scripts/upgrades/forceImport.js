@@ -23,7 +23,7 @@ const questions = [
   {
     name: inquirerParams.contractAddress,
     type: 'input',
-    message: '🤔 Proxy contract address is ...',
+    message: '🤔 Proxy or Beacon contract address is ...',
     validate: nullCheck,
   },
 ];
