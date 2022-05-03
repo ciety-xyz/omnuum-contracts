@@ -18,14 +18,14 @@ contract OmnuumMintManager is OwnableUpgradeable {
     /// @notice minimum fee (ether)
     uint256 public minFee;
 
-    /// @notice omnuum ca manager address
-    address private caManager;
-
     /// @notice special fee rates for exceptional contracts
     mapping(address => uint256) public specialFeeRates;
 
     /// @notice nft => groupId => PublicMintSchedule
     mapping(address => mapping(uint256 => PublicMintSchedule)) public publicMintSchedules;
+
+    /// @notice omnuum ca manager address
+    address private caManager;
 
     event ChangeFeeRate(uint256 feeRate);
     event SetSpecialFeeRate(address indexed nftContract, uint256 discountFeeRate);

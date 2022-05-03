@@ -773,8 +773,8 @@ describe('Omnuum Multi-sig Wallet', () => {
       await Wallet.connect(requester).execute(1);
       await Wallet.connect(requester).execute(3);
 
-      expect(await Wallet.getRequestIdsByExecution(true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByExecution(false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByExecution(true, 0, 99)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByExecution(false, 0, 99)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
     });
   });
   describe('[Method] getRequestIdsByOwner', () => {
@@ -800,11 +800,13 @@ describe('Omnuum Multi-sig Wallet', () => {
       await Wallet.connect(requester).execute(1);
       await Wallet.connect(requester).execute(3);
 
-      expect(await Wallet.getRequestIdsByOwner(requester.address, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByOwner(requester.address, false)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(requester.address, true, 0, 99)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(requester.address, false, 0, 99)).to.deep.eq([0, 2, 4].map((x) => ethers.BigNumber.from(x)));
 
-      expect(await Wallet.getRequestIdsByOwner(approver.address, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByOwner(approver.address, false)).to.deep.eq(range(5, 10).map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(approver.address, true, 0, 99)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByOwner(approver.address, false, 0, 99)).to.deep.eq(
+        range(5, 10).map((x) => ethers.BigNumber.from(x)),
+      );
     });
   });
 
@@ -825,12 +827,12 @@ describe('Omnuum Multi-sig Wallet', () => {
       await Wallet.connect(requester).execute(1);
       await Wallet.connect(requester).execute(3);
 
-      expect(await Wallet.getRequestIdsByType(0, false)).to.deep.eq([0, 2, 5].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByType(0, true)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByType(1, false)).to.deep.eq([6, 8].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByType(2, false)).to.deep.eq([4, 7].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByType(2, true)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
-      expect(await Wallet.getRequestIdsByType(3, false)).to.deep.eq([9].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(0, false, 0, 99)).to.deep.eq([0, 2, 5].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(0, true, 0, 99)).to.deep.eq([1, 3].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(1, false, 0, 99)).to.deep.eq([6, 8].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, false, 0, 99)).to.deep.eq([4, 7].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(2, true, 0, 99)).to.deep.eq([].map((x) => ethers.BigNumber.from(x)));
+      expect(await Wallet.getRequestIdsByType(3, false, 0, 99)).to.deep.eq([9].map((x) => ethers.BigNumber.from(x)));
     });
   });
 });

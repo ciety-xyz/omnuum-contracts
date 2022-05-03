@@ -6,7 +6,6 @@ const DEP_CONSTANTS = require('../deployments/deployConstants');
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',
   proxy_address: 'proxy_address',
-  ca_manager_address: 'ca_manager_address',
 };
 
 const questions = [
@@ -22,12 +21,6 @@ const questions = [
     message: '🤔 Proxy Address is...',
     validate: nullCheck,
   },
-  {
-    name: inquirerParams.ca_manager_address,
-    type: 'input',
-    message: '🤔 CA Manager Address is...',
-    validate: nullCheck,
-  },
 ];
 
 (async () => {
@@ -37,19 +30,12 @@ const questions = [
       const deployerSigner = new ethers.Wallet(ans.deployer_private_key, provider);
 
       const MintManager = (await ethers.getContractFactory('OmnuumMintManager')).connect(deployerSigner);
-      const MintManager2 = (await ethers.getContractFactory('OmnuumMintManager2')).connect(deployerSigner);
-      const proxy = await upgrades.forceImport(ans.proxy_address, MintManager, {
-        kind: 'transparent',
-      });
 
-      console.log('proxy', proxy);
-      const upgraded = await upgrades.upgradeProxy(
-        proxy,
-        MintManager2,
-        // call: { fn: 'initialize(uint256,address)', args: [DEP_CONSTANTS.mintManager.feeRate, ans.ca_manager_address] },
-      );
+      const upgraded = await upgrades.upgradeProxy(ans.proxy_address, MintManager);
+      const txResponse = await upgraded.deployTransaction.wait();
 
-      console.log(upgraded);
+      console.log(txResponse);
+      console.log('Upgrade is done');
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
