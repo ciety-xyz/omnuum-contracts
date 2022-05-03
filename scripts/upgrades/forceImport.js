@@ -9,8 +9,6 @@ const inquirerParams = {
   contractAddress: 'contractAddress',
 };
 
-console.log(path.resolve(__dirname, '../../contracts/V1'));
-
 const getSolidityFileList = fs
   .readdirSync(path.resolve(__dirname, '../../contracts/V1'))
   .map((filename) => filename.substr(0, filename.indexOf('.')));

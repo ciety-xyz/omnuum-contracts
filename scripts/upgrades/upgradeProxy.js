@@ -1,12 +1,20 @@
 const inquirer = require('inquirer');
 const { ethers, upgrades } = require('hardhat');
+const fs = require('fs');
+const path = require('path');
+const chalk = require('chalk');
 const { nullCheck, getRPCProvider } = require('../deployments/deployHelper');
 const DEP_CONSTANTS = require('../deployments/deployConstants');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',
   proxy_address: 'proxy_address',
+  contract_name: 'contract_name',
 };
+
+const getSolidityFileList = fs
+  .readdirSync(path.resolve(__dirname, '../../contracts/V1'))
+  .map((filename) => filename.substr(0, filename.indexOf('.')));
 
 const questions = [
   {
@@ -16,9 +24,15 @@ const questions = [
     validate: nullCheck,
   },
   {
+    name: inquirerParams.contract_name,
+    type: 'list',
+    message: '🤔 Choose contract you want to upgrade is ...',
+    choices: getSolidityFileList,
+  },
+  {
     name: inquirerParams.proxy_address,
     type: 'input',
-    message: '🤔 Proxy Address is...',
+    message: '🤔 Previous contract proxy Address is...',
     validate: nullCheck,
   },
 ];
@@ -29,13 +43,13 @@ const questions = [
       const provider = await getRPCProvider(ethers.provider);
       const deployerSigner = new ethers.Wallet(ans.deployer_private_key, provider);
 
-      const MintManager = (await ethers.getContractFactory('OmnuumMintManager')).connect(deployerSigner);
+      const ContractFactory = (await ethers.getContractFactory(ans.contract_name)).connect(deployerSigner);
 
-      const upgraded = await upgrades.upgradeProxy(ans.proxy_address, MintManager);
+      const upgraded = await upgrades.upgradeProxy(ans.proxy_address, ContractFactory);
       const txResponse = await upgraded.deployTransaction.wait();
 
       console.log(txResponse);
-      console.log('Upgrade is done');
+      console.log(chalk.yellow(`${ans.contract_name} upgrade is done`));
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
