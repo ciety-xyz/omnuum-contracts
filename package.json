@@ -40,10 +40,10 @@
     "itx:revoke": "npx hardhat run scripts/interactions/wallet/revoke.js --network rinkeby",
     "itx:sendEther": "npx hardhat run scripts/interactions/wallet/sendEther.js --network rinkeby",
     "itx:payment": "npx hardhat run scripts/interactions/wallet/payment.js --network rinkeby",
-    "upgrade:proxy": "npx hardhat run scripts/upgrades/upgradeProxy.js --network rinkeby",
-    "upgrade:beacon": "npx hardhat run scripts/upgrades/upgradeBeacon.js --network rinkeby",
+    "upgrade:proxy": "npx hardhat run scripts/upgrades/upgradeProxy.js --network $npm_config_network",
+    "upgrade:beacon": "npx hardhat run scripts/upgrades/upgradeBeacon.js --network $npm_config_network",
     "coverage": "npx hardhat coverage --network hardhat",
-    "forceImport": "npx hardhat run scripts/upgrades/forceImport.js"
+    "forceImport": "npx hardhat run scripts/upgrades/forceImport.js --network $npm_config_network"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",

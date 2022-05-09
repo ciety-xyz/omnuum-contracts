@@ -3,12 +3,17 @@ const { ethers, upgrades } = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
-const { nullCheck, getRPCProvider } = require('../deployments/deployHelper');
+const { getAdminAddress } = require('@openzeppelin/upgrades-core');
+const { mkdir, writeFile } = require('fs/promises');
+const { nullCheck, getRPCProvider, getChainName, getDateSuffix } = require('../deployments/deployHelper');
+const { getWalletFromMnemonic } = require('../walletFromMnemonic');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',
   proxy_address: 'proxy_address',
   contract_name: 'contract_name',
+  signer_method: 'signer_method',
+  proceed: 'proceed',
 };
 
 const getSolidityFileList = fs
@@ -17,38 +22,115 @@ const getSolidityFileList = fs
 
 const questions = [
   {
-    name: inquirerParams.deployer_private_key,
-    type: 'input',
-    message: '🤔 Deployer Private Key is...',
-    validate: nullCheck,
-  },
-  {
     name: inquirerParams.contract_name,
     type: 'list',
-    message: '🤔 Choose contract you want to upgrade is ...',
+    message: chalk.yellowBright('🤔 Choose contract you want to upgrade is ...'),
     choices: getSolidityFileList,
   },
   {
     name: inquirerParams.proxy_address,
     type: 'input',
-    message: '🤔 Previous contract proxy Address is...',
+    message: chalk.yellowBright('🤔 Proxy Address to be upgraded is...'),
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.signer_method,
+    type: 'list',
+    message: chalk.yellowBright('🤔 How to create deployer signer'),
+    choices: ['from_PK', 'from_mnemonic'],
     validate: nullCheck,
   },
 ];
 
 (async () => {
+  console.log(
+    chalk.yellow(`
+                                                     ######
+ #    # #####   ####  #####    ##   #####  ######    #     # #####   ####  #    # #   #
+ #    # #    # #    # #    #  #  #  #    # #         #     # #    # #    #  #  #   # #
+ #    # #    # #      #    # #    # #    # #####     ######  #    # #    #   ##     #
+ #    # #####  #  ### #####  ###### #    # #         #       #####  #    #   ##     #
+ #    # #      #    # #   #  #    # #    # #         #       #   #  #    #  #  #    #
+  ####  #       ####  #    # #    # #####  ######    #       #    #  ####  #    #   #
+  `),
+  );
   inquirer.prompt(questions).then(async (ans) => {
     try {
+      const dirPath = './scripts/deployments/deployResults/upgrades';
+      await mkdir(dirPath, { recursive: true });
+      const chainName = await getChainName();
+
       const provider = await getRPCProvider(ethers.provider);
-      const deployerSigner = new ethers.Wallet(ans.deployer_private_key, provider);
+
+      let deployerSigner;
+      if (ans.signer_method === 'from_PK') {
+        const { deployer_private_key } = await inquirer.prompt([
+          {
+            name: inquirerParams.deployer_private_key,
+            type: 'input',
+            message: chalk.yellowBright('🤔 Deployer Private Key is...'),
+            validate: nullCheck,
+          },
+        ]);
+        deployerSigner = new ethers.Wallet(deployer_private_key, provider);
+      } else if (ans.signer_method === 'from_mnemonic') {
+        deployerSigner = await getWalletFromMnemonic(provider);
+      }
+
+      const deployerAddress = deployerSigner.address;
+      const deployerBalance = ethers.utils.formatEther(await deployerSigner.getBalance());
+
+      const { proceed } = await inquirer.prompt([
+        {
+          name: inquirerParams.proceed,
+          type: 'confirm',
+          message: chalk.yellow(
+            `ATTENTION!!!!!!\n\tDeployer: ${deployerAddress}\n\tBalance: ${deployerBalance} ETH\n\tNetwork: ${chainName}\n ${chalk.red(
+              '=> Do you want to proceed?',
+            )}`,
+          ),
+        },
+      ]);
+
+      // eslint-disable-next-line consistent-return
+      if (!proceed) return;
 
       const ContractFactory = (await ethers.getContractFactory(ans.contract_name)).connect(deployerSigner);
 
-      const upgraded = await upgrades.upgradeProxy(ans.proxy_address, ContractFactory);
-      const txResponse = await upgraded.deployTransaction.wait();
+      const adminAddress = await getAdminAddress(provider, ans.proxy_address);
+      const AdminContract = new ethers.Contract(
+        adminAddress,
+        new ethers.utils.Interface(['function getProxyImplementation(address proxy) public view returns (address)']),
+        provider,
+      );
 
-      console.log(txResponse);
-      console.log(chalk.yellow(`${ans.contract_name} upgrade is done`));
+      const previousImplAddress = await AdminContract.getProxyImplementation(ans.proxy_address);
+
+      // Go Proxy Upgrade!
+      console.log(chalk.greenBright(`!!! Starting Proxy Upgrade --- ${ans.contract_name}`));
+      const upgraded = await upgrades.upgradeProxy(ans.proxy_address, ContractFactory);
+      const txReceipt = await upgraded.deployTransaction.wait();
+
+      const iFace = new ethers.utils.Interface(['event Upgraded(address indexed implementation)']);
+      const { implementation } = iFace.parseLog(txReceipt.events[0]).args;
+
+      const resultData = {
+        upgradeTarget: `${ans.contract_name}`,
+        chain: chainName,
+        timeStamp: new Date().toLocaleString(),
+        deployer: deployerSigner.address,
+        proxyAddress: ans.proxy_address,
+        adminAddress,
+        previousImplAddress,
+        upgradedImplAddress: implementation,
+      };
+
+      console.log(chalk.yellowBright('☀️ Result\n'), resultData);
+      console.log(chalk.yellow(`${ans.contract_name} Proxy upgrade is done!`));
+
+      const filename = `${chainName}_${getDateSuffix()}_${ans.contract_name}_upgrade.json`;
+
+      await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

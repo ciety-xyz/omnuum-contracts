@@ -30,7 +30,6 @@ const questions = [
 
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
-    console.log('ans.contractName', ans.contractName);
     try {
       const Contract = await ethers.getContractFactory(ans.contractName);
       await upgrades.forceImport(ans.contractAddress, Contract);
