@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const { ethers, upgrades } = require('hardhat');
 const fs = require('fs');
 const chalk = require('chalk');
+const { mkdir } = require('fs/promises');
 const { deployNFT } = require('./deployments');
 const { getDateSuffix, nullCheck, getRPCProvider, getChainName } = require('./deployHelper');
 
@@ -78,6 +79,7 @@ const questions = [
       console.log(chalk.green(`${`\nSTART DEPLOYMENT to ${chainName} at ${new Date()}`}`));
 
       const provider = await getRPCProvider(ethers.provider);
+
       const projectOwnerSigner = new ethers.Wallet(ans.project_owner_private_key, provider);
 
       const nftDeployment = await deployNFT({
@@ -105,6 +107,8 @@ const questions = [
       );
 
       const filename = `${chainName}_${getDateSuffix()}.json`;
+
+      await mkdir('./scripts/deployments/deployResults/nft', { recursive: true });
       fs.writeFileSync(
         `./scripts/deployments/deployResults/nft/${filename}`,
         Buffer.from(
