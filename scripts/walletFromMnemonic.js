@@ -26,7 +26,7 @@ const createWordQuestions = async (len) =>
     range(len),
     map((idx) => {
       const word_index = idx + 1;
-      return { name: `word_${word_index}`, type: 'input', message: `Input word [${word_index}]`, validate: validateWord };
+      return { name: `word_${word_index}`, type: 'password', mask: '*', message: `Input word [${word_index}]`, validate: validateWord };
     }),
   );
 

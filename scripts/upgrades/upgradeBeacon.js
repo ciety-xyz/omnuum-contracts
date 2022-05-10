@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
 const { mkdir, writeFile } = require('fs/promises');
+const AWS = require('aws-sdk');
 const { getRPCProvider, nullCheck, getDateSuffix, getChainName } = require('../deployments/deployHelper');
 const { getWalletFromMnemonic } = require('../walletFromMnemonic');
 
@@ -10,6 +11,8 @@ const inquirerParams = {
   beacon_address: 'beacon_address',
   signer_method: 'signer_method',
   proceed: 'proceed',
+  localSave: 'localSave',
+  s3Save: 's3Save',
 };
 
 const questions = [
@@ -41,6 +44,7 @@ const questions = [
   
   `),
   );
+
   inquirer.prompt(questions).then(async (ans) => {
     try {
       const dirPath = './scripts/deployments/deployResults/upgrades';
@@ -72,7 +76,9 @@ const questions = [
           name: inquirerParams.proceed,
           type: 'confirm',
           message: chalk.yellow(
-            `ATTENTION!!!!!!\n\tDeployer: ${deployerAddress}\n\tBalance: ${deployerBalance} ETH\n\tNetwork: ${chainName}\n ${chalk.red(
+            `${chalk.redBright(
+              'ATTENTION!!!!!!',
+            )}\n\tDeployer: ${deployerAddress}\n\tBalance: ${deployerBalance} ETH\n\tNetwork: ${chainName}\n ${chalk.red(
               '=> Do you want to proceed?',
             )}`,
           ),
@@ -110,11 +116,46 @@ const questions = [
         transaction: txReceipt.transactionHash,
       };
       console.log(chalk.yellowBright('☀️ Result\n'), resultData);
-      console.log(chalk.yellow('New NFT1155 Implementation deployed, then Beacon upgrade is done!'));
+      console.log(chalk.greenBright('New NFT1155 Implementation deployed, then Beacon upgrade is done!'));
 
-      const filename = `${chainName}_${getDateSuffix()}_NFT1155_upgrade.json`;
-
-      await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
+      inquirer
+        .prompt([
+          {
+            name: inquirerParams.localSave,
+            type: 'confirm',
+            message: chalk.yellow(`Save result JSON file to ${chalk.redBright('local')}`),
+          },
+          {
+            name: inquirerParams.s3Save,
+            type: 'confirm',
+            message: chalk.yellow(`Save result JSON file to ${chalk.redBright('S3')}`),
+          },
+        ])
+        .then(async (result) => {
+          const filename = `${chainName}_${getDateSuffix()}_NFT1155_upgrade.json`;
+          if (result.localSave) {
+            await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
+          }
+          if (result.s3Save) {
+            AWS.config.region = 'ap-northeast-2';
+            const s3 = new AWS.S3();
+            const bucketName = 'omnuum-prod-website-resources';
+            const keyName = `contracts/${filename}`;
+            const s3Promise = s3
+              .putObject({
+                Bucket: bucketName,
+                Key: keyName,
+                Body: Buffer.from(JSON.stringify(resultData)),
+              })
+              .promise();
+            s3Promise
+              .then((data) => {
+                console.log('data', data);
+                console.log(`Successfully uploaded data to ${bucketName}/${keyName}`);
+              })
+              .catch((e) => console.error(e));
+          }
+        });
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
