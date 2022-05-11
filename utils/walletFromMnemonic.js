@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const { go, range, map } = require('fxjs');
 const ethers = require('ethers');
-const { nullCheck } = require('./deployments/deployHelper');
+const { nullCheck } = require('../scripts/deployments/deployHelper');
 
 const question = [
   {

@@ -6,7 +6,8 @@ const chalk = require('chalk');
 const { getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { mkdir, writeFile } = require('fs/promises');
 const { nullCheck, getRPCProvider, getChainName, getDateSuffix } = require('../deployments/deployHelper');
-const { getWalletFromMnemonic } = require('../walletFromMnemonic');
+const { getWalletFromMnemonic } = require('../../utils/walletFromMnemonic');
+const { s3Upload } = require('../../utils/s3Upload');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',
@@ -125,12 +126,35 @@ const questions = [
         upgradedImplAddress: implementation,
       };
 
-      console.log(chalk.yellowBright('☀️ Result\n'), resultData);
-      console.log(chalk.yellow(`${ans.contract_name} Proxy upgrade is done!`));
+      console.log(chalk.yellowBright('\n☀️ Result\n'), resultData);
+      console.log(chalk.yellow(`\n${ans.contract_name} Proxy upgrade is done!`));
 
-      const filename = `${chainName}_${getDateSuffix()}_${ans.contract_name}_upgrade.json`;
-
-      await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
+      inquirer
+        .prompt([
+          {
+            name: inquirerParams.localSave,
+            type: 'confirm',
+            message: chalk.yellow(`Save result JSON file to ${chalk.redBright('local')}`),
+          },
+          {
+            name: inquirerParams.s3Save,
+            type: 'confirm',
+            message: chalk.yellow(`Save result JSON file to ${chalk.redBright('S3')}`),
+          },
+        ])
+        .then(async (result) => {
+          const filename = `${chainName}_${getDateSuffix()}_${ans.contract_name}_upgrade.json`;
+          if (result.localSave) {
+            await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
+          }
+          if (result.s3Save) {
+            await s3Upload({
+              bucketName: 'omnuum-prod-website-resources',
+              keyName: `contracts/upgrades/${filename}`,
+              fileBuffer: Buffer.from(JSON.stringify(resultData)),
+            });
+          }
+        });
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

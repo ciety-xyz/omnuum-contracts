@@ -4,7 +4,8 @@ const chalk = require('chalk');
 const { mkdir, writeFile } = require('fs/promises');
 const AWS = require('aws-sdk');
 const { getRPCProvider, nullCheck, getDateSuffix, getChainName } = require('../deployments/deployHelper');
-const { getWalletFromMnemonic } = require('../walletFromMnemonic');
+const { getWalletFromMnemonic } = require('../../utils/walletFromMnemonic');
+const { s3Upload } = require('../../utils/s3Upload');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',
@@ -115,8 +116,8 @@ const questions = [
         upgradedImplAddress: implementation,
         transaction: txReceipt.transactionHash,
       };
-      console.log(chalk.yellowBright('☀️ Result\n'), resultData);
-      console.log(chalk.greenBright('New NFT1155 Implementation deployed, then Beacon upgrade is done!'));
+      console.log(chalk.yellowBright('\n☀️ Result\n'), resultData);
+      console.log(chalk.greenBright('\nNew NFT1155 Implementation deployed, then Beacon upgrade is done!'));
 
       inquirer
         .prompt([
@@ -137,23 +138,11 @@ const questions = [
             await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
           }
           if (result.s3Save) {
-            AWS.config.region = 'ap-northeast-2';
-            const s3 = new AWS.S3();
-            const bucketName = 'omnuum-prod-website-resources';
-            const keyName = `contracts/${filename}`;
-            const s3Promise = s3
-              .putObject({
-                Bucket: bucketName,
-                Key: keyName,
-                Body: Buffer.from(JSON.stringify(resultData)),
-              })
-              .promise();
-            s3Promise
-              .then((data) => {
-                console.log('data', data);
-                console.log(`Successfully uploaded data to ${bucketName}/${keyName}`);
-              })
-              .catch((e) => console.error(e));
+            await s3Upload({
+              bucketName: 'omnuum-prod-website-resources',
+              keyName: `contracts/upgrades/${filename}`,
+              fileBuffer: Buffer.from(JSON.stringify(resultData)),
+            });
           }
         });
     } catch (e) {
