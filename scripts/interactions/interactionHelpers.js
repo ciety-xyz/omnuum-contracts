@@ -1,3 +1,4 @@
+const { ifElse, identity } = require('fxjs');
 const { ethers } = require('hardhat');
 
 const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, payloadTopic, groupId }) => ({
@@ -92,9 +93,14 @@ const getTicketWithSignature = async ({
 const getPayloadWithSignature = async ({ senderVerifierAddress, minterAddress, payloadTopic, groupId, signerPrivateKey }) => {
   const { signingEIP712 } = await import('@marpple/omnuum-digitalSigning');
   const payloadTypedData = await getPayloadTypedData({ senderVerifierAddress, minterAddress, payloadTopic, groupId });
+
   const { signature } = signingEIP712({
     typedData: payloadTypedData,
-    privateKey: signerPrivateKey,
+    privateKey: ifElse(
+      (key) => /^0x/.test(key),
+      (key) => key.slice(2),
+      identity,
+    )(signerPrivateKey),
   });
 
   return { ...payloadTypedData.message, signature };
