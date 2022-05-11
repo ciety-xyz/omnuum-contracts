@@ -14,7 +14,7 @@ require('solidity-coverage');
 
 module.exports = {
   solidity: '0.8.10',
-  defaultNetwork: 'rinkeby',
+  defaultNetwork: 'localhost',
   networks: {
     hardhat: {
       accounts: {
