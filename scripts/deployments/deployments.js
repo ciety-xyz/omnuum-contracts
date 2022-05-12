@@ -1,45 +1,9 @@
 const { ethers } = require('hardhat');
 const chalk = require('chalk');
-const { go } = require('fxjs');
 const CONSTANTS = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
 const { deployProxy, deployNormal, deployBeacon, getChainName } = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
-
-const deployNFT = async ({
-  projectOwnerSigner,
-  signerPrivateKey,
-  senderVerifierAddress,
-  maxSupply,
-  coverUri,
-  nftFactoryAddress,
-  collectionId,
-}) => {
-  /* Deploy NFT1155 Beacon Proxy */
-  const NftFactory = await ethers.getContractFactory('NftFactory');
-
-  // in this case, minterAddress means nft project owner
-  const payload = await getPayloadWithSignature({
-    senderVerifierAddress,
-    minterAddress: projectOwnerSigner.address,
-    payloadTopic: CONSTANTS.payloadTopic.deployCol,
-    groupId: collectionId,
-    signerPrivateKey,
-  });
-
-  const txResponse = await NftFactory.attach(nftFactoryAddress)
-    .connect(projectOwnerSigner)
-    .deploy(maxSupply, coverUri, collectionId, payload);
-  const deployReceipt = await txResponse.wait();
-
-  const { logs } = deployReceipt;
-
-  const {
-    args: { nftContract: beaconProxyAddress },
-  } = NftFactory.interface.parseLog(logs[logs.length - 1]);
-
-  return { beaconProxyAddress, deployReceipt };
-};
 
 const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts }) => {
   /* Deploy CA Manager */
@@ -101,9 +65,9 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
   });
 
-  /* Deploy NFT1155 Beacon */
+  /* Deploy NFT721 Beacon */
   const nft = await deployBeacon({
-    contractName: 'OmnuumNFT1155',
+    contractName: 'OmnuumNFT721',
     deploySigner,
   });
 
@@ -166,6 +130,43 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     revealManager,
     wallet,
   };
+};
+
+const deployNFT = async ({
+  projectOwnerSigner,
+  signerPrivateKey,
+  senderVerifierAddress,
+  maxSupply,
+  coverUri,
+  nftFactoryAddress,
+  collectionId,
+  name,
+  symbol,
+}) => {
+  /* Deploy NFT721 Beacon Proxy */
+  const NftFactory = await ethers.getContractFactory('NftFactory');
+
+  // in this case, minterAddress means nft project owner
+  const payload = await getPayloadWithSignature({
+    senderVerifierAddress,
+    minterAddress: projectOwnerSigner.address,
+    payloadTopic: CONSTANTS.payloadTopic.deployCol,
+    groupId: collectionId,
+    signerPrivateKey,
+  });
+
+  const txResponse = await NftFactory.attach(nftFactoryAddress)
+    .connect(projectOwnerSigner)
+    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload);
+  const deployReceipt = await txResponse.wait();
+
+  const { logs } = deployReceipt;
+
+  const {
+    args: { nftContract: beaconProxyAddress },
+  } = NftFactory.interface.parseLog(logs[logs.length - 1]);
+
+  return { beaconProxyAddress, deployReceipt };
 };
 
 module.exports = { deployNFT, deployManagers };
