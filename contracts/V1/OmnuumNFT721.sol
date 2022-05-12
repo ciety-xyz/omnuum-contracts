@@ -174,7 +174,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         }
     }
 
-    /// @notice transfer balance of the contract to someone (maybe the project team member), including project owner him or herself
+    /// @notice transfer balance of the contract to address (project team member or else) including project owner him or herself
     /// @param _value The amount of value to transfer
     /// @param _to Receiver who receive the value
     function transferBalance(uint256 _value, address _to) external onlyOwner nonReentrant {
