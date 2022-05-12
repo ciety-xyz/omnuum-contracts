@@ -14,25 +14,27 @@ const inquirerParams = {
   max_supply: 'max_supply',
   cover_uri: 'cover_uri',
   nft_collection_id: 'nft_collection_id',
+  name: 'name',
+  symbol: 'symbol',
 };
 
 const questions = [
   {
     name: inquirerParams.project_owner_private_key,
     type: 'input',
-    message: '🤔 Project owner private key who become owner is...',
+    message: '🤔 Project owner private key is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.signer_privateKey,
     type: 'input',
-    message: '🤔 Payload signers privateKey is...',
+    message: '🤔 Payload signers private key is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.sender_verifier_address,
     type: 'input',
-    message: '🤔 Sender verifier contract address is...',
+    message: '🤔 Sender verifier address is...',
     validate: nullCheck,
   },
   {
@@ -57,6 +59,18 @@ const questions = [
     name: inquirerParams.nft_collection_id,
     type: 'input',
     message: '🤔 NFT collection id you would like is...',
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.name,
+    type: 'input',
+    message: '🤔 NFT name is...',
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.symbol,
+    type: 'input',
+    message: '🤔 NFT symbol is...',
     validate: nullCheck,
   },
 ];
@@ -90,6 +104,8 @@ const questions = [
         coverUri: ans.cover_uri,
         nftFactoryAddress: ans.nft_factory_address,
         collectionId: ans.nft_collection_id,
+        name: ans.name,
+        symbol: ans.symbol,
       });
 
       const { transactionHash, blockNumber, gasUsed } = nftDeployment.deployReceipt;

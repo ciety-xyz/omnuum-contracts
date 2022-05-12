@@ -12,6 +12,31 @@ import './OmnuumCAManager.sol';
 import './TicketManager.sol';
 import './OmnuumWallet.sol';
 
+/// @title OmnuumNFT721 - NFT contract that implements the ERC721 standard
+/// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
+
+//                 .`:_(xz&B@@B&zx(_:`.
+//             ."}*$%WMM8$$$$$$$$$$$$$$*}".
+//           ,{}:`.       .'^;[n@$$$$$$$$$$t,
+//        .i+`             ....  `<n$$$$$$$$$8<.
+//       ;1.         `I1n&$$$$$$8u)!,iv$$$$$$$$8;
+//     .x~        ^Ii,`'''`^:_t%$$$$$B|_(@$$$$$$$x.
+//    '&|       ":.             '!u$$$$$M_1$$$$$$$&'
+//   '8$'     .1'                  '?B$$$$u,x$$$$$$8'
+//   v$8     '&'                     .-$$$$%`i$$$$$$v
+//  j$$$.   i$c                          t$$$- `B$$$$j
+//  B$$$~   r$$.                          u$$z  "$$$$%
+//  v$$$$z. ?$$$-                          c$)   `$$$v
+//  .&$$$$$W`"$$$$,                       .B:     @$&.
+//   ^$$$$$$$_"&$$$$v,                    )"     '$$^
+//    ,$$$$$$$Wi{$$$$$&?`               `!.      [$,
+//     `&$$$$$$$*_?M$$$$$Bt>"'.     .^I:'       ,&`
+//      .1$$$$$$$$%]I!|#$$$$$$$$%8z\i`         +1.
+//        `/$$$$$$$$$M?^.'`^""^`'           .;[`
+//          '-&$$$$$$$$$$u?:`.          .`;{+'
+//             `_v$$$$$$$$$$$$B*xt|(\fu&v_`
+//                .`I[j#@$$$$$$$$@#j}I`.
+
 contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using CountersUpgradeable for CountersUpgradeable.Counter;
