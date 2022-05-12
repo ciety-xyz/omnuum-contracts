@@ -25,7 +25,7 @@ describe('RevealManager', () => {
     // success case is tested on vRFManager.test.js
     it('[Revert] only project owner', async () => {
       const {
-        omnuumNFT1155,
+        omnuumNFT721,
         revealManager,
         accounts: [, maliciousAC],
       } = this;
@@ -33,15 +33,15 @@ describe('RevealManager', () => {
       if (await isLocalNetwork(ethers.provider)) return;
 
       // check link is enough
-      await expect(revealManager.connect(maliciousAC).vrfRequest(omnuumNFT1155.address)).to.be.revertedWith(Constants.reasons.code.OO1);
+      await expect(revealManager.connect(maliciousAC).vrfRequest(omnuumNFT721.address)).to.be.revertedWith(Constants.reasons.code.OO1);
     });
     it('[Revert] Already revealed project', async () => {
-      const { omnuumNFT1155, revealManager } = this;
+      const { omnuumNFT721, revealManager } = this;
 
       // set isRevealed to true
-      await (await omnuumNFT1155.setUri('mock.uri')).wait();
+      await (await omnuumNFT721.setUri('mock.uri')).wait();
 
-      await expect(revealManager.vrfRequest(omnuumNFT1155.address)).to.be.revertedWith(Constants.reasons.code.SE6);
+      await expect(revealManager.vrfRequest(omnuumNFT721.address)).to.be.revertedWith(Constants.reasons.code.SE6);
     });
   });
 });

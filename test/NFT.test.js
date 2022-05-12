@@ -30,7 +30,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -43,7 +43,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -54,23 +54,23 @@ describe('OmnuumNFT', () => {
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
-      const tx = await omnuumNFT1155.connect(minterAC).publicMint(2, group_id, payload, {
+      const tx = await omnuumNFT721.connect(minterAC).publicMint(2, group_id, payload, {
         value: basePrice.mul(2),
       });
 
       await expect(tx)
-        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
         .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
 
       await expect(tx)
-        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
         .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
     });
     it('Omnuum should receive fee when mint success', async () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         omnuumWallet,
         signatureSigner,
@@ -85,7 +85,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -95,7 +95,7 @@ describe('OmnuumNFT', () => {
       ).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
-      const mintTx = omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+      const mintTx = omnuumNFT721.connect(minterAC).publicMint(quantity, group_id, payload, {
         value: basePrice.mul(quantity),
       });
       const mint_fee = basePrice
@@ -111,7 +111,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         omnuumWallet,
         signatureSigner,
@@ -126,7 +126,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -135,9 +135,9 @@ describe('OmnuumNFT', () => {
         )
       ).wait();
 
-      await omnuumMintManager.setSpecialFeeRate(omnuumNFT1155.address, Constants.testValues.specialFeeRate);
+      await omnuumMintManager.setSpecialFeeRate(omnuumNFT721.address, Constants.testValues.specialFeeRate);
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
-      const mintTx = omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+      const mintTx = omnuumNFT721.connect(minterAC).publicMint(quantity, group_id, payload, {
         value: basePrice.mul(quantity),
       });
       const mint_fee = basePrice
@@ -151,7 +151,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         mockNFT,
       } = this;
@@ -164,7 +164,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -177,7 +177,7 @@ describe('OmnuumNFT', () => {
 
       // mint through CA
       await expect(
-        mockNFT.publicContractMint(omnuumNFT1155.address, 2, group_id, payload, {
+        mockNFT.publicContractMint(omnuumNFT721.address, 2, group_id, payload, {
           value: basePrice.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT9);
@@ -186,7 +186,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC, maliciousAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -199,7 +199,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -212,7 +212,7 @@ describe('OmnuumNFT', () => {
 
       // CASE1: valid payload, but malicious sender
       await expect(
-        omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, payload, {
+        omnuumNFT721.connect(maliciousAC).publicMint(2, group_id, payload, {
           value: basePrice.mul(2),
         }),
       ).revertedWith(Constants.reasons.code.VR4);
@@ -227,7 +227,7 @@ describe('OmnuumNFT', () => {
       );
 
       await expect(
-        omnuumNFT1155.connect(maliciousAC).publicMint(2, group_id, invalidSignedPayload, {
+        omnuumNFT721.connect(maliciousAC).publicMint(2, group_id, invalidSignedPayload, {
           value: basePrice.mul(2),
         }),
       ).revertedWith(Constants.reasons.code.VR1);
@@ -236,7 +236,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -250,7 +250,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           immediate_end_date,
           basePrice,
@@ -265,7 +265,7 @@ describe('OmnuumNFT', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).publicMint(2, group_id, payload, {
+        omnuumNFT721.connect(minterAC).publicMint(2, group_id, payload, {
           value: basePrice.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT8);
@@ -274,7 +274,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -288,7 +288,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -300,7 +300,7 @@ describe('OmnuumNFT', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+        omnuumNFT721.connect(minterAC).publicMint(quantity, group_id, payload, {
           value: basePrice.mul(quantity).div(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT5);
@@ -309,7 +309,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -322,7 +322,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -334,7 +334,7 @@ describe('OmnuumNFT', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).publicMint(max_min_per_address + 1, group_id, payload, {
+        omnuumNFT721.connect(minterAC).publicMint(max_min_per_address + 1, group_id, payload, {
           value: basePrice.mul(max_min_per_address + 1),
         }),
       ).revertedWith(Constants.reasons.code.MT2);
@@ -343,7 +343,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         signatureSigner,
       } = this;
@@ -355,7 +355,7 @@ describe('OmnuumNFT', () => {
       // make NFT public
       await (
         await omnuumMintManager.setPublicMintSchedule(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           group_id,
           end_date,
           basePrice,
@@ -367,7 +367,7 @@ describe('OmnuumNFT', () => {
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).publicMint(open_quantity + 2, group_id, payload, {
+        omnuumNFT721.connect(minterAC).publicMint(open_quantity + 2, group_id, payload, {
           value: basePrice.mul(open_quantity + 2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
@@ -379,7 +379,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -388,24 +388,24 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
-      const tx = await omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
+      const tx = await omnuumNFT721.connect(minterAC).ticketMint(2, ticket, payload, {
         value: price.mul(2),
       });
 
       await expect(tx)
-        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
         .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
 
       await expect(tx)
-        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
         .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
     });
     it('Wallet should receive fee when mint success', async () => {
@@ -414,7 +414,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -423,17 +423,17 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const prev_bal = await ethers.provider.getBalance(walletAddress);
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
-      await omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
+      await omnuumNFT721.connect(minterAC).ticketMint(2, ticket, payload, {
         value: price.mul(2),
       });
 
@@ -450,7 +450,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         mockNFT,
         signatureSigner,
@@ -460,16 +460,16 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        mockNFT.ticketContractMint(omnuumNFT1155.address, 2, ticket, payload, {
+        mockNFT.ticketContractMint(omnuumNFT721.address, 2, ticket, payload, {
           value: price.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT9);
@@ -478,7 +478,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -487,16 +487,16 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(2, ticket, payload, {
           value: price.mul(2).sub(price.div(2)),
         }),
       ).revertedWith(Constants.reasons.code.MT5);
@@ -505,7 +505,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC, maliciousAC, anonymousAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -514,11 +514,11 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price: ticketPrice, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price: ticketPrice, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       // CASE1: valid payload, but malicious sender
       const invalidSenderPayload = await signPayload(
@@ -530,7 +530,7 @@ describe('OmnuumNFT', () => {
       );
 
       await expect(
-        omnuumNFT1155.connect(maliciousAC).ticketMint(2, ticket, invalidSenderPayload, {
+        omnuumNFT721.connect(maliciousAC).ticketMint(2, ticket, invalidSenderPayload, {
           value: ticketPrice.mul(2),
         }),
       ).revertedWith(Constants.reasons.code.VR4);
@@ -545,7 +545,7 @@ describe('OmnuumNFT', () => {
       );
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, anonymousSignedPayload, {
+        omnuumNFT721.connect(minterAC).ticketMint(2, ticket, anonymousSignedPayload, {
           value: ticketPrice.mul(2),
         }),
       ).revertedWith(Constants.reasons.code.VR1);
@@ -555,7 +555,7 @@ describe('OmnuumNFT', () => {
         accounts: [, minterAC, maliciousAC, anotherNFTcontract],
         senderVerifier,
         ticketManager,
-        omnuumNFT1155,
+        omnuumNFT721,
         signatureSigner,
       } = this;
 
@@ -563,23 +563,23 @@ describe('OmnuumNFT', () => {
       const quantity = 5;
 
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity },
         signatureSigner,
         ticketManager.address,
       );
 
       // CASE1: invalid signer
       const invalidSignedticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity },
         maliciousAC,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(quantity, invalidSignedticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(quantity, invalidSignedticket, payload, {
           value: price.mul(quantity),
         }),
       ).to.be.revertedWith(Constants.reasons.code.VR1);
@@ -594,7 +594,7 @@ describe('OmnuumNFT', () => {
       );
 
       await expect(
-        omnuumNFT1155.connect(maliciousAC).ticketMint(quantity, ticket, invalidMinterPayload, {
+        omnuumNFT721.connect(maliciousAC).ticketMint(quantity, ticket, invalidMinterPayload, {
           value: price.mul(quantity),
         }),
       ).to.be.revertedWith(Constants.reasons.code.VR6);
@@ -607,7 +607,7 @@ describe('OmnuumNFT', () => {
       );
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(quantity, anotherContractTicket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(quantity, anotherContractTicket, payload, {
           value: price.mul(quantity),
         }),
       ).to.be.revertedWith(Constants.reasons.code.VR5);
@@ -616,7 +616,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [omnuumAC, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -626,18 +626,18 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 2 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 2 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, immediate_end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, immediate_end_date)).wait();
 
       await delay(1000 * 3, 1);
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(2, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(2, ticket, payload, {
           value: price.mul(2),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT8);
@@ -646,7 +646,7 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [, minterAC],
         senderVerifier,
-        omnuumNFT1155,
+        omnuumNFT721,
         ticketManager,
         signatureSigner,
       } = this;
@@ -659,37 +659,37 @@ describe('OmnuumNFT', () => {
       const successRemainingCount = 3;
 
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: ticketCount },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: ticketCount },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
       // fail: try minting more than ticket amount
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(initialTryCount, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(initialTryCount, ticket, payload, {
           value: price.mul(initialTryCount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       // success: ticket count - 2
       await (
-        await omnuumNFT1155.connect(minterAC).ticketMint(successTryCount, ticket, payload, {
+        await omnuumNFT721.connect(minterAC).ticketMint(successTryCount, ticket, payload, {
           value: price.mul(successTryCount),
         })
       ).wait();
 
       // fail - try minting more than remaining ticket amount
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(secondTryCount, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(secondTryCount, ticket, payload, {
           value: price.mul(secondTryCount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       await (
-        await omnuumNFT1155.connect(minterAC).ticketMint(successRemainingCount, ticket, payload, {
+        await omnuumNFT721.connect(minterAC).ticketMint(successRemainingCount, ticket, payload, {
           value: price.mul(secondTryCount),
         })
       ).wait();
@@ -708,7 +708,7 @@ describe('OmnuumNFT', () => {
       const lastTryAmount = 3;
 
       // total max quantity 10
-      const omnuumNFT1155 = await deployNFT(this, {
+      const omnuumNFT721 = await deployNFT(this, {
         maxSupply,
       });
 
@@ -716,29 +716,29 @@ describe('OmnuumNFT', () => {
 
       // give Ticket to minter
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 20 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 20 },
         signatureSigner,
         ticketManager.address,
       );
-      await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(initialTryAmount, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(initialTryAmount, ticket, payload, {
           value: price.mul(initialTryAmount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
 
       // use 8 of 10
       await (
-        await omnuumNFT1155.connect(minterAC).ticketMint(usingAmount, ticket, payload, {
+        await omnuumNFT721.connect(minterAC).ticketMint(usingAmount, ticket, payload, {
           value: price.mul(usingAmount),
         })
       ).wait();
 
       await expect(
-        omnuumNFT1155.connect(minterAC).ticketMint(lastTryAmount, ticket, payload, {
+        omnuumNFT721.connect(minterAC).ticketMint(lastTryAmount, ticket, payload, {
           value: price.mul(lastTryAmount),
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
@@ -747,44 +747,44 @@ describe('OmnuumNFT', () => {
 
   describe('[Method] setUri', () => {
     it('Should set uri and reveal', async () => {
-      const { omnuumNFT1155 } = this;
+      const { omnuumNFT721 } = this;
 
       const uri = 'https://test.com';
 
-      const tx = await omnuumNFT1155.setUri(uri);
+      const tx = await omnuumNFT721.setUri(uri);
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumNFT1155, Constants.events.NFT.Uri).withArgs(omnuumNFT1155.address, uri);
-      await expect(await omnuumNFT1155.isRevealed()).to.be.true;
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Uri).withArgs(omnuumNFT721.address, uri);
+      await expect(await omnuumNFT721.isRevealed()).to.be.true;
     });
     it('[Revert] only owner', async () => {
       const {
-        omnuumNFT1155,
+        omnuumNFT721,
         accounts: [, not_owner],
       } = this;
 
       const uri = 'https://test.com';
 
-      await expect(omnuumNFT1155.connect(not_owner).setUri(uri)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
+      await expect(omnuumNFT721.connect(not_owner).setUri(uri)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
   });
 
   describe('[Method] uri', () => {
     it('Should return cover uri when it is not revealed', async () => {
-      const { omnuumNFT1155 } = this;
+      const { omnuumNFT721 } = this;
 
-      const uri = await omnuumNFT1155.uri(1);
+      const uri = await omnuumNFT721.uri(1);
 
       expect(uri).to.equal(Constants.testValues.coverUri);
     });
     it('Should return base uri when it is revealed', async () => {
-      const { omnuumNFT1155 } = this;
+      const { omnuumNFT721 } = this;
 
       const baseUri = 'https://baseUri.com';
 
-      await (await omnuumNFT1155.setUri(baseUri)).wait();
+      await (await omnuumNFT721.setUri(baseUri)).wait();
 
-      const uri = await omnuumNFT1155.uri(1);
+      const uri = await omnuumNFT721.uri(1);
 
       expect(uri).to.equal(baseUri);
     });
@@ -799,7 +799,7 @@ describe('OmnuumNFT', () => {
         signatureSigner,
       } = this;
 
-      const omnuumNFT1155 = await deployNFT(this, {
+      const omnuumNFT721 = await deployNFT(this, {
         prjOwner: prjOwnerAC,
       });
 
@@ -808,46 +808,46 @@ describe('OmnuumNFT', () => {
       const price = ethers.utils.parseEther('1');
 
       const ticket = await createTicket(
-        { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity: 20 },
+        { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity: 20 },
         signatureSigner,
         ticketManager.address,
       );
 
-      await (await ticketManager.connect(prjOwnerAC).setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+      await (await ticketManager.connect(prjOwnerAC).setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
       const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
       await (
-        await omnuumNFT1155.connect(minterAC).ticketMint(ticketCount, ticket, payload, {
+        await omnuumNFT721.connect(minterAC).ticketMint(ticketCount, ticket, payload, {
           value: price.mul(ticketCount),
         })
       ).wait();
 
       // Event emit check
       const testValue = ethers.utils.parseEther('0.123');
-      await expect(omnuumNFT1155.connect(prjOwnerAC).transferBalance(testValue, prjOwnerAC.address))
-        .to.emit(omnuumNFT1155, Constants.events.NFT.TransferBalance)
+      await expect(omnuumNFT721.connect(prjOwnerAC).transferBalance(testValue, prjOwnerAC.address))
+        .to.emit(omnuumNFT721, Constants.events.NFT.TransferBalance)
         .withArgs(testValue, prjOwnerAC.address);
 
-      // Transfer Ether to Owner himself, then check the change of balances between OmnuumNFT1155 (decrement) and project Owner (increment)
+      // Transfer Ether to Owner himself, then check the change of balances between omnuumNFT721 (decrement) and project Owner (increment)
       const transferEtherToOwnerSelf = ethers.utils.parseEther('1.492874');
-      const transferBalanceTx = omnuumNFT1155.connect(prjOwnerAC).transferBalance(transferEtherToOwnerSelf, prjOwnerAC.address);
-      await expect(() => transferBalanceTx).to.changeEtherBalance(omnuumNFT1155, transferEtherToOwnerSelf.mul('-1'));
+      const transferBalanceTx = omnuumNFT721.connect(prjOwnerAC).transferBalance(transferEtherToOwnerSelf, prjOwnerAC.address);
+      await expect(() => transferBalanceTx).to.changeEtherBalance(omnuumNFT721, transferEtherToOwnerSelf.mul('-1'));
       await expect(() => transferBalanceTx).to.changeEtherBalance(prjOwnerAC, transferEtherToOwnerSelf);
 
-      // Transfer Ether to someone, then check the change of balances between OmnuumNFT1155 (decrement) and someone (increment)
+      // Transfer Ether to someone, then check the change of balances between omnuumNFT721 (decrement) and someone (increment)
       const transferEtherToSomebody = ethers.utils.parseEther('0.7389724');
-      const transferBalanceSomebodyTx = omnuumNFT1155.connect(prjOwnerAC).transferBalance(transferEtherToSomebody, somebodyAC.address);
-      await expect(() => transferBalanceSomebodyTx).to.changeEtherBalance(omnuumNFT1155, transferEtherToSomebody.mul('-1'));
+      const transferBalanceSomebodyTx = omnuumNFT721.connect(prjOwnerAC).transferBalance(transferEtherToSomebody, somebodyAC.address);
+      await expect(() => transferBalanceSomebodyTx).to.changeEtherBalance(omnuumNFT721, transferEtherToSomebody.mul('-1'));
       await expect(() => transferBalanceSomebodyTx).to.changeEtherBalance(somebodyAC, transferEtherToSomebody);
     });
 
     it('[Revert] only owner', async () => {
       const {
-        omnuumNFT1155,
+        omnuumNFT721,
         accounts: [, not_omnuumAC],
       } = this;
 
       await expect(
-        omnuumNFT1155.connect(not_omnuumAC).transferBalance(ethers.utils.parseEther('0'), not_omnuumAC.address),
+        omnuumNFT721.connect(not_omnuumAC).transferBalance(ethers.utils.parseEther('0'), not_omnuumAC.address),
       ).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
 
@@ -856,12 +856,12 @@ describe('OmnuumNFT', () => {
         accounts: [prjOwnerAC, somebodyAC],
       } = this;
 
-      const omnuumNFT1155 = await deployNFT(this, {
+      const omnuumNFT721 = await deployNFT(this, {
         prjOwner: prjOwnerAC,
       });
 
       await expect(
-        omnuumNFT1155.connect(prjOwnerAC).transferBalance(ethers.utils.parseEther('999999'), somebodyAC.address),
+        omnuumNFT721.connect(prjOwnerAC).transferBalance(ethers.utils.parseEther('999999'), somebodyAC.address),
       ).to.be.revertedWith(Constants.reasons.code.NE4);
     });
   });
@@ -870,20 +870,20 @@ describe('OmnuumNFT', () => {
       const {
         accounts: [prjOwnerAC, madFan],
       } = this;
-      const omnuumNFT1155 = await deployNFT(this, {
+      const omnuumNFT721 = await deployNFT(this, {
         prjOwner: prjOwnerAC,
       });
 
       const donation = ethers.utils.parseEther('10');
 
       const sendEtherTx = madFan.sendTransaction({
-        to: omnuumNFT1155.address,
+        to: omnuumNFT721.address,
         value: donation,
       });
 
-      await expect(() => sendEtherTx).to.changeEtherBalance(omnuumNFT1155, donation);
+      await expect(() => sendEtherTx).to.changeEtherBalance(omnuumNFT721, donation);
 
-      await expect(sendEtherTx).to.emit(omnuumNFT1155, Constants.events.NFT.EtherReceived).withArgs(madFan.address);
+      await expect(sendEtherTx).to.emit(omnuumNFT721, Constants.events.NFT.EtherReceived).withArgs(madFan.address);
     });
   });
 });

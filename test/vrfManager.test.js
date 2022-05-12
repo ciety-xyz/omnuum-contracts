@@ -84,7 +84,7 @@ describe('OmnuumVRFManager', () => {
 
   describe('[Method] requestVRFOnce', () => {
     it('Should request VRF and receive response (local mock)', async () => {
-      const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT1155 } = this;
+      const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT721 } = this;
 
       if (!(await isLocalNetwork(ethers.provider))) return;
 
@@ -92,9 +92,9 @@ describe('OmnuumVRFManager', () => {
       const exchangeAmount = await omnuumExchange.getExchangeAmount(nullAddress, mockLink.address, vrfFee);
       const safetyRatio = await omnuumVRFManager.safetyRatio();
 
-      // omnuumAC == omnuumNFT1155.owner()
+      // omnuumAC == omnuumNFT721.owner()
       // request vrf (tx => reveal manager => VRF manager)
-      const requestTx = await revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) });
+      const requestTx = await revealManager.vrfRequest(omnuumNFT721.address, { value: exchangeAmount.mul(safetyRatio).div(100) });
 
       const vrfIface = omnuumVRFManager.interface;
       const exchangeIface = omnuumExchange.interface;
@@ -106,7 +106,7 @@ describe('OmnuumVRFManager', () => {
 
       await expect(requestTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
-        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId, Constants.vrfTopic.REVEAL_PFP);
+        .withArgs(omnuumNFT721.address, requestEvent.args.requestId, Constants.vrfTopic.REVEAL_PFP);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -173,13 +173,13 @@ describe('OmnuumVRFManager', () => {
       ).to.be.revertedWith(Constants.reasons.code.ARG3);
     });
     it('[Revert] Already used address', async () => {
-      const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT1155 } = this;
+      const { omnuumVRFManager, mockVrfCoords, omnuumExchange, revealManager, mockLink, omnuumNFT721 } = this;
       const vrfFee = Constants.chainlink.rinkeby.fee;
       const exchangeAmount = await omnuumExchange.getExchangeAmount(nullAddress, mockLink.address, vrfFee);
       const safetyRatio = await omnuumVRFManager.safetyRatio();
 
       // success for first time
-      const requestTx = await revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) });
+      const requestTx = await revealManager.vrfRequest(omnuumNFT721.address, { value: exchangeAmount.mul(safetyRatio).div(100) });
 
       const vrfIface = omnuumVRFManager.interface;
       const exchangeIface = omnuumExchange.interface;
@@ -191,7 +191,7 @@ describe('OmnuumVRFManager', () => {
 
       await expect(requestTx)
         .to.emit(omnuumVRFManager, Constants.events.VRFManager.RequestVRF)
-        .withArgs(omnuumNFT1155.address, requestEvent.args.requestId, Constants.vrfTopic.REVEAL_PFP);
+        .withArgs(omnuumNFT721.address, requestEvent.args.requestId, Constants.vrfTopic.REVEAL_PFP);
 
       const randomNumber = Math.floor(Math.random() * 100000);
 
@@ -204,7 +204,7 @@ describe('OmnuumVRFManager', () => {
         .withArgs(requestId, randomNumber, Constants.vrfTopic.REVEAL_PFP, false, Constants.reasons.RevertMessage.silent);
 
       // fail for second try
-      await expect(revealManager.vrfRequest(omnuumNFT1155.address, { value: exchangeAmount.mul(safetyRatio).div(100) })).to.be.revertedWith(
+      await expect(revealManager.vrfRequest(omnuumNFT721.address, { value: exchangeAmount.mul(safetyRatio).div(100) })).to.be.revertedWith(
         Constants.reasons.code.SE8,
       );
     });

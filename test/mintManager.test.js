@@ -35,15 +35,15 @@ describe('OmnuumMintManager', () => {
 
   describe('[Method] getFeeRate', () => {
     it('Should get fee rate - basic rate', async () => {
-      const { omnuumMintManager, omnuumNFT1155 } = this;
-      expect((await omnuumMintManager.getFeeRate(omnuumNFT1155.address)).toNumber()).to.equal(Constants.testValues.feeRate);
+      const { omnuumMintManager, omnuumNFT721 } = this;
+      expect((await omnuumMintManager.getFeeRate(omnuumNFT721.address)).toNumber()).to.equal(Constants.testValues.feeRate);
     });
     it('Should get fee rate - special rate', async () => {
-      const { omnuumMintManager, omnuumNFT1155 } = this;
-      const tx = await omnuumMintManager.setSpecialFeeRate(omnuumNFT1155.address, Constants.testValues.specialFeeRate);
+      const { omnuumMintManager, omnuumNFT721 } = this;
+      const tx = await omnuumMintManager.setSpecialFeeRate(omnuumNFT721.address, Constants.testValues.specialFeeRate);
       await tx.wait();
 
-      expect((await omnuumMintManager.getFeeRate(omnuumNFT1155.address)).toNumber()).to.equal(Constants.testValues.specialFeeRate);
+      expect((await omnuumMintManager.getFeeRate(omnuumNFT721.address)).toNumber()).to.equal(Constants.testValues.specialFeeRate);
     });
   });
 
@@ -76,7 +76,7 @@ describe('OmnuumMintManager', () => {
   describe('[Method] setSpecialFeeRate', () => {
     it('Set special fee rate of nft contract', async () => {
       const { omnuumMintManager } = this;
-      const nftContractAddr = this.omnuumNFT1155.address;
+      const nftContractAddr = this.omnuumNFT721.address;
       const tx = await omnuumMintManager.setSpecialFeeRate(nftContractAddr, Constants.testValues.specialFeeRate);
       await tx.wait();
 
@@ -88,7 +88,7 @@ describe('OmnuumMintManager', () => {
     });
     it('[Revert] not owner', async () => {
       const { omnuumMintManager, accounts } = this;
-      const nftContractAddr = this.omnuumNFT1155.address;
+      const nftContractAddr = this.omnuumNFT721.address;
       const notOwner = accounts[1];
       await expect(
         omnuumMintManager.connect(notOwner).setSpecialFeeRate(nftContractAddr, Constants.testValues.specialFeeRate),
@@ -96,7 +96,7 @@ describe('OmnuumMintManager', () => {
     });
     it('[Revert] Special fee rate should be lower than 100%', async () => {
       const { omnuumMintManager } = this;
-      const nftContractAddr = this.omnuumNFT1155.address;
+      const nftContractAddr = this.omnuumNFT721.address;
       const decimal = await omnuumMintManager.rateDecimal();
       await expect(omnuumMintManager.setSpecialFeeRate(nftContractAddr, 10 ** decimal + 1)).to.be.revertedWith(Constants.reasons.code.NE1);
     });
@@ -126,7 +126,7 @@ describe('OmnuumMintManager', () => {
 
   describe('[Method] setPublicMintSchedule', () => {
     it('Should set public mint schedule', async () => {
-      const { omnuumNFT1155, omnuumMintManager } = this;
+      const { omnuumNFT721, omnuumMintManager } = this;
 
       const base_price = ethers.utils.parseEther('0.2');
 
@@ -134,7 +134,7 @@ describe('OmnuumMintManager', () => {
       const max_mint_per_address = 5;
 
       const tx = await omnuumMintManager.setPublicMintSchedule(
-        omnuumNFT1155.address,
+        omnuumNFT721.address,
         group_id,
         end_date,
         base_price,
@@ -146,11 +146,11 @@ describe('OmnuumMintManager', () => {
 
       await expect(tx)
         .to.emit(omnuumMintManager, Constants.events.MintManager.SetPublicSchedule)
-        .withArgs(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, max_mint_per_address);
+        .withArgs(omnuumNFT721.address, group_id, end_date, base_price, open_amount, max_mint_per_address);
     });
     it('[Revert] only owner of collection', async () => {
       const {
-        omnuumNFT1155,
+        omnuumNFT721,
         omnuumMintManager,
         accounts: [, maliciousAC],
       } = this;
@@ -160,7 +160,7 @@ describe('OmnuumMintManager', () => {
       const open_amount = 2000;
 
       await expect(
-        omnuumMintManager.connect(maliciousAC).setPublicMintSchedule(omnuumNFT1155.address, group_id, end_date, base_price, open_amount, 5),
+        omnuumMintManager.connect(maliciousAC).setPublicMintSchedule(omnuumNFT721.address, group_id, end_date, base_price, open_amount, 5),
       ).to.be.revertedWith(Constants.reasons.code.OO1);
     });
   });
@@ -347,12 +347,12 @@ describe('OmnuumMintManager', () => {
 
   describe('[Method] mintMultiple', () => {
     it('Airdrop to multiple address', async () => {
-      const { omnuumMintManager, omnuumNFT1155, accounts } = this;
+      const { omnuumMintManager, omnuumNFT721, accounts } = this;
       const count = 5;
       const airDropToAddresses = pluck('address', accounts.slice(1, count + 1));
 
       const tx = await omnuumMintManager.connect(accounts[0]).mintMultiple(
-        omnuumNFT1155.address,
+        omnuumNFT721.address,
         airDropToAddresses,
         go(
           range(count),
@@ -371,7 +371,7 @@ describe('OmnuumMintManager', () => {
         // event TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
         mapC(async (idx) =>
           expect(tx)
-            .to.emit(omnuumNFT1155, Constants.events.NFT.TransferSingle)
+            .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
             .withArgs(omnuumMintManager.address, nullAddress, airDropToAddresses[idx], idx + 1, 1),
         ),
       );
@@ -381,17 +381,17 @@ describe('OmnuumMintManager', () => {
         mapC(async (idx) =>
           expect(tx)
             .to.emit(omnuumMintManager, Constants.events.MintManager.Airdrop)
-            .withArgs(omnuumNFT1155.address, airDropToAddresses[idx], 1),
+            .withArgs(omnuumNFT721.address, airDropToAddresses[idx], 1),
         ),
       );
     });
     it('[Revert] not owner', async () => {
-      const { omnuumMintManager, omnuumNFT1155, accounts } = this;
+      const { omnuumMintManager, omnuumNFT721, accounts } = this;
       const count = 5;
 
       await expect(
         omnuumMintManager.connect(accounts[1]).mintMultiple(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           pluck('address', accounts.slice(1, count + 1)),
           go(
             range(count),
@@ -401,12 +401,12 @@ describe('OmnuumMintManager', () => {
       ).to.be.revertedWith(Constants.reasons.code.OO1);
     });
     it('[Revert] arg length not equal', async () => {
-      const { omnuumMintManager, omnuumNFT1155, accounts } = this;
+      const { omnuumMintManager, omnuumNFT721, accounts } = this;
       const count = 5;
 
       await expect(
         omnuumMintManager.connect(accounts[0]).mintMultiple(
-          omnuumNFT1155.address,
+          omnuumNFT721.address,
           pluck('address', accounts.slice(1, count + 1)),
           go(
             // quantity array length is lower than address count on purpose
@@ -419,18 +419,18 @@ describe('OmnuumMintManager', () => {
     it('[Revert] NFT remaining quantity is less than requested', async () => {
       const { omnuumMintManager, accounts } = this;
 
-      const omnuumNFT1155 = await deployNFT(this, {
+      const omnuumNFT721 = await deployNFT(this, {
         maxSupply: 10,
       });
 
       await expect(
-        omnuumMintManager.connect(accounts[0]).mintMultiple(omnuumNFT1155.address, [accounts[1].address], [12], {
+        omnuumMintManager.connect(accounts[0]).mintMultiple(omnuumNFT721.address, [accounts[1].address], [12], {
           value: ethers.utils.parseEther('1'), // enough ether for mint fee
         }),
       ).to.be.revertedWith(Constants.reasons.code.MT3);
     });
     it('[Revert] Should pay minimum fee * quantity', async () => {
-      const { omnuumNFT1155, omnuumMintManager, accounts } = this;
+      const { omnuumNFT721, omnuumMintManager, accounts } = this;
 
       const quantitys = [2, 3, 4];
       const total_quantity = quantitys.reduce(add);
@@ -438,7 +438,7 @@ describe('OmnuumMintManager', () => {
       await expect(
         omnuumMintManager
           .connect(accounts[0])
-          .mintMultiple(omnuumNFT1155.address, [accounts[1].address, accounts[2].address, accounts[3].address], quantitys, {
+          .mintMultiple(omnuumNFT721.address, [accounts[1].address, accounts[2].address, accounts[3].address], quantitys, {
             value: Constants.testValues.minFee.mul(total_quantity - 1), // pay less money
           }),
       ).to.be.revertedWith(Constants.reasons.code.ARG3);

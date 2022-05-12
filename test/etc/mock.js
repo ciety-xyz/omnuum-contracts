@@ -15,6 +15,8 @@ module.exports = {
     coverUri: testValues.coverUri,
     nftFactoryAddress: context.nftFactory.address,
     collectionId: testValues.collectionId,
+    name: testValues.name,
+    symbol: testValues.symbol,
   }),
   async deployNFT(context, overrideArgs) {
     const args = module.exports.createNftContractArgs(context, overrideArgs);
@@ -27,13 +29,15 @@ module.exports = {
       coverUri: args.coverUri,
       nftFactoryAddress: args.nftFactoryAddress,
       collectionId: args.collectionId,
+      name: args.name,
+      symbol: args.symbol,
     });
 
-    return context.OmnuumNFT1155.attach(beaconProxyAddress);
+    return context.OmnuumNFT721.attach(beaconProxyAddress);
   },
   async prepareDeploy() {
     this.OmnuumMintManager = await ethers.getContractFactory('OmnuumMintManager');
-    this.OmnuumNFT1155 = await ethers.getContractFactory('OmnuumNFT1155');
+    this.OmnuumNFT721 = await ethers.getContractFactory('OmnuumNFT721');
     this.TicketManager = await ethers.getContractFactory('TicketManager');
     this.SenderVerifier = await ethers.getContractFactory('SenderVerifier');
     this.OmnuumCAManager = await ethers.getContractFactory('OmnuumCAManager');
@@ -41,8 +45,8 @@ module.exports = {
     this.OmnuumExchange = await ethers.getContractFactory('OmnuumExchange');
     this.RevealManager = await ethers.getContractFactory('RevealManager');
     this.OmnuumWallet = await ethers.getContractFactory('OmnuumWallet');
-    this.NFTbeacon = await upgrades.deployBeacon(this.OmnuumNFT1155);
     this.NftFactory = await ethers.getContractFactory('NftFactory');
+    this.NFTbeacon = await upgrades.deployBeacon(this.OmnuumNFT721);
 
     /* Hardhat Accounts
      * Account #10: 0xbcd4042de499d14e55001ccbb24a551f3b954096 (10000 ETH)
@@ -131,8 +135,7 @@ module.exports = {
     await (await this.omnuumCAManager.addRole([this.revealManager.address, this.mockVrfRequester.address], contractRole.vrf)).wait();
 
     /* Deploy NFT beacon proxy */
-    this.omnuumNFT1155 = await module.exports.deployNFT(this, overrides);
-
+    this.omnuumNFT721 = await module.exports.deployNFT(this, overrides);
     /* Deploy Mock NFT */
     this.mockNFT = await (await this.MockNFT.deploy(this.senderVerifier.address, this.ticketManager.address)).deployed();
   },

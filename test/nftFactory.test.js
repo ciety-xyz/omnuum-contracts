@@ -30,7 +30,6 @@ describe('NftFactory', () => {
       const {
         accounts: [, prjOwnerAC],
         senderVerifier,
-        ticketManager,
         signatureSigner,
         nftFactory,
       } = this;

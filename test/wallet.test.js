@@ -40,7 +40,7 @@ describe('Omnuum Multi-sig Wallet', () => {
     await testDeploy.call(this, accounts);
 
     Wallet = this.omnuumWallet;
-    NFT = this.omnuumNFT1155;
+    NFT = this.omnuumNFT721;
     walletOwnerSigners = this.walletOwnerSigner;
     walletOwnerAccounts = this.walletOwnerAccounts;
   });

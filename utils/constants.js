@@ -160,5 +160,7 @@ module.exports = {
     coverUri: 'https://testCover.com',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
     collectionId: 71,
+    name: 'hello',
+    symbol: 'WRD',
   },
 };
