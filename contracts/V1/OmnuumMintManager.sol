@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import '../utils/OwnableUpgradeable.sol';
-import './OmnuumNFT1155.sol';
+import './OmnuumNFT721.sol';
 import './OmnuumCAManager.sol';
 import './OmnuumWallet.sol';
 
@@ -168,7 +168,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         address[] calldata _tos,
         uint256[] calldata _quantitys
     ) external payable {
-        OmnuumNFT1155 targetContract = OmnuumNFT1155(_nftContract);
+        OmnuumNFT721 targetContract = OmnuumNFT721(_nftContract);
         uint256 len = _tos.length;
 
         /// @custom:error (OO1) - Ownable: Caller is not the collection owner

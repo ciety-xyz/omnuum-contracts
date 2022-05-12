@@ -40,14 +40,14 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     /// @notice constructor function for upgradeable
     /// @param _caManagerAddress ca manager address
     /// @param _maxSupply max amount can be minted
-    /// @param _coverURI metadata uri for before reveal
+    /// @param _coverBaseURI metadata uri for before reveal
     /// @param _prjOwner project owner address to transfer ownership
     /// @param _name NFT name
     /// @param _symbol NFT symbol
     function initialize(
         address _caManagerAddress,
         uint32 _maxSupply,
-        string calldata _coverURI,
+        string calldata _coverBaseURI,
         address _prjOwner,
         string calldata _name,
         string calldata _symbol
@@ -66,7 +66,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
 
         omA = caManager.owner();
-        baseURI = _coverURI;
+        baseURI = _coverBaseURI;
     }
 
     /// @dev See {ERC721Upgradeable}.

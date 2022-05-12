@@ -41,7 +41,7 @@ contract MockNFT is Ownable {
         uint32 _quantity,
         SenderVerifier.Payload calldata _payload
     ) public payable {
-        OmnuumNFT1155(_target).publicMint(_quantity, _groupId, _payload);
+        OmnuumNFT721(_target).publicMint(_quantity, _groupId, _payload);
     }
 
     function ticketContractMint(
@@ -50,6 +50,6 @@ contract MockNFT is Ownable {
         TicketManager.Ticket calldata _ticket,
         SenderVerifier.Payload calldata _payload
     ) public payable {
-        OmnuumNFT1155(_target).ticketMint(_quantity, _ticket, _payload);
+        OmnuumNFT721(_target).ticketMint(_quantity, _ticket, _payload);
     }
 }

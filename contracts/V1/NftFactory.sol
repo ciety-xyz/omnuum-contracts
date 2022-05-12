@@ -31,26 +31,22 @@ contract NftFactory is Ownable {
 
     /// @notice deploy
     /// @param _maxSupply max amount can be minted
-    /// @param _coverUri metadata uri for before reveal
+    /// @param _coverBaseURI metadata uri for before reveal
     /// @param _collectionId collection id
     /// @param _payload payload for signature to verify collection id
     function deploy(
         uint32 _maxSupply,
-        string calldata _coverUri,
+        string calldata _coverBaseURI,
         uint256 _collectionId,
+        string calldata _name,
+        string calldata _symbol,
         SenderVerifier.Payload calldata _payload
     ) external {
         address senderVerifier = OmnuumCAManager(caManager).getContract('VERIFIER');
         SenderVerifier(senderVerifier).verify(omnuumSigner, msg.sender, 'DEPLOY_COL', _collectionId, _payload);
 
-        bytes memory data = abi.encodeWithSignature(
-            'initialize(address,address,uint32,string,address)',
-            caManager,
-            omnuumSigner,
-            _maxSupply,
-            _coverUri,
-            msg.sender
-        );
+        /// @dev 0x9da8ac6a == keccak256('initialize(address,uint32,string,address,string,string)')
+        bytes memory data = abi.encodeWithSelector(0x9da8ac6a, caManager, _maxSupply, _coverBaseURI, msg.sender, _name, _symbol);
 
         BeaconProxy beacon = new BeaconProxy(nftContractBeacon, data);
         emit NftContractDeployed(address(beacon), msg.sender, _collectionId);
