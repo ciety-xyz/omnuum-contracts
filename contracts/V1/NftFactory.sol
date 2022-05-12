@@ -45,8 +45,8 @@ contract NftFactory is Ownable {
         address senderVerifier = OmnuumCAManager(caManager).getContract('VERIFIER');
         SenderVerifier(senderVerifier).verify(omnuumSigner, msg.sender, 'DEPLOY_COL', _collectionId, _payload);
 
-        /// @dev 0x9da8ac6a == keccak256('initialize(address,uint32,string,address,string,string)')
-        bytes memory data = abi.encodeWithSelector(0x9da8ac6a, caManager, _maxSupply, _coverBaseURI, msg.sender, _name, _symbol);
+        /// @dev 0x9da8ac6a == keccak256('initialize(address,address,uint32,string,address,string,string)')
+        bytes memory data = abi.encodeWithSelector(0xc903b7f2, caManager, omnuumSigner, _coverBaseURI, msg.sender, _name, _symbol);
 
         BeaconProxy beacon = new BeaconProxy(nftContractBeacon, data);
         emit NftContractDeployed(address(beacon), msg.sender, _collectionId);

@@ -21,7 +21,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     OmnuumMintManager private mintManager;
 
     // @notice OMNUUM deployer address
-    address private omA;
+    address private omnuumSigner;
 
     /// @notice Maximum supply limit that can be minted
     uint32 public maxSupply;
@@ -39,6 +39,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
 
     /// @notice constructor function for upgradeable
     /// @param _caManagerAddress ca manager address
+    /// @param _omnuumSigner Address of Omnuum signer for creating and verifying off-chain ECDSA signature
     /// @param _maxSupply max amount can be minted
     /// @param _coverBaseURI metadata uri for before reveal
     /// @param _prjOwner project owner address to transfer ownership
@@ -46,6 +47,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     /// @param _symbol NFT symbol
     function initialize(
         address _caManagerAddress,
+        address _omnuumSigner,
         uint32 _maxSupply,
         string calldata _coverBaseURI,
         address _prjOwner,
@@ -61,12 +63,11 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         __Ownable_init();
 
         maxSupply = _maxSupply;
+        omnuumSigner = _omnuumSigner;
+        baseURI = _coverBaseURI;
 
         caManager = OmnuumCAManager(_caManagerAddress);
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
-
-        omA = caManager.owner();
-        baseURI = _coverBaseURI;
     }
 
     /// @dev See {ERC721Upgradeable}.
@@ -98,7 +99,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         /// @custom:error (MT9) - Minter cannot be CA
         require(!msg.sender.isContract(), 'MT9');
 
-        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'MINT', _groupId, _payload);
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omnuumSigner, msg.sender, 'MINT', _groupId, _payload);
         mintManager.preparePublicMint(_groupId, _quantity, msg.value, msg.sender);
 
         mintLoop(msg.sender, _quantity);
@@ -120,8 +121,8 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         /// @custom:error (MT5) - Not enough money
         require(_ticket.price * _quantity <= msg.value, 'MT5');
 
-        SenderVerifier(caManager.getContract('VERIFIER')).verify(omA, msg.sender, 'TICKET', _ticket.groupId, _payload);
-        TicketManager(caManager.getContract('TICKET')).useTicket(omA, msg.sender, _quantity, _ticket);
+        SenderVerifier(caManager.getContract('VERIFIER')).verify(omnuumSigner, msg.sender, 'TICKET', _ticket.groupId, _payload);
+        TicketManager(caManager.getContract('TICKET')).useTicket(omnuumSigner, msg.sender, _quantity, _ticket);
 
         mintLoop(msg.sender, _quantity);
         sendMintFee(_quantity);
