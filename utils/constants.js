@@ -65,6 +65,7 @@ module.exports = {
       OO5: 'OO5', // Already the owner of the wallet
       OO6: 'OO6', // Only the requester is allowed
       OO7: 'OO7', // Only role owner can access
+      c: 'OO8', // Only reveal manager allowed
       // Not Exist Error
       NX1: 'NX1', // ERC721Metadata: URI query for nonexistent token
       NX2: 'NX2', // Non-existent wallet account
