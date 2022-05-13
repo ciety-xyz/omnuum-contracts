@@ -37,7 +37,7 @@ import './OmnuumWallet.sol';
 //             `_v$$$$$$$$$$$$B*xt|(\fu&v_`
 //                .`I[j#@$$$$$$$$@#j}I`.
 
-contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
