@@ -56,7 +56,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     bool public isRevealed;
     string private baseURI;
 
-    event baseURIChanged(address indexed nftContract, string baseURI);
+    event BaseURIChanged(address indexed nftContract, string baseURI);
     event MintFeePaid(address indexed payer, uint256 amount);
     event TransferBalance(uint256 value, address indexed receiver);
     event EtherReceived(address indexed sender, uint256 value);
@@ -104,7 +104,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     function changeBaseURI(string calldata baseURI_) public onlyOwner {
         baseURI = baseURI_;
 
-        emit baseURIChanged(address(this), baseURI_);
+        emit BaseURIChanged(address(this), baseURI_);
     }
 
     /// @notice Returns the total amount of tokens supplied in the contract.
