@@ -767,7 +767,7 @@ describe('OmnuumNFT', () => {
       const tx = await omnuumNFT721.changeBaseURI(baseURI);
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.baseURIChanged).withArgs(omnuumNFT721.address, baseURI);
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.BaseURIChanged).withArgs(omnuumNFT721.address, baseURI);
 
       await checkTokenURI(omnuumNFT721, airDropQty, Constants.testValues.baseURI);
     });

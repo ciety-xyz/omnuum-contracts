@@ -6,7 +6,7 @@ module.exports = {
       Transfer: 'Transfer', // address indexed from, address indexed to, uint256 indexed tokenId
       Ticket: 'Ticket',
       Public: 'Public',
-      baseURIChanged: 'baseURIChanged',
+      BaseURIChanged: 'BaseURIChanged',
       TransferBalance: 'TransferBalance',
       EtherReceived: 'EtherReceived',
     },

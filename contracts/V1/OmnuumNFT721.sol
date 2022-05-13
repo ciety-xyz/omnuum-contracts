@@ -54,7 +54,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
     /// @notice Revealed or not
     /// @dev The number of reveal is limited to once per NFT contract controlled by RevealManager contract
     bool public isRevealed;
-    string private baseURI;
+    string public baseURI;
 
     event BaseURIChanged(address indexed nftContract, string indexed baseURI);
     event MintFeePaid(address indexed payer, uint256 amount);
@@ -89,7 +89,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         maxSupply = _maxSupply;
         omnuumSigner = _omnuumSigner;
-        changeBaseURI(_coverBaseURI);
+        baseURI = _coverBaseURI;
 
         caManager = OmnuumCAManager(_caManagerAddress);
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
