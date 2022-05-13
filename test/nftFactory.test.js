@@ -43,6 +43,8 @@ describe('NftFactory', () => {
           maxSupply,
           Constants.testValues.coverUri,
           collectionId,
+          Constants.testValues.name,
+          Constants.testValues.symbol,
           await signPayload(prjOwnerAC.address, Constants.payloadTopic.deployCol, collectionId, signatureSigner, senderVerifier.address),
         );
 

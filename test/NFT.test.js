@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { delay } = require('fxjs');
+const { delay, go, range, mapC, each } = require('fxjs');
 const { addDays } = require('date-fns');
 const Constants = require('../utils/constants.js');
 require('chai').should();
@@ -28,7 +28,7 @@ describe('OmnuumNFT', () => {
   describe('[Method] Public Mint', () => {
     it('Public mint', async () => {
       const {
-        accounts: [omnuumAC, minterAC],
+        accounts: [_, minterAC],
         senderVerifier,
         omnuumNFT721,
         omnuumMintManager,
@@ -58,13 +58,9 @@ describe('OmnuumNFT', () => {
         value: basePrice.mul(2),
       });
 
-      await expect(tx)
-        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
-        .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Transfer).withArgs(nullAddress, minterAC.address, 1);
 
-      await expect(tx)
-        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
-        .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Transfer).withArgs(nullAddress, minterAC.address, 2);
     });
     it('Omnuum should receive fee when mint success', async () => {
       const {
@@ -400,13 +396,9 @@ describe('OmnuumNFT', () => {
         value: price.mul(2),
       });
 
-      await expect(tx)
-        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
-        .withArgs(minterAC.address, nullAddress, minterAC.address, 1, 1);
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Transfer).withArgs(nullAddress, minterAC.address, 1);
 
-      await expect(tx)
-        .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
-        .withArgs(minterAC.address, nullAddress, minterAC.address, 2, 1);
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Transfer).withArgs(nullAddress, minterAC.address, 2);
     });
     it('Wallet should receive fee when mint success', async () => {
       const walletAddress = this.omnuumWallet.address;
@@ -745,17 +737,39 @@ describe('OmnuumNFT', () => {
     });
   });
 
-  describe('[Method] setUri', () => {
-    it('Should set uri and reveal', async () => {
-      const { omnuumNFT721 } = this;
+  const checkTokenURI = async (omnuumNFT721, iterQty, baseURI) => {
+    await go(
+      range(iterQty),
+      mapC(async (idx) => {
+        const tokenID = idx + 1;
+        const expectedTokenURI = baseURI + tokenID;
+        expect(await omnuumNFT721.tokenURI(tokenID)).to.equal(expectedTokenURI);
+      }),
+    );
+  };
 
-      const uri = 'https://test.com';
+  describe('[Method] changeBaseURI', () => {
+    it('Should change base URI', async () => {
+      const {
+        accounts: [, minterAC, prjOwnerAC],
+        omnuumNFT721,
+        omnuumMintManager,
+      } = this;
 
-      const tx = await omnuumNFT721.setUri(uri);
+      const { baseURI } = Constants.testValues;
+      const airDropQty = 5;
+      await omnuumMintManager.mintMultiple(omnuumNFT721.address, [minterAC.address], [airDropQty], {
+        value: (await omnuumMintManager.minFee()).mul(airDropQty),
+      });
+
+      await checkTokenURI(omnuumNFT721, airDropQty, Constants.testValues.coverUri);
+
+      const tx = await omnuumNFT721.changeBaseURI(baseURI);
       await tx.wait();
 
-      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.Uri).withArgs(omnuumNFT721.address, uri);
-      await expect(await omnuumNFT721.isRevealed()).to.be.true;
+      await expect(tx).to.emit(omnuumNFT721, Constants.events.NFT.baseURIChanged).withArgs(omnuumNFT721.address, baseURI);
+
+      await checkTokenURI(omnuumNFT721, airDropQty, Constants.testValues.baseURI);
     });
     it('[Revert] only owner', async () => {
       const {
@@ -763,30 +777,9 @@ describe('OmnuumNFT', () => {
         accounts: [, not_owner],
       } = this;
 
-      const uri = 'https://test.com';
+      const { baseURI } = Constants.testValues;
 
-      await expect(omnuumNFT721.connect(not_owner).setUri(uri)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
-    });
-  });
-
-  describe('[Method] uri', () => {
-    it('Should return cover uri when it is not revealed', async () => {
-      const { omnuumNFT721 } = this;
-
-      const uri = await omnuumNFT721.uri(1);
-
-      expect(uri).to.equal(Constants.testValues.coverUri);
-    });
-    it('Should return base uri when it is revealed', async () => {
-      const { omnuumNFT721 } = this;
-
-      const baseUri = 'https://baseUri.com';
-
-      await (await omnuumNFT721.setUri(baseUri)).wait();
-
-      const uri = await omnuumNFT721.uri(1);
-
-      expect(uri).to.equal(baseUri);
+      await expect(omnuumNFT721.connect(not_owner).changeBaseURI(baseURI)).to.be.revertedWith(Constants.reasons.common.onlyOwner);
     });
   });
 

@@ -368,11 +368,11 @@ describe('OmnuumMintManager', () => {
       // Note: token id is started from 1, not zero.
       await go(
         range(count),
-        // event TransferSingle (address operator, address from, address to, uint256 id, uint256 value)
+        // event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
         mapC(async (idx) =>
           expect(tx)
-            .to.emit(omnuumNFT721, Constants.events.NFT.TransferSingle)
-            .withArgs(omnuumMintManager.address, nullAddress, airDropToAddresses[idx], idx + 1, 1),
+            .to.emit(omnuumNFT721, Constants.events.NFT.Transfer)
+            .withArgs(nullAddress, airDropToAddresses[idx], idx + 1),
         ),
       );
       await go(

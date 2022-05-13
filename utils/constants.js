@@ -3,10 +3,10 @@ const { ethers } = require('hardhat');
 module.exports = {
   events: {
     NFT: {
-      TransferSingle: 'TransferSingle', // address operator, address from, address to, uint256 id, uint256 value
+      Transfer: 'Transfer', // address indexed from, address indexed to, uint256 indexed tokenId
       Ticket: 'Ticket',
       Public: 'Public',
-      Uri: 'Uri',
+      baseURIChanged: 'baseURIChanged',
       TransferBalance: 'TransferBalance',
       EtherReceived: 'EtherReceived',
     },
@@ -157,7 +157,8 @@ module.exports = {
     consensusRatio: 55,
     minLimitForConsensus: 3,
     mintFee: 2500, // 0.025 == 2.5%
-    coverUri: 'https://testCover.com',
+    coverUri: 'https://cover.com/',
+    baseURI: 'https://reveal.com/',
     tmpExchangeRate: ethers.utils.parseEther('0.0055'),
     collectionId: 71,
     name: 'hello',
