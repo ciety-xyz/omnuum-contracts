@@ -59,7 +59,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     event baseURIChanged(address indexed nftContract, string baseURI);
     event MintFeePaid(address indexed payer, uint256 amount);
     event TransferBalance(uint256 value, address indexed receiver);
-    event EtherReceived(address indexed sender);
+    event EtherReceived(address indexed sender, uint256 value);
     event Revealed(address indexed nftContract);
 
     /// @notice constructor function for upgradeable
@@ -190,7 +190,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
 
     /// @notice a function to donate to support the project owner. Hooray~!
     receive() external payable {
-        emit EtherReceived(msg.sender);
+        emit EtherReceived(msg.sender, msg.value);
     }
 
     /// @notice send fee to omnuum wallet
