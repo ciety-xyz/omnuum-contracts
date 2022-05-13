@@ -89,7 +89,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         maxSupply = _maxSupply;
         omnuumSigner = _omnuumSigner;
-        baseURI = _coverBaseURI;
+        changeBaseURI(_coverBaseURI);
 
         caManager = OmnuumCAManager(_caManagerAddress);
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
