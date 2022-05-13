@@ -121,7 +121,7 @@ describe('Omnuum Multi-sig Wallet', () => {
       await go(
         sendTxs,
         mapC(async (sendTx) => {
-          await expect(sendTx).to.emit(Wallet, events.Wallet.EtherReceived).withArgs(sendTx.from);
+          await expect(sendTx).to.emit(Wallet, events.Wallet.EtherReceived).withArgs(sendTx.from, sendTx.value);
         }),
       );
 
@@ -148,7 +148,7 @@ describe('Omnuum Multi-sig Wallet', () => {
 
       await expect(Wallet.connect(sendSigner).makePayment(testValues.paymentTestTopic, testValues.paymentDescription, { value }))
         .to.emit(Wallet, events.Wallet.PaymentReceived)
-        .withArgs(sendSigner.address, testValues.paymentTestTopic, testValues.paymentDescription);
+        .withArgs(sendSigner.address, testValues.paymentTestTopic, testValues.paymentDescription, value);
 
       const afterWalletBalance = await ethers.provider.getBalance(Wallet.address);
 
@@ -167,7 +167,10 @@ describe('Omnuum Multi-sig Wallet', () => {
     currentAccount = testValues.zeroOwnerAccount,
     newAccount = testValues.zeroOwnerAccount,
     withdrawalAmount = ethers.utils.parseEther('0'),
-  }) => walletContract.request(requestType, currentAccount, newAccount, withdrawalAmount);
+  }) =>
+    requestType === 0
+      ? walletContract.requestWithdrawal(withdrawalAmount)
+      : walletContract.requestOwnerManagement(requestType, currentAccount, newAccount);
 
   describe('[Method] request', () => {
     it('can make a request by owner', async () => {

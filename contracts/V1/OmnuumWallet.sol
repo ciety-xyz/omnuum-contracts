@@ -50,17 +50,10 @@ contract OmnuumWallet {
         bool isExecute;
     }
 
-    /* *****************************************************************************
-     *   Storages
-     * *****************************************************************************/
     Request[] public requests;
     mapping(OwnerVotes => uint8) public ownerCounter;
     mapping(address => OwnerVotes) public ownerVote;
 
-    /* *****************************************************************************
-     *   Constructor
-     * - set consensus ratio, minimum votes limit for consensus, and initial accounts
-     * *****************************************************************************/
     constructor(
         uint256 _consensusRatio,
         uint8 _minLimitForConsensus,
@@ -77,20 +70,14 @@ contract OmnuumWallet {
         _checkMinConsensus();
     }
 
-    /* *****************************************************************************
-     *   Events
-     * *****************************************************************************/
-    event PaymentReceived(address indexed sender, string topic, string description);
-    event EtherReceived(address indexed sender);
+    event PaymentReceived(address indexed sender, string topic, string description, uint256 value);
+    event EtherReceived(address indexed sender, uint256 value);
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
     event Revoked(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
     event Canceled(address indexed owner, uint256 indexed requestId);
     event Executed(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
 
-    /* *****************************************************************************
-     *   Modifiers
-     * *****************************************************************************/
     modifier onlyOwner(address _address) {
         /// @custom:error (004) - Only the owner of the wallet is allowed
         require(isOwner(_address), 'OO4');
@@ -163,34 +150,28 @@ contract OmnuumWallet {
         _;
     }
 
-    /* *****************************************************************************
-     *   Methods - Public, External
-     * *****************************************************************************/
-
     function makePayment(string calldata _topic, string calldata _description) external payable {
         /// @custom:error (NE3) - A zero payment is not acceptable
         require(msg.value > 0, 'NE3');
-        emit PaymentReceived(msg.sender, _topic, _description);
+        emit PaymentReceived(msg.sender, _topic, _description, msg.value);
     }
 
     receive() external payable {
-        emit EtherReceived(msg.sender);
+        emit EtherReceived(msg.sender, msg.value);
     }
 
-    /// @notice request
+    /// @notice requestOwnerManage
     /// @dev Allows an owner to request for an agenda that wants to proceed
     /// @dev The owner can make multiple requests even if the previous one is unresolved
     /// @dev The requester is automatically voted for the request
     /// @param _requestType Withdraw(0) / Add(1) / Remove(2) / Change(3) / Cancel(4)
     /// @param _currentAccount Tuple[address, OwnerVotes] for current exist owner account (use for Request Type as Remove or Change)
     /// @param _newAccount Tuple[address, OwnerVotes] for new owner account (use for Request Type as Add or Change)
-    /// @param _withdrawalAmount Amount of Ether to be withdrawal (use for Request Type as Withdrawal)
 
-    function request(
+    function requestOwnerManagement(
         RequestTypes _requestType,
         OwnerAccount calldata _currentAccount,
-        OwnerAccount calldata _newAccount,
-        uint256 _withdrawalAmount
+        OwnerAccount calldata _newAccount
     ) external onlyOwner(msg.sender) {
         address requester = msg.sender;
 
@@ -199,11 +180,28 @@ contract OmnuumWallet {
         request_.requestType = _requestType;
         request_.currentOwner = OwnerAccount({ addr: _currentAccount.addr, vote: _currentAccount.vote });
         request_.newOwner = OwnerAccount({ addr: _newAccount.addr, vote: _newAccount.vote });
-        request_.withdrawalAmount = _withdrawalAmount;
         request_.voters[requester] = true;
         request_.votes = uint8(ownerVote[requester]);
 
         emit Requested(msg.sender, requests.length - 1, _requestType);
+    }
+
+    /// @notice requestWithdrawal
+    /// @dev Allows an owner to request withdrawal
+    /// @dev The owner can make multiple requests even if the previous one is unresolved
+    /// @dev The requester is automatically voted for the request
+    /// @param _withdrawalAmount Amount of Ether to be withdrawal (use for Request Type as Withdrawal)
+    function requestWithdrawal(uint256 _withdrawalAmount) external onlyOwner(msg.sender) {
+        address requester = msg.sender;
+
+        Request storage request_ = requests.push();
+        request_.withdrawalAmount = _withdrawalAmount;
+        request_.requester = requester;
+        request_.requestType = RequestTypes.Withdraw;
+        request_.voters[requester] = true;
+        request_.votes = uint8(ownerVote[requester]);
+
+        emit Requested(msg.sender, requests.length - 1, RequestTypes.Withdraw);
     }
 
     /// @notice approve
@@ -416,10 +414,6 @@ contract OmnuumWallet {
     function getLastRequestNo() public view returns (uint256 requestNo) {
         return requests.length - 1;
     }
-
-    /* *****************************************************************************
-     *   Functions - Internal, Private
-     * *****************************************************************************/
 
     /// @notice _withdraw
     /// @dev Withdraw Ethers from the wallet
