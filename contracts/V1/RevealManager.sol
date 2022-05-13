@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import './OmnuumNFT721.sol';
+import '../utils/Ownable.sol';
 import './OmnuumVRFManager.sol';
 import './OmnuumCAManager.sol';
 
@@ -18,14 +18,10 @@ contract RevealManager {
     /// @notice Request Chainlink VRF through the OmnuumVRFManager contract for revealing all NFT items
     /// @dev check that msg.sender is owner of nft contract and nft is revealed or not
     /// @param _nftContract nft contract address
-    function vrfRequest(OmnuumNFT721 _nftContract) external payable {
+    function vrfRequest(Ownable _nftContract) external payable {
         /// @custom:error (OO1) - Ownable: Caller is not the collection owner
         require(_nftContract.owner() == msg.sender, 'OO1');
 
-        /// @custom:error (SE6) - NFT already revealed
-        require(!_nftContract.isRevealed(), 'SE6');
-
-        _nftContract.setRevealed();
         OmnuumVRFManager(caManager.getContract('VRF')).requestVRFOnce{ value: msg.value }(address(_nftContract), 'REVEAL_PFP');
     }
 }

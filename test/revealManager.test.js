@@ -35,13 +35,5 @@ describe('RevealManager', () => {
       // check link is enough
       await expect(revealManager.connect(maliciousAC).vrfRequest(omnuumNFT721.address)).to.be.revertedWith(Constants.reasons.code.OO1);
     });
-    it('[Revert] Already revealed project', async () => {
-      const { omnuumNFT721, revealManager } = this;
-
-      // set isRevealed to true
-      await (await omnuumNFT721.setUri('mock.uri')).wait();
-
-      await expect(revealManager.vrfRequest(omnuumNFT721.address)).to.be.revertedWith(Constants.reasons.code.SE6);
-    });
   });
 });

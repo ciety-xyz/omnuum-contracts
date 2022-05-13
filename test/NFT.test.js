@@ -876,7 +876,7 @@ describe('OmnuumNFT', () => {
 
       await expect(() => sendEtherTx).to.changeEtherBalance(omnuumNFT721, donation);
 
-      await expect(sendEtherTx).to.emit(omnuumNFT721, Constants.events.NFT.EtherReceived).withArgs(madFan.address);
+      await expect(sendEtherTx).to.emit(omnuumNFT721, Constants.events.NFT.EtherReceived).withArgs(madFan.address, donation);
     });
   });
 });

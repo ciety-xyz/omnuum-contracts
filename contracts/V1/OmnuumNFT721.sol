@@ -101,7 +101,7 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
     }
 
     /// @notice Allows an owner to change base URI.
-    function changeBaseURI(string calldata baseURI_) external onlyOwner {
+    function changeBaseURI(string calldata baseURI_) public onlyOwner {
         baseURI = baseURI_;
 
         emit baseURIChanged(address(this), baseURI_);
@@ -209,10 +209,14 @@ contract OmnuumNFT721 is Initializable, ERC721Upgradeable, ReentrancyGuardUpgrad
         emit MintFeePaid(msg.sender, feePayment);
     }
 
-    function setRevealed() external {
-        /// @custom:error (OO8) - Only reveal manager allowed
-        require(msg.sender == caManager.getContract('REVEAL'), 'OO8');
+    /// @notice can execute only once!!
+    /// @dev update reveal flag and update base uri
+    /// @param baseURI_ revealed metadata uri
+    function setRevealed(string calldata baseURI_) external onlyOwner {
+        require(!isRevealed);
+
         isRevealed = true;
+        changeBaseURI(baseURI_);
 
         emit Revealed(address(this));
     }

@@ -77,6 +77,8 @@ describe('NftFactory', () => {
               maxSupply,
               Constants.testValues.coverUri,
               collectionId,
+              Constants.testValues.name,
+              Constants.testValues.symbol,
               await signPayload(
                 prjOwnerAC.address,
                 Constants.payloadTopic.deployCol,
@@ -120,6 +122,8 @@ describe('NftFactory', () => {
             maxSupply,
             Constants.testValues.coverUri,
             collectionId,
+            Constants.testValues.name,
+            Constants.testValues.symbol,
             await signPayload(prjOwnerAC.address, Constants.payloadTopic.deployCol, collectionId, falseSigner, senderVerifier.address),
           ),
       ).to.be.revertedWith(Constants.reasons.code.VR1);
@@ -130,6 +134,8 @@ describe('NftFactory', () => {
           maxSupply,
           Constants.testValues.coverUri,
           collectionId,
+          Constants.testValues.name,
+          Constants.testValues.symbol,
           // payload collection id is not equal to above argument
           await signPayload(
             prjOwnerAC.address,
@@ -149,6 +155,8 @@ describe('NftFactory', () => {
             maxSupply,
             Constants.testValues.coverUri,
             collectionId,
+            Constants.testValues.name,
+            Constants.testValues.symbol,
             await signPayload(prjOwnerAC.address, Constants.payloadTopic.mint, collectionId, signatureSigner, senderVerifier.address),
           ),
       ).to.be.revertedWith(Constants.reasons.code.VR3);
