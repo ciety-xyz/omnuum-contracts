@@ -81,7 +81,7 @@ const questions = [
 
       const sendValue = ethers.utils.parseEther(ans.publicPrice).mul(Number(ans.mintQuantity));
 
-      const nftContract = (await ethers.getContractFactory('OmnuumNFT1155')).attach(ans.nftContractAddress);
+      const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
 
       const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
 

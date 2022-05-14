@@ -61,8 +61,6 @@ const questions = [
       const provider = await getRPCProvider(ethers.provider);
       const nftOwnerSigner = new ethers.Wallet(ans.nftOwnerPrivateKey, provider);
 
-      // const nftContract = (await ethers.getContractFactory('OmnuumNFT1155')).attach(ans.nftContractAddress);
-
       const inputs = {
         from: await nftOwnerSigner.getAddress(),
         to: ans.receiverAddress,

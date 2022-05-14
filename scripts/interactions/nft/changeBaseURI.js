@@ -6,7 +6,7 @@ const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
   nft_owner_private_key: 'nft_owner_private_key',
   nft_address: 'nft_address',
-  reveal_uri: 'reveal_uri',
+  base_uri: 'base_uri',
 };
 
 const questions = [
@@ -23,9 +23,9 @@ const questions = [
     validate: nullCheck,
   },
   {
-    name: inquirerParams.reveal_uri,
+    name: inquirerParams.base_uri,
     type: 'input',
-    message: '🤔 Reveal Uri is ...',
+    message: '🤔 Base Uri to be changed is ...',
     validate: nullCheck,
   },
 ];
@@ -36,14 +36,14 @@ const questions = [
       const provider = await getRPCProvider(ethers.provider);
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
-      const nftContract = (await ethers.getContractFactory('OmnuumNFT1155')).attach(ans.nftContractAddress);
-      const txResponse = await nftContract.connect(nftOwnerSigner).setUri(ans.reveal_uri);
+      const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
+      const txResponse = await nftContract.connect(nftOwnerSigner).changeBaseURI(ans.base_uri);
 
       console.log('txRseponse', txResponse);
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`💋 Reveal (Set URI) is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(`💋 Base uri is changed.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

@@ -56,7 +56,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
     bool public isRevealed;
     string public baseURI;
 
-    event BaseURIChanged(address indexed nftContract, string indexed baseURI);
+    event BaseURIChanged(address indexed nftContract, string baseURI);
     event MintFeePaid(address indexed payer, uint256 amount);
     event TransferBalance(uint256 value, address indexed receiver);
     event EtherReceived(address indexed sender, uint256 value);
