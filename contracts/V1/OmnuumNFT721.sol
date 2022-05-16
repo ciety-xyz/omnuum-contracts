@@ -202,7 +202,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         uint256 feePayment = calculatedFee > minimumFee ? calculatedFee : minimumFee;
 
-        OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }('MINT_FEE', '');
+        OmnuumWallet(payable(caManager.getContract('WALLET'))).mintFeePayment{ value: feePayment }(address(this));
 
         emit MintFeePaid(address(this), msg.sender, msg.value - feePayment, feePayment);
     }
@@ -211,7 +211,8 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
     /// @dev update reveal flag and update base uri
     /// @param baseURI_ revealed metadata uri
     function setRevealed(string calldata baseURI_) external onlyOwner {
-        require(!isRevealed);
+        /// @custom:error (SE6) - Already revealed
+        require(!isRevealed, 'SE6');
 
         isRevealed = true;
         changeBaseURI(baseURI_);

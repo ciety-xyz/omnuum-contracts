@@ -879,4 +879,23 @@ describe('OmnuumNFT', () => {
       await expect(sendEtherTx).to.emit(omnuumNFT721, Constants.events.NFT.EtherReceived).withArgs(madFan.address, donation);
     });
   });
+  describe('[Method] setRevealed', () => {
+    it('can set revealed', async () => {
+      const {
+        accounts: [prjOwnerAC, madFan],
+      } = this;
+      const omnuumNFT721 = await deployNFT(this, {
+        prjOwner: prjOwnerAC,
+      });
+
+      expect(await omnuumNFT721.isRevealed()).to.false;
+      expect(await omnuumNFT721.baseURI()).to.equal(Constants.testValues.coverUri);
+
+      const revealURI = Constants.testValues.baseURI;
+      await expect(omnuumNFT721.setRevealed(revealURI)).to.emit(omnuumNFT721, Constants.events.NFT.Revealed).withArgs(omnuumNFT721.address);
+
+      expect(await omnuumNFT721.baseURI()).to.equal(revealURI);
+      expect(await omnuumNFT721.isRevealed()).to.true;
+    });
+  });
 });

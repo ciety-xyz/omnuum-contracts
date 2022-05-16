@@ -70,8 +70,8 @@ contract OmnuumWallet {
         _checkMinConsensus();
     }
 
-    event PaymentReceived(address indexed sender, string topic, string description, uint256 value);
-    event mintFeeReceived(address indexed nftContract, uint256 value);
+    event PaymentReceived(address indexed sender, address indexed target, string topic, string description, uint256 value);
+    event MintFeeReceived(address indexed nftContract, uint256 value);
     event EtherReceived(address indexed sender, uint256 value);
     event Requested(address indexed owner, uint256 indexed requestId, RequestTypes indexed requestType);
     event Approved(address indexed owner, uint256 indexed requestId, OwnerVotes votes);
@@ -154,13 +154,17 @@ contract OmnuumWallet {
     function mintFeePayment(address _nftContract) external payable {
         /// @custom:error (NE3) - A zero payment is not acceptable
         require(msg.value > 0, 'NE3');
-        emit mintFeeReceived(_nftContract, msg.value);
+        emit MintFeeReceived(_nftContract, msg.value);
     }
 
-    function makePayment(string calldata _topic, string calldata _description) external payable {
+    function makePayment(
+        address _target,
+        string calldata _topic,
+        string calldata _description
+    ) external payable {
         /// @custom:error (NE3) - A zero payment is not acceptable
         require(msg.value > 0, 'NE3');
-        emit PaymentReceived(msg.sender, _topic, _description, msg.value);
+        emit PaymentReceived(msg.sender, _target, _topic, _description, msg.value);
     }
 
     receive() external payable {

@@ -9,6 +9,7 @@ module.exports = {
       BaseURIChanged: 'BaseURIChanged',
       TransferBalance: 'TransferBalance',
       EtherReceived: 'EtherReceived',
+      Revealed: 'Revealed',
     },
     MintManager: {
       SetSpecialFeeRate: 'SetSpecialFeeRate',

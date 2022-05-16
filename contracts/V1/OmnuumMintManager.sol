@@ -189,7 +189,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= totalQuantity * minFee, 'ARG3');
-        OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET'))).makePayment{ value: msg.value }('MINT_FEE', '');
+        OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET'))).mintFeePayment{ value: msg.value }(_nftContract);
 
         emit MintFeePaid(_nftContract, msg.sender, 0, msg.value);
     }
