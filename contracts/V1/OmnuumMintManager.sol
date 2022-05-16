@@ -31,6 +31,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     event SetSpecialFeeRate(address indexed nftContract, uint256 discountFeeRate);
     event SetMinFee(uint256 minFee);
     event Airdrop(address indexed nftContract, address indexed receiver, uint256 quantity);
+    event MintFeePaid(address indexed nftContract, address indexed payer, uint256 profit, uint256 mintFee);
     event SetPublicSchedule(
         address indexed nftContract,
         uint256 indexed groupId,
@@ -189,5 +190,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
         /// @custom:error (ARG3) - Not enough ether sent
         require(msg.value >= totalQuantity * minFee, 'ARG3');
         OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET'))).makePayment{ value: msg.value }('MINT_FEE', '');
+
+        emit MintFeePaid(_nftContract, msg.sender, 0, msg.value);
     }
 }

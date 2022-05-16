@@ -3,16 +3,16 @@ const inquirer = require('inquirer');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
-  wallet_address: 'wallet_address',
+  nft_contract_address: 'nft_contract_address',
   ether_sender_private_key: 'ether_sender_private_key',
   send_value: 'send_value',
 };
 
 const questions = [
   {
-    name: inquirerParams.wallet_address,
+    name: inquirerParams.nft_contract_address,
     type: 'input',
-    message: '🤔 Wallet contract address is ...',
+    message: '🤔 NFT contract address is ...',
     validate: nullCheck,
   },
   {
@@ -36,28 +36,15 @@ const questions = [
       const senderSigner = new ethers.Wallet(ans.ether_sender_private_key, provider);
 
       const txResponse = await senderSigner.sendTransaction({
-        to: ans.wallet_address,
+        to: ans.nft_contract_address,
         value: ethers.utils.parseEther(ans.send_value),
       });
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`💋 Send ether to Wallet. \nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(`💋 Send ether to NFT Contract. \nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }
   });
 })();
-
-/*
-* "profit": "44000000000",
-        "feePaid": "2500000000000000"
-   0.012 * 2 * 0.05 = 0.0012
-   *
-        * "profit": "22800044000000000",
-        "feePaid": "3700000000000000"
-        *
-   0.011 * 2 * 0.05 = 0.0011
-   *    * "profit": "43700044000000000",
-        "feePaid": "4800000000000000"
-* */

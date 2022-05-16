@@ -14,28 +14,26 @@ import './OmnuumWallet.sol';
 
 /// @title OmnuumNFT721 - NFT contract that implements the ERC721 standard
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
-
-//                 .`:_(xz&B@@B&zx(_:`.
-//             ."}*$%WMM8$$$$$$$$$$$$$$*}".
-//           ,{}:`.       .'^;[n@$$$$$$$$$$t,
-//        .i+`             ....  `<n$$$$$$$$$8<.
-//       ;1.         `I1n&$$$$$$8u)!,iv$$$$$$$$8;
-//     .x~        ^Ii,`'''`^:_t%$$$$$B|_(@$$$$$$$x.
-//    '&|       ":.             '!u$$$$$M_1$$$$$$$&'
-//   '8$'     .1'                  '?B$$$$u,x$$$$$$8'
-//   v$8     '&'                     .-$$$$%`i$$$$$$v
-//  j$$$.   i$c                          t$$$- `B$$$$j
-//  B$$$~   r$$.                          u$$z  "$$$$%
-//  v$$$$z. ?$$$-                          c$)   `$$$v
-//  .&$$$$$W`"$$$$,                       .B:     @$&.
-//   ^$$$$$$$_"&$$$$v,                    )"     '$$^
-//    ,$$$$$$$Wi{$$$$$&?`               `!.      [$,
-//     `&$$$$$$$*_?M$$$$$Bt>"'.     .^I:'       ,&`
-//      .1$$$$$$$$%]I!|#$$$$$$$$%8z\i`         +1.
-//        `/$$$$$$$$$M?^.'`^""^`'           .;[`
-//          '-&$$$$$$$$$$u?:`.          .`;{+'
-//             `_v$$$$$$$$$$$$B*xt|(\fu&v_`
-//                .`I[j#@$$$$$$$$@#j}I`.
+/*
+                       *$#_(xz&B@@B&zx(_:`.
+                  ."}*$%WMM8$$$$$$$$$$$$$$*}".
+                ,{}:`.       .'^;[n@$$$$$$$$$$t,
+            ;1.          `I1&$$$$$$8u)!,iv$$$$$$$$8;
+          .x~        ^Ii,`'''`^:_t%$$$$$B|_(@$$$$$$$x.
+         '&|       ":.             '!u$$$$$M_1$$$$$$$&'
+        '8$'     .1'                  '?B$$$$u,x$$$$$$8'
+        v$8     '&'                     .-$$$$%`i$$$$$$v
+       j$$$.   i$c                          t$$$- `B$$$$j
+       B$$$~   r$$.                          u$$z  "$$$$%
+       v$$$$z. ?$$$-                          c$)   `$$$v
+       .&$$$$$W`"$$$$,                       .B:     @$&.
+        ^$$$$$$$_"&$$$$v,                    )"     '$$^
+         ,$$$$$$$Wi{$$$$$&?`               `!.      [$,
+          `&$$$$$$$*_?M$$$$$Bt>"'.     .^I:'       ,&`
+           .1$$$$$$$$%]I!|#$$$$$$$$%8z\i`         +1.
+             `/$$$$$$$$$M?^.'`^""^`'           .;[`
+                  `_v$$$$$$$$$$$$B*xt|(\fu&v_`
+                     .`I[j#@$$$$$$$$@#j}I*/
 
 contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
@@ -57,7 +55,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
     string public baseURI;
 
     event BaseURIChanged(address indexed nftContract, string baseURI);
-    event MintFeePaid(address indexed payer, uint256 amount);
+    event MintFeePaid(address indexed nftContract, address indexed payer, uint256 profit, uint256 mintFee);
     event TransferBalance(uint256 value, address indexed receiver);
     event EtherReceived(address indexed sender, uint256 value);
     event Revealed(address indexed nftContract);
@@ -127,8 +125,8 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omnuumSigner, msg.sender, 'MINT', _groupId, _payload);
         mintManager.preparePublicMint(_groupId, _quantity, msg.value, msg.sender);
 
+        payMintFee(_quantity);
         mintLoop(msg.sender, _quantity);
-        sendMintFee(_quantity);
     }
 
     /// @notice ticket minting function
@@ -149,8 +147,8 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
         SenderVerifier(caManager.getContract('VERIFIER')).verify(omnuumSigner, msg.sender, 'TICKET', _ticket.groupId, _payload);
         TicketManager(caManager.getContract('TICKET')).useTicket(omnuumSigner, msg.sender, _quantity, _ticket);
 
+        payMintFee(_quantity);
         mintLoop(msg.sender, _quantity);
-        sendMintFee(_quantity);
     }
 
     /// @notice direct mint, neither public nor ticket
@@ -195,7 +193,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
     /// @notice send fee to omnuum wallet
     /// @param _quantity Mint quantity
-    function sendMintFee(uint256 _quantity) internal {
+    function payMintFee(uint256 _quantity) internal {
         uint8 rateDecimal = mintManager.rateDecimal();
         uint256 minFee = mintManager.minFee();
         uint256 feeRate = mintManager.getFeeRate(address(this));
@@ -206,7 +204,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         OmnuumWallet(payable(caManager.getContract('WALLET'))).makePayment{ value: feePayment }('MINT_FEE', '');
 
-        emit MintFeePaid(msg.sender, feePayment);
+        emit MintFeePaid(address(this), msg.sender, msg.value - feePayment, feePayment);
     }
 
     /// @notice can execute only once!!
