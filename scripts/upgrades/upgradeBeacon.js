@@ -2,7 +2,6 @@ const inquirer = require('inquirer');
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
 const { mkdir, writeFile } = require('fs/promises');
-const AWS = require('aws-sdk');
 const { getRPCProvider, nullCheck, getDateSuffix, getChainName } = require('../deployments/deployHelper');
 const { getWalletFromMnemonic } = require('../../utils/walletFromMnemonic');
 const { s3Upload } = require('../../utils/s3Upload');

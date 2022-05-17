@@ -42,6 +42,7 @@
     "itx:sendEtherToWallet": "npx hardhat run scripts/interactions/wallet/sendEther.js --network rinkeby",
     "itx:sendEtherToNFT": "npx hardhat run scripts/interactions/nft/sendEther.js --network rinkeby",
     "itx:payment": "npx hardhat run scripts/interactions/wallet/payment.js --network rinkeby",
+    "itx:transferBalance": "npx hardhat run scripts/interactions/nft/transferBalance.js --network rinkeby",
     "upgrade:proxy": "npx hardhat run scripts/upgrades/upgradeProxy.js --network $npm_config_network",
     "upgrade:beacon": "npx hardhat run scripts/upgrades/upgradeBeacon.js --network $npm_config_network",
     "coverage": "npx hardhat coverage --network hardhat",
