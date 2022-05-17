@@ -34,6 +34,7 @@
     "itx:airdrop": "npx hardhat run scripts/interactions/mintManager/airDrop.js --network rinkeby",
     "itx:vrfRequest": "npx hardhat run scripts/interactions/revealManager/vrfRequest.js --network rinkeby",
     "itx:changeBaseURI": "npx hardhat run scripts/interactions/nft/changeBaseURI.js --network rinkeby",
+    "itx:setReveal": "npx hardhat run scripts/interactions/nft/setReveal.js --network rinkeby",
     "itx:transferNFT": "npx hardhat run scripts/interactions/nft/transferNFT.js --network rinkeby",
     "itx:approvalRequest": "npx hardhat run scripts/interactions/wallet/approvalRequest.js --network rinkeby",
     "itx:approve": "npx hardhat run scripts/interactions/wallet/approve.js --network rinkeby",

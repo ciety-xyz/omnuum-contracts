@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 
+const chalk = require('chalk');
 const { nullCheck, getRPCProvider, getChainName } = require('../../deployments/deployHelper');
 const { testValues, chainlink } = require('../../../utils/constants');
 
@@ -63,37 +64,57 @@ const questions = [
       const revealManager = (await ethers.getContractFactory('RevealManager')).attach(ans.reveal_manager_address);
       const vrfManager = (await ethers.getContractFactory('OmnuumVRFManager')).attach(ans.vrf_manager_address);
 
-      const linkContract = new ethers.Contract(
-        chainlink[chainName].LINK,
-        ['function transfer(address _to, uint256 _value) returns (bool)'],
-        devDeployerSigner
-      );
-      const txTransfer = await linkContract.transfer(ans.exchange_manager_address, chainlink[chainName].fee);
+      const requiredLinkFee = chainlink[chainName].fee;
 
-      const txTransferReceipt = await txTransfer.wait();
-      console.log(txTransferReceipt);
-      console.log(
-        `💰💰💰 Fee Transfer from devDeployer to Exchange Manager.\nBlock: ${txTransferReceipt.blockNumber}\nTransaction: ${txTransferReceipt.transactionHash}\nValue: ${chainlink[chainName].fee}`
-      );
+      const { sendLink } = await inquirer.prompt([
+        {
+          name: 'sendLink',
+          type: 'confirm',
+          message: `${chalk.yellowBright(`🤔 Do you want to send ${requiredLinkFee} LINK to exchange manager contract?`)}`,
+        },
+      ]);
+      if (sendLink) {
+        const linkContract = new ethers.Contract(
+          chainlink[chainName].LINK,
+          ['function transfer(address _to, uint256 _value) returns (bool)'],
+          devDeployerSigner,
+        );
+        const txTransfer = await linkContract.transfer(ans.exchange_manager_address, requiredLinkFee);
 
-      const amountLinkFee = chainlink[chainName].fee; // 0.1 ether for Rinkeby
-      const safetyRatio = await vrfManager.safetyRatio();
+        const txTransferReceipt = await txTransfer.wait();
+        console.log(
+          `💰💰💰 LINK fee is transferred from devDeployer to Exchange Manager.\nBlock: ${txTransferReceipt.blockNumber}\nTransaction: ${txTransferReceipt.transactionHash}\nValue: ${chainlink[chainName].fee}`,
+        );
+      }
 
-      const value = testValues.tmpExchangeRate
-        .mul(amountLinkFee)
+      const sendEtherFee = testValues.tmpLinkExRate
+        .mul(requiredLinkFee)
         .div(ethers.utils.parseEther('1'))
-        .mul(ethers.BigNumber.from(safetyRatio))
+        .mul(ethers.BigNumber.from(await vrfManager.safetyRatio()))
         .div(ethers.BigNumber.from('100'));
 
-      console.log('💰 Send value', value);
+      console.log(
+        `💰 Sending ${chalk.redBright(
+          sendEtherFee,
+        )} ETH to revealManager...\n=> Value is sent through internal transaction to VRF manager\n${chalk.green(
+          '=> Request Verifiable Random Function to ChainLINK Oracle',
+        )}`,
+        sendEtherFee,
+      );
 
-      const txResponse = await revealManager.connect(nftOwnerSigner).vrfRequest(ans.nft_address, { value, gasLimit: 10000000 });
+      const txResponse = await revealManager
+        .connect(nftOwnerSigner)
+        .vrfRequest(ans.nft_address, { value: sendEtherFee, gasLimit: 10000000 });
 
       console.log('txRseponse', txResponse);
       const txReceipt = await txResponse.wait();
 
       console.log(txReceipt);
-      console.log(`💋 VRF request is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+      console.log(
+        `${chalk.yellowBright('💋 VRF request is on the way.')}\nBlock: ${txReceipt.blockNumber}\nTransaction: ${
+          txReceipt.transactionHash
+        }`,
+      );
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

@@ -146,18 +146,22 @@ describe('Omnuum Multi-sig Wallet', () => {
 
       const beforeWalletBalance = await ethers.provider.getBalance(Wallet.address);
 
-      await expect(Wallet.connect(sendSigner).makePayment(testValues.paymentTestTopic, testValues.paymentDescription, { value }))
+      await expect(
+        Wallet.connect(sendSigner).makePayment(testValues.paymentTarget, testValues.paymentTestTopic, testValues.paymentDescription, {
+          value,
+        }),
+      )
         .to.emit(Wallet, events.Wallet.PaymentReceived)
-        .withArgs(sendSigner.address, testValues.paymentTestTopic, testValues.paymentDescription, value);
+        .withArgs(sendSigner.address, testValues.paymentTarget, testValues.paymentTestTopic, testValues.paymentDescription, value);
 
       const afterWalletBalance = await ethers.provider.getBalance(Wallet.address);
 
       expect(afterWalletBalance.sub(beforeWalletBalance)).to.equal(value);
     });
     it('[Revert] Cannot send zero amount', async () => {
-      await expect(Wallet.makePayment(testValues.paymentTestTopic, testValues.paymentDescription, { value: 0 })).to.be.revertedWith(
-        reasons.code.NE3,
-      );
+      await expect(
+        Wallet.makePayment(testValues.paymentTarget, testValues.paymentTestTopic, testValues.paymentDescription, { value: 0 }),
+      ).to.be.revertedWith(reasons.code.NE3);
     });
   });
 

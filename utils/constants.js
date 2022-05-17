@@ -147,6 +147,7 @@ module.exports = {
     },
   },
   testValues: {
+    paymentTarget: '0x0000000000000000DEad0000000000000000DEad',
     paymentDescription: 'Test for Payment',
     paymentTestTopic: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('TEST')),
     zeroOwnerAccount: { addr: ethers.constants.AddressZero, vote: 0 },
@@ -160,7 +161,7 @@ module.exports = {
     mintFee: 2500, // 0.025 == 2.5%
     coverUri: 'https://cover.com/',
     baseURI: 'https://reveal.com/',
-    tmpExchangeRate: ethers.utils.parseEther('0.0055'),
+    tmpLinkExRate: ethers.utils.parseEther('0.01466666666'),
     collectionId: 71,
     name: 'hello',
     symbol: 'WRD',
