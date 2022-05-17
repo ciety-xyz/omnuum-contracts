@@ -7,7 +7,7 @@ module.exports = {
       Ticket: 'Ticket',
       Public: 'Public',
       BaseURIChanged: 'BaseURIChanged',
-      TransferBalance: 'TransferBalance',
+      BalanceTransferred: 'BalanceTransferred',
       EtherReceived: 'EtherReceived',
       Revealed: 'Revealed',
     },

@@ -56,7 +56,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
     event BaseURIChanged(address indexed nftContract, string baseURI);
     event MintFeePaid(address indexed nftContract, address indexed payer, uint256 profit, uint256 mintFee);
-    event TransferBalance(uint256 value, address indexed receiver);
+    event BalanceTransferred(address indexed receiver, uint256 value);
     event EtherReceived(address indexed sender, uint256 value);
     event Revealed(address indexed nftContract);
 
@@ -183,7 +183,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
         /// @custom:error (SE5) - Address: unable to send value, recipient may have reverted
         require(withdrawn, 'SE5');
 
-        emit TransferBalance(_value, _to);
+        emit BalanceTransferred(_to, _value);
     }
 
     /// @notice a function to donate to support the project owner. Hooray~!

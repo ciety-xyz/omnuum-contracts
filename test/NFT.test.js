@@ -817,8 +817,8 @@ describe('OmnuumNFT', () => {
       // Event emit check
       const testValue = ethers.utils.parseEther('0.123');
       await expect(omnuumNFT721.connect(prjOwnerAC).transferBalance(testValue, prjOwnerAC.address))
-        .to.emit(omnuumNFT721, Constants.events.NFT.TransferBalance)
-        .withArgs(testValue, prjOwnerAC.address);
+        .to.emit(omnuumNFT721, Constants.events.NFT.BalanceTransferred)
+        .withArgs(prjOwnerAC.address, testValue);
 
       // Transfer Ether to Owner himself, then check the change of balances between omnuumNFT721 (decrement) and project Owner (increment)
       const transferEtherToOwnerSelf = ethers.utils.parseEther('1.492874');
