@@ -7,7 +7,7 @@ const { getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { mkdir, writeFile } = require('fs/promises');
 const { nullCheck, getRPCProvider, getChainName, getDateSuffix } = require('../deployments/deployHelper');
 const { getWalletFromMnemonic } = require('../../utils/walletFromMnemonic');
-const { s3Upload } = require('../../utils/s3Upload');
+const { s3Upload } = require('../../utils/s3.js');
 
 const inquirerParams = {
   deployer_private_key: 'deployer_private_key',

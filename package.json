@@ -17,7 +17,7 @@
     "deploy:nft:local": "npm run compile && npx hardhat run scripts/deployments/deployNFTBeaconProxy.js --network localhost",
     "deploy:nft:rinkeby": "npm run compile && npx hardhat run scripts/deployments/deployNFTBeaconProxy.js --network rinkeby",
     "deploy:wallet:rinkeby": "npx hardhat run scripts/deployments/deployWallet.js --network rinkeby",
-    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/wallet.js --network rinkeby",
+    "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/wallet.js",
     "verify:nftBeaconProxy": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/nftBeaconProxy.js",
     "verify:nftFactory": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/nftFactory.js",
     "verify:vrfManager": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/vrfManager.js",

@@ -49,8 +49,8 @@ const DEP_CONSTANTS = {
     },
   },
   roles: {
-    vrfManager: 'EXCHANGE',
-    revealManager: 'VRF',
+    EXCHANGE: 'EXCHANGE',
+    VRF: 'VRF',
   },
 };
 

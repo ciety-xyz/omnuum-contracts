@@ -94,6 +94,22 @@ const alreadyDeployedConsole = (contractName, addr) => {
   console.log(`\n${chalk.yellow(`<${contractName}>`)} - Skip for deployed contract (${addr})`);
 };
 
+const getProxyDeployMetadata = async (proxyContract) => {
+  const txResponse = await proxyContract.deployed();
+  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
+  const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
+  const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
+  const { gasUsed, blockNumber } = deployTxReceipt;
+
+  return {
+    deployTxReceipt,
+    implAddress,
+    adminAddress,
+    gasUsed,
+    blockNumber,
+  };
+};
+
 const deployBeaconConsole = (contractName, beaconAddr, ImplAddr, gasUsed, txHash, blockNumber) =>
   console.log(
     `\n${chalk.green(`<${contractName}>`)}\n${[
@@ -194,11 +210,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
   log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 600000 });
-  const txResponse = await proxyContract.deployed();
-  const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);
-  const implAddress = await upgrades.erc1967.getImplementationAddress(proxyContract.address);
-  const adminAddress = await upgrades.erc1967.getAdminAddress(proxyContract.address);
-  const { gasUsed, blockNumber } = deployTxReceipt;
+  const { deployTxReceipt, implAddress, adminAddress, gasUsed, blockNumber } = await getProxyDeployMetadata(proxyContract);
 
   log &&
     deployProxyConsole(
@@ -207,7 +219,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       implAddress,
       adminAddress,
       gasUsed,
-      txResponse.deployTransaction.hash,
+      deployTxReceipt.transactionHash,
       blockNumber,
     );
 
@@ -292,6 +304,7 @@ const createWalletOwnerAccounts = (addressArray, votesArray) => {
 module.exports = {
   structurizeProxyData,
   structurizeContractData,
+  getProxyDeployMetadata,
   isLocalNetwork,
   deployNormal,
   deployProxy,

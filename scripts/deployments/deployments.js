@@ -112,9 +112,9 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   /* Reveal manager => VRF role */
 
   console.log(`\n${chalk.green('Start Role Additions to CA Manager...')} - ${new Date()}`);
-  await (await caManager.proxyContract.connect(deploySigner).addRole([vrfManager.contract.address], DEP_CONSTANTS.roles.vrfManager)).wait();
+  await (await caManager.proxyContract.connect(deploySigner).addRole([vrfManager.contract.address], DEP_CONSTANTS.roles.EXCHANGE)).wait();
   await (
-    await caManager.proxyContract.connect(deploySigner).addRole([revealManager.contract.address], DEP_CONSTANTS.roles.revealManager)
+    await caManager.proxyContract.connect(deploySigner).addRole([revealManager.contract.address], DEP_CONSTANTS.roles.VRF)
   ).wait(DEP_CONSTANTS.confirmWait);
   console.log(`${chalk.yellow('Complete!')} - ${new Date()}`);
 

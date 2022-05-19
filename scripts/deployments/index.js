@@ -17,7 +17,7 @@ const {
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
 const { compile } = require('../../utils/hardhat.js');
-const { s3Upload } = require('../../utils/s3Upload');
+const { s3Upload } = require('../../utils/s3.js');
 
 async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3Save = false }) {
   try {

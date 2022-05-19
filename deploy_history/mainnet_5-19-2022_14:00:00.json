@@ -1,0 +1,53 @@
+{
+  "network": "mainnet",
+  "deployStartAt": "2:00:00 PM",
+  "deployer": "0x84803BBd4269f596D94e88fA4E697b21C39370d2",
+  "mintManager": {
+    "proxy": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492",
+    "impl": "0x44eBfaF325961eeA4E1ef7969A327893C796513A",
+    "admin": "0x6d82f1895bdAe7B6FEA3c57F44fc281AbB6BB649",
+    "gasUsed": 2152868,
+    "blockNumber": 14803042,
+    "address": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492"
+  },
+  "wallet": {
+    "contract": "0x6DEc671d53F33a4a7314Ea596A8E892F18ecEc91",
+    "address": "0x6DEc671d53F33a4a7314Ea596A8E892F18ecEc91",
+    "gasUsed": 3875571,
+    "blockNumber": 14802811,
+    "args": [
+      55,
+      3,
+      [
+        { "addr": "0x95254b0F9eFc20295AE423373cd105EE8b5a717F", "vote": 2 },
+        { "addr": "0x0bb5708C4f71439DB00027F85D87f0232acDeEfA", "vote": 2 },
+        { "addr": "0x734724b6bAaF3C407298d24d98ece1E0fA077ffd", "vote": 1 },
+        { "addr": "0xDfe2eFA72E86397728c885D91A8786aA9FdE7A24", "vote": 1 },
+        { "addr": "0x4E2d208C5f7DB881Ee871F5DF4a23DFDb0e77b58", "vote": 1 }
+      ]
+    ]
+  },
+  "revealManager": {
+    "contract": "0xb2Cff4c533C95fd5B77Ad246539afc5751FA2B4b",
+    "address": "0xb2Cff4c533C95fd5B77Ad246539afc5751FA2B4b",
+    "gasUsed": 342309,
+    "blockNumber": 14802809,
+    "args": ["0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab"]
+  },
+  "nft721": {
+    "impl": "0x2359f095fb44b3a8fc642587f006fb5bdee5ac5a",
+    "beacon": "0xD4d7fd222Ccc3b574Cd6CA7DF632df1DB09ad388",
+    "address": "0xD4d7fd222Ccc3b574Cd6CA7DF632df1DB09ad388"
+  },
+  "nftFactory": {
+    "contract": "0x0efe513723df57fa00675a00Bca3C54Cd87792Fb",
+    "address": "0x0efe513723df57fa00675a00Bca3C54Cd87792Fb",
+    "gasUsed": 2016818,
+    "blockNumber": 14802980,
+    "args": [
+      "0xD52F874978c3B86Ef4A8DC5e03AdaA4F3C81B8Ab",
+      "0xd4d7fd222ccc3b574cd6ca7df632df1db09ad388",
+      "0x81876853baef4001B844B11dF010E9647b7c9a2b"
+    ]
+  }
+}
