@@ -25,7 +25,7 @@ contract OmnuumMintManager is OwnableUpgradeable {
     mapping(address => mapping(uint256 => PublicMintSchedule)) public publicMintSchedules;
 
     /// @notice omnuum ca manager address
-    address private caManager;
+    address public caManager;
 
     event ChangeFeeRate(uint256 feeRate);
     event SetSpecialFeeRate(address indexed nftContract, uint256 discountFeeRate);
@@ -192,5 +192,12 @@ contract OmnuumMintManager is OwnableUpgradeable {
         OmnuumWallet(payable(OmnuumCAManager(caManager).getContract('WALLET'))).mintFeePayment{ value: msg.value }(_nftContract);
 
         emit MintFeePaid(_nftContract, msg.sender, 0, msg.value);
+    }
+
+    /// @notice set ca manager
+    /// @dev only owner can use this function
+    /// @param _caManager address of CA manager
+    function setCaManager(address _caManager) external onlyOwner {
+        caManager = _caManager;
     }
 }

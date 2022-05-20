@@ -1,0 +1,357 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xE2C85fBB027D66c539b70331522B2166d6a96381"
+  },
+  "proxies": [
+    {
+      "address": "0xdB09724585cd6CDe2bE010eC15D231B7D3F7628f",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "b611504e8fb7b2c7b3136f51e8e42a87e5e6c6a3c153aed04c3ff0bef0facdee": {
+      "address": "0x299A4A8c28055B8175aabe436008FA3f2Ad5C197",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts/utils/OwnableUpgradeable.sol:8"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts/utils/OwnableUpgradeable.sol:57"
+          },
+          {
+            "label": "feeRate",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:16"
+          },
+          {
+            "label": "minFee",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_uint256",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:19"
+          },
+          {
+            "label": "specialFeeRates",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:22"
+          },
+          {
+            "label": "publicMintSchedules",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage))",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:25"
+          },
+          {
+            "label": "caManager",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct OmnuumMintManager.PublicMintSchedule))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint32)": {
+            "label": "mapping(address => uint32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage)": {
+            "label": "mapping(uint256 => struct OmnuumMintManager.PublicMintSchedule)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(PublicMintSchedule)3153_storage": {
+            "label": "struct OmnuumMintManager.PublicMintSchedule",
+            "members": [
+              {
+                "label": "supply",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "mintedTotal",
+                "type": "t_uint32",
+                "offset": 4,
+                "slot": "0"
+              },
+              {
+                "label": "maxMintAtAddress",
+                "type": "t_uint32",
+                "offset": 8,
+                "slot": "0"
+              },
+              {
+                "label": "minted",
+                "type": "t_mapping(t_address,t_uint32)",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "endDate",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "basePrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          }
+        }
+      }
+    },
+    "c8a32fd241bf4a10e415afae8f2f2f64fa38e0016c378cf87cee2ec29d615d65": {
+      "address": "0xfc099cb0E30Df2b213d3De0A389dFA02c0c35615",
+      "txHash": "0xd635ccc929c99c0035b41ade88cd97573ad061454f39c9f1e9661b996b42eb05",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts/utils/OwnableUpgradeable.sol:8"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts/utils/OwnableUpgradeable.sol:57"
+          },
+          {
+            "label": "feeRate",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:16"
+          },
+          {
+            "label": "minFee",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_uint256",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:19"
+          },
+          {
+            "label": "specialFeeRates",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:22"
+          },
+          {
+            "label": "publicMintSchedules",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage))",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:25"
+          },
+          {
+            "label": "caManager",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "OmnuumMintManager",
+            "src": "contracts/V1/OmnuumMintManager.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct OmnuumMintManager.PublicMintSchedule))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint32)": {
+            "label": "mapping(address => uint32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(PublicMintSchedule)3153_storage)": {
+            "label": "mapping(uint256 => struct OmnuumMintManager.PublicMintSchedule)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(PublicMintSchedule)3153_storage": {
+            "label": "struct OmnuumMintManager.PublicMintSchedule",
+            "members": [
+              {
+                "label": "supply",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "mintedTotal",
+                "type": "t_uint32",
+                "offset": 4,
+                "slot": "0"
+              },
+              {
+                "label": "maxMintAtAddress",
+                "type": "t_uint32",
+                "offset": 8,
+                "slot": "0"
+              },
+              {
+                "label": "minted",
+                "type": "t_mapping(t_address,t_uint32)",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "endDate",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "basePrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          }
+        }
+      }
+    }
+  }
+}

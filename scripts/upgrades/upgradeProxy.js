@@ -15,6 +15,8 @@ const inquirerParams = {
   contract_name: 'contract_name',
   signer_method: 'signer_method',
   proceed: 'proceed',
+  localSave: 'localSave',
+  s3Save: 's3Save',
 };
 
 const getSolidityFileList = fs
