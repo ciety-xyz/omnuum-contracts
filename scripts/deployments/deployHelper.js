@@ -69,6 +69,8 @@ const getRPCProvider = async () => {
   const jsonRpcProvider =
     chainName == 'localhost'
       ? null
+      : chainName == 'mainnet'
+      ? process.env.MAINNET_URL
       : chainName == 'rinkeby'
       ? process.env.RINKEBY_URL
       : chainName == 'ropsten'
