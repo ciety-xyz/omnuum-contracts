@@ -5,7 +5,7 @@ const { addDays } = require('date-fns');
 
 upgrades.silenceWarnings();
 
-const gas_price = 40; // in gwei
+const gas_price = 20; // in gwei
 
 const roundTo = (n, to) => Math.round(n * 10 ** to) / 10 ** to;
 const calcGasPrice = (gas) => roundTo((gas * gas_price) / 10 ** 9, 3);
@@ -32,7 +32,7 @@ async function createTicketMintCase(quantity) {
   const {
     accounts: [omnuumAC, minterAC],
     senderVerifier,
-    omnuumNFT1155,
+    omnuumNFT721,
     ticketManager,
     signatureSigner,
   } = this;
@@ -44,15 +44,15 @@ async function createTicketMintCase(quantity) {
 
   // give Ticket to minter
   const ticket = await createTicket(
-    { user: minterAC.address, nft: omnuumNFT1155.address, groupId: group_id, price, quantity },
+    { user: minterAC.address, nft: omnuumNFT721.address, groupId: group_id, price, quantity },
     signatureSigner,
     ticketManager.address,
   );
-  await (await ticketManager.setEndDate(omnuumNFT1155.address, group_id, end_date)).wait();
+  await (await ticketManager.setEndDate(omnuumNFT721.address, group_id, end_date)).wait();
 
   const payload = await signPayload(minterAC.address, Constants.payloadTopic.ticket, group_id, signatureSigner, senderVerifier.address);
 
-  const tx = await omnuumNFT1155.connect(minterAC).ticketMint(quantity, ticket, payload, {
+  const tx = await omnuumNFT721.connect(minterAC).ticketMint(quantity, ticket, payload, {
     value: price.mul(quantity),
   });
 
@@ -67,7 +67,7 @@ async function createPublicMintCase(quantity) {
   const {
     accounts: [omnuumAC, minterAC],
     senderVerifier,
-    omnuumNFT1155,
+    omnuumNFT721,
     omnuumMintManager,
     signatureSigner,
   } = this;
@@ -77,16 +77,16 @@ async function createPublicMintCase(quantity) {
   const end_date = toSolDate(addDays(new Date(), 2));
 
   const open_quantity = 2000;
-  const max_min_per_address = 300;
+  const max_min_per_address = 2000;
 
   // make NFT public
   await (
-    await omnuumMintManager.setPublicMintSchedule(omnuumNFT1155.address, group_id, end_date, basePrice, open_quantity, max_min_per_address)
+    await omnuumMintManager.setPublicMintSchedule(omnuumNFT721.address, group_id, end_date, basePrice, open_quantity, max_min_per_address)
   ).wait();
 
   const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
 
-  const tx = await omnuumNFT1155.connect(minterAC).publicMint(quantity, group_id, payload, {
+  const tx = await omnuumNFT721.connect(minterAC).publicMint(quantity, group_id, payload, {
     value: basePrice.mul(quantity),
   });
 
@@ -238,7 +238,7 @@ async function estimatePureMintGas() {
   // );
 }
 
-// estimateMintGas();
+estimateMintGas();
 // estimateNFTProxyDeploymentGas();
-estimateNFTAirdropGas();
+// estimateNFTAirdropGas();
 // estimatePureMintGas();
