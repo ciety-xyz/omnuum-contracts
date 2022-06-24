@@ -44,13 +44,14 @@ contract OmnuumNFT1155 is ERC1155Upgradeable, ReentrancyGuardUpgradeable, Ownabl
     /// @param _prjOwner project owner address to transfer ownership
     function initialize(
         address _caManagerAddress,
-        address _omA, // omnuum deployer
+        address _omA, // omnuum signer
         uint32 _maxSupply,
         string calldata _coverUri,
         address _prjOwner
     ) public initializer {
         /// @custom:error (AE1) - Zero address not acceptable
         require(_caManagerAddress != address(0), 'AE1');
+        require(_omA != address(0), 'AE1');
         require(_prjOwner != address(0), 'AE1');
 
         __ERC1155_init('');
