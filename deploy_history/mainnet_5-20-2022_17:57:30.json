@@ -1,0 +1,13 @@
+{
+  "network": "mainnet",
+  "deployStartAt": "5:57:30 PM",
+  "deployer": "0x84803BBd4269f596D94e88fA4E697b21C39370d2",
+  "mintManager": {
+    "proxy": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492",
+    "impl": "0xf8a9b89e29ceb504f33c83a24b9d0cb312677788",
+    "admin": "0x6d82f1895bdAe7B6FEA3c57F44fc281AbB6BB649",
+    "gasUsed": 2186325,
+    "blockNumber": 14810165,
+    "address": "0x2D24c1C8677870d320C10aE7b840A279A0CAF492"
+  }
+}
