@@ -16,3 +16,4 @@ cache
 data/
 coverage/
 coverage.json
+artifacts/
