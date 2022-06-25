@@ -63,13 +63,13 @@ const questions = [
           name: 'tokenTrasnfer',
           type: 'list',
           message: '🤔 Choose transfer method?',
-          choices: ['safeTrasnferFrom', 'transferFrom', 'cancel'],
+          choices: ['safeTransferFrom', 'transferFrom', 'cancel'],
         },
       ]);
       if (tokenTrasnfer !== 'cancel') {
         let txResponseSafeTransfer;
         const transferArguments = [nftOwnerSigner.address, ans.receiverAddress, ans.tokenId];
-        if (tokenTrasnfer === 'safeTrasnferFrom') {
+        if (tokenTrasnfer === 'safeTransferFrom') {
           txResponseSafeTransfer = await nftContract['safeTransferFrom(address,address,uint256)'](...transferArguments);
         } else if (tokenTrasnfer === 'transferFrom') {
           txResponseSafeTransfer = await nftContract.transferFrom(...transferArguments);
@@ -77,10 +77,13 @@ const questions = [
 
         const txReceiptSafeTransfer = await txResponseSafeTransfer.wait();
 
+        console.log(txReceiptSafeTransfer.events);
+
         // event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
         // event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
         const { to } = nftContract.interface.parseLog(txReceiptSafeTransfer.events[1]).args;
-        if (to === ans.receiverAddress) {
+        console.log(to, ans.receiverAddress);
+        if (to.toLowerCase() === ans.receiverAddress.toLowerCase()) {
           console.log(
             `\n${chalk.yellow(`Token id ${ans.tokenId} is ${chalk.redBright('safe transferred')} to receiver ${ans.receiverAddress}`)}\n`,
           );
