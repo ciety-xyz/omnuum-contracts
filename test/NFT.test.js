@@ -882,7 +882,7 @@ describe('OmnuumNFT', () => {
   describe('[Method] setRevealed', () => {
     it('can set revealed', async () => {
       const {
-        accounts: [prjOwnerAC, madFan],
+        accounts: [prjOwnerAC],
       } = this;
       const omnuumNFT721 = await deployNFT(this, {
         prjOwner: prjOwnerAC,
@@ -896,6 +896,97 @@ describe('OmnuumNFT', () => {
 
       expect(await omnuumNFT721.baseURI()).to.equal(revealURI);
       expect(await omnuumNFT721.isRevealed()).to.true;
+    });
+  });
+  describe('[Method] burn', () => {
+    it('can burn', async () => {
+      const {
+        accounts: [_, minterAC],
+        senderVerifier,
+        omnuumNFT721,
+        omnuumMintManager,
+        signatureSigner,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT721.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
+
+      const tx = await omnuumNFT721.connect(minterAC).publicMint(2, group_id, payload, {
+        value: basePrice.mul(2),
+      });
+
+      await tx.wait();
+
+      const ownedTokenId = 1;
+
+      expect(await omnuumNFT721.ownerOf(ownedTokenId)).to.equal(minterAC.address);
+
+      // token burning
+      await omnuumNFT721.connect(minterAC).burn(ownedTokenId);
+
+      await expect(omnuumNFT721.ownerOf(ownedTokenId)).to.be.reverted;
+    });
+  });
+  describe('[Revert] burn', () => {
+    it('if not token owner', async () => {
+      const {
+        accounts: [_, minterAC, madBurner],
+        senderVerifier,
+        omnuumNFT721,
+        omnuumMintManager,
+        signatureSigner,
+      } = this;
+
+      const basePrice = ethers.utils.parseEther('0.1');
+
+      const open_quantity = 2000;
+      const max_min_per_address = 10;
+
+      // make NFT public
+      await (
+        await omnuumMintManager.setPublicMintSchedule(
+          omnuumNFT721.address,
+          group_id,
+          end_date,
+          basePrice,
+          open_quantity,
+          max_min_per_address,
+        )
+      ).wait();
+
+      const payload = await signPayload(minterAC.address, Constants.payloadTopic.mint, group_id, signatureSigner, senderVerifier.address);
+
+      const tx = await omnuumNFT721.connect(minterAC).publicMint(2, group_id, payload, {
+        value: basePrice.mul(2),
+      });
+
+      await tx.wait();
+
+      const ownedTokenId = 1;
+
+      expect(await omnuumNFT721.ownerOf(ownedTokenId)).to.equal(minterAC.address);
+
+      const txBurn = omnuumNFT721.connect(madBurner).burn(ownedTokenId);
+      // console.log(txBurn);
+
+      // token burning
+      await expect(txBurn).to.be.revertedWith();
     });
   });
 });
