@@ -49,6 +49,7 @@ module.exports = {
     common: {
       initialize: 'Initializable: contract is already initialized',
       onlyOwner: 'Ownable: caller is not the owner',
+      notTokenOwnerOrApproved: 'ERC721Burnable: caller is not owner nor approved'
     },
     RevertMessage: {
       silent: 'Transaction reverted silently',

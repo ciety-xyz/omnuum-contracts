@@ -986,7 +986,7 @@ describe('OmnuumNFT', () => {
       // console.log(txBurn);
 
       // token burning
-      await expect(txBurn).to.be.revertedWith();
+      await expect(txBurn).to.be.revertedWith(Constants.reasons.common.notTokenOwnerOrApproved);
     });
   });
 });
