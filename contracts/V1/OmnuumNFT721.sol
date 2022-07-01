@@ -36,7 +36,7 @@ import './OmnuumWallet.sol';
                   `_v$$$$$$$$$$$$B*xt|(\fu&v_`
                      .`I[j#@$$$$$$$$@#j}I*/
 
-contract OmnuumNFT721 is ERC721Upgradeable, ERC721BurnableUpgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
@@ -219,5 +219,11 @@ contract OmnuumNFT721 is ERC721Upgradeable, ERC721BurnableUpgradeable, Reentranc
         changeBaseURI(baseURI_);
 
         emit Revealed(address(this));
+    }
+
+    function burn(uint256 tokenId) public virtual {
+        /// @custom:error (OO9) - Caller is not owner nor approved
+        require(_isApprovedOrOwner(_msgSender(), tokenId), 'OO9');
+        _burn(tokenId);
     }
 }

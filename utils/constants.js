@@ -49,7 +49,6 @@ module.exports = {
     common: {
       initialize: 'Initializable: contract is already initialized',
       onlyOwner: 'Ownable: caller is not the owner',
-      notTokenOwnerOrApproved: 'ERC721Burnable: caller is not owner nor approved',
       notExistTokenQuery: 'ERC721: owner query for nonexistent token',
     },
     RevertMessage: {
@@ -68,7 +67,8 @@ module.exports = {
       OO5: 'OO5', // Already the owner of the wallet
       OO6: 'OO6', // Only the requester is allowed
       OO7: 'OO7', // Only role owner can access
-      c: 'OO8', // Only reveal manager allowed
+      OO8: 'OO8', // Only reveal manager allowed
+      OO9: 'OO9', // Caller is not owner nor approved
       // Not Exist Error
       NX1: 'NX1', // ERC721Metadata: URI query for nonexistent token
       NX2: 'NX2', // Non-existent wallet account

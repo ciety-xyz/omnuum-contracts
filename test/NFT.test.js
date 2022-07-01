@@ -1018,7 +1018,7 @@ describe('OmnuumNFT', () => {
 
           // After burn
           const txBurn = omnuumNFT721.connect(madBurnerSigner).burn(tokenId);
-          await expect(txBurn).to.be.revertedWith(Constants.reasons.common.notTokenOwnerOrApproved);
+          await expect(txBurn).to.be.revertedWith(Constants.reasons.code.OO9);
         }),
       );
     });
