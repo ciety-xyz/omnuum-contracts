@@ -65,6 +65,7 @@
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.1.4",
     "ethers": "^5.5.4",
+    "ethers-eip712": "^0.2.0",
     "fxjs": "^0.21.3",
     "hardhat": "^2.9.3",
     "hardhat-abi-exporter": "^2.8.0",
