@@ -22,6 +22,8 @@ async function prepare() {
 }
 
 async function getGas(tx) {
+  if (tx.gasUsed) return tx.gasUsed;
+
   const { gasUsed } = await tx.wait();
   return gasUsed;
 }
@@ -109,13 +111,11 @@ async function estimateMintGas() {
 async function estimateNFTProxyDeploymentGas() {
   await prepare();
 
-  const { NFTbeacon, OmnuumNFT1155, omnuumCAManager } = this;
+  const { OmnuumNFT721, omnuumCAManager } = this;
 
-  const { deployTransaction } = await deployNFT(NFTbeacon, OmnuumNFT1155, this, {
-    caManagerAddress: omnuumCAManager.address,
-  });
+  const { deployReceipt } = await deployNFT(this);
 
-  const gas = await getGas(deployTransaction);
+  const gas = await getGas(deployReceipt);
 
   console.log(`NFT Proxy Deployment Minting Gas: ${chalk.green(gas)}, ${chalk.green(calcGasPrice(gas))} ether`);
 }
@@ -126,7 +126,7 @@ async function estimateNFTAirdropGas() {
     const {
       accounts: [omnuumAC, minterAC],
       senderVerifier,
-      omnuumNFT1155,
+      omnuumNFT721,
       ticketManager,
       omnuumMintManager,
     } = this;
@@ -145,7 +145,7 @@ async function estimateNFTAirdropGas() {
       );
 
       try {
-        const tx = await omnuumMintManager.mintMultiple(omnuumNFT1155.address, airdrop_input_address, airdrop_input_quantity, {
+        const tx = await omnuumMintManager.mintMultiple(omnuumNFT721.address, airdrop_input_address, airdrop_input_quantity, {
           value: ethers.utils.parseEther('1'),
         });
 
@@ -174,8 +174,8 @@ async function estimateNFTAirdropGas() {
     // await estimateCase(100, [1]);
     // await estimateCase(100, [2]);
     await estimateCase(200, [1]);
-    // await estimateCase(300, [1]);
-    // await estimateCase(400, [1]);
+    await estimateCase(300, [1]);
+    await estimateCase(400, [1]);
     // await estimateCase(500, [1]);
     // await estimateCase(1000, [1]);
     // await estimateCase(1000, [2]);
@@ -238,7 +238,7 @@ async function estimatePureMintGas() {
   // );
 }
 
-estimateMintGas();
-// estimateNFTProxyDeploymentGas();
-// estimateNFTAirdropGas();
+// estimateMintGas();
+estimateNFTProxyDeploymentGas();
+estimateNFTAirdropGas();
 // estimatePureMintGas();
