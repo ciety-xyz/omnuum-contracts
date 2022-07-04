@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { delay, go, range, mapC, each } = require('fxjs');
+const { delay, go, range, mapC, each, hi } = require('fxjs');
 const { addDays } = require('date-fns');
 const Constants = require('../utils/constants.js');
 require('chai').should();
@@ -13,6 +13,62 @@ const end_date = toSolDate(addDays(new Date(), 2));
 const group_id = 0;
 
 upgrades.silenceWarnings();
+
+const publicMintTo = async ({
+  omnuumNFT721Instance,
+  omnuumMintManagerInstance,
+  senderVerifierInstance,
+  minterSigner,
+  signatureSigner,
+  groupId = 0,
+  endDate = toSolDate(addDays(new Date(), 2)),
+  publicMintSupply = 1000,
+  maxMintPerAddress = 100,
+  mintCount = 1,
+  basePrice = ethers.utils.parseEther('0.1'),
+}) => {
+  // Set NFT Public Mint Schedule
+  await (
+    await omnuumMintManagerInstance.setPublicMintSchedule(
+      omnuumNFT721Instance.address,
+      groupId,
+      endDate,
+      basePrice,
+      publicMintSupply,
+      maxMintPerAddress,
+    )
+  ).wait();
+
+  // Create Signature Hash
+  const mintSignature = await signPayload(
+    minterSigner.address,
+    Constants.payloadTopic.mint,
+    groupId,
+    signatureSigner,
+    senderVerifierInstance.address,
+  );
+
+  const mintPrice = basePrice.mul(mintCount);
+
+  // Public Mint
+  (
+    await omnuumNFT721Instance.connect(minterSigner).publicMint(mintCount, groupId, mintSignature, {
+      value: mintPrice,
+    })
+  ).wait();
+
+  // Verify the minter actually get minted tokens for the amount of mint counts.
+  expect(await omnuumNFT721Instance.balanceOf(minterSigner.address)).to.equal(mintCount);
+
+  // Verify the owner of tokens are actually owned by minter
+  const expectedTokenIds = range(1, 1 + mintCount);
+
+  await go(
+    range(1, 1 + mintCount),
+    mapC(async (tokenId) => expect(await omnuumNFT721Instance.ownerOf(tokenId)).to.equal(minterSigner.address)),
+  );
+  return expectedTokenIds;
+};
 
 describe('OmnuumNFT', () => {
   before(async () => {
@@ -882,7 +938,7 @@ describe('OmnuumNFT', () => {
   describe('[Method] setRevealed', () => {
     it('can set revealed', async () => {
       const {
-        accounts: [prjOwnerAC, madFan],
+        accounts: [prjOwnerAC],
       } = this;
       const omnuumNFT721 = await deployNFT(this, {
         prjOwner: prjOwnerAC,
@@ -896,6 +952,75 @@ describe('OmnuumNFT', () => {
 
       expect(await omnuumNFT721.baseURI()).to.equal(revealURI);
       expect(await omnuumNFT721.isRevealed()).to.true;
+    });
+  });
+
+  describe('[Method] burn', () => {
+    it('can burn', async () => {
+      const {
+        accounts: [_, minterSigner],
+        senderVerifier,
+        omnuumNFT721,
+        omnuumMintManager,
+        signatureSigner,
+      } = this;
+      const mintedTokenIds = await publicMintTo({
+        omnuumNFT721Instance: omnuumNFT721,
+        omnuumMintManagerInstance: omnuumMintManager,
+        senderVerifierInstance: senderVerifier,
+        minterSigner,
+        signatureSigner,
+        mintCount: 10,
+      });
+
+      // token burning
+      await go(
+        mintedTokenIds,
+        mapC(async (tokenId) => {
+          // Before burn
+          expect(await omnuumNFT721.connect(minterSigner).ownerOf(tokenId)).to.equal(minterSigner.address);
+
+          // Burn
+          await omnuumNFT721.connect(minterSigner).burn(tokenId);
+
+          // After burn
+          await expect(omnuumNFT721.connect(minterSigner).ownerOf(tokenId)).to.be.revertedWith(Constants.reasons.common.notExistTokenQuery);
+        }),
+      );
+    });
+  });
+
+  describe('[Revert] burn', () => {
+    it('if not token owner', async () => {
+      const {
+        accounts: [_, minterSigner, madBurnerSigner],
+        senderVerifier,
+        omnuumNFT721,
+        omnuumMintManager,
+        signatureSigner,
+      } = this;
+      const mintedTokenIds = await publicMintTo({
+        omnuumNFT721Instance: omnuumNFT721,
+        omnuumMintManagerInstance: omnuumMintManager,
+        senderVerifierInstance: senderVerifier,
+        minterSigner,
+        signatureSigner,
+        mintCount: 10,
+      });
+
+      // token burning
+      await go(
+        [...mintedTokenIds],
+        mapC(async (tokenId) => {
+          // Before burn
+          const txOwned = omnuumNFT721.connect(minterSigner).ownerOf(tokenId);
+          expect(await txOwned).to.equal(minterSigner.address);
+
+          // After burn
+          const txBurn = omnuumNFT721.connect(madBurnerSigner).burn(tokenId);
+          await expect(txBurn).to.be.revertedWith(Constants.reasons.code.OO9);
+        }),
+      );
     });
   });
 });

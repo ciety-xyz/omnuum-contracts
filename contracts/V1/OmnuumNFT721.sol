@@ -219,4 +219,10 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         emit Revealed(address(this));
     }
+
+    function burn(uint256 tokenId) public virtual {
+        /// @custom:error (OO9) - Caller is not owner nor approved
+        require(_isApprovedOrOwner(_msgSender(), tokenId), 'OO9');
+        _burn(tokenId);
+    }
 }

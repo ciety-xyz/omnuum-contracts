@@ -21,7 +21,7 @@ module.exports = {
   async deployNFT(context, overrideArgs) {
     const args = module.exports.createNftContractArgs(context, overrideArgs);
 
-    const { beaconProxyAddress } = await deployNFT({
+    const { beaconProxyAddress, deployReceipt } = await deployNFT({
       projectOwnerSigner: args.prjOwnerSigner,
       signerPrivateKey: args.signatureSignerPrivateKey,
       senderVerifierAddress: args.senderVerifierAddress,
@@ -33,7 +33,9 @@ module.exports = {
       symbol: args.symbol,
     });
 
-    return context.OmnuumNFT721.attach(beaconProxyAddress);
+    const omnuumNFT721 = context.OmnuumNFT721.attach(beaconProxyAddress);
+    omnuumNFT721.deployReceipt = deployReceipt;
+    return omnuumNFT721;
   },
   async prepareDeploy() {
     this.OmnuumMintManager = await ethers.getContractFactory('OmnuumMintManager');

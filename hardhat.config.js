@@ -7,7 +7,7 @@ require('@nomiclabs/hardhat-solhint');
 require('hardhat-gas-reporter');
 
 require('@openzeppelin/hardhat-upgrades');
-// require('hardhat-contract-sizer');
+require('hardhat-contract-sizer');
 
 require('hardhat-abi-exporter');
 require('solidity-coverage');
@@ -18,7 +18,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 10000,
+        runs: 1000,
       },
     },
   },

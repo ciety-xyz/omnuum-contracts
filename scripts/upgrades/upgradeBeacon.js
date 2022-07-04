@@ -19,7 +19,7 @@ const questions = [
   {
     name: inquirerParams.beacon_address,
     type: 'input',
-    message: chalk.yellowBright('🤔 Beacon address (for NFT1155) to be upgraded is...'),
+    message: chalk.yellowBright('🤔 Beacon address (for NFT721) to be upgraded is...'),
     validate: nullCheck,
   },
   {
@@ -88,7 +88,7 @@ const questions = [
       // eslint-disable-next-line consistent-return
       if (!proceed) return;
 
-      const ContractFactory = (await ethers.getContractFactory('OmnuumNFT1155')).connect(deployerSigner);
+      const ContractFactory = (await ethers.getContractFactory('OmnuumNFT721')).connect(deployerSigner);
       const BeaconContract = new ethers.Contract(
         ans.beacon_address,
         new ethers.utils.Interface(['function implementation() external view returns(address)']),
@@ -98,7 +98,7 @@ const questions = [
       const previousImplAddress = await BeaconContract.implementation();
 
       // Go Beacon Upgrade!
-      console.log(chalk.greenBright('!!! Starting Beacon Upgrade --- NFT1155'));
+      console.log(chalk.greenBright('!!! Starting Beacon Upgrade --- NFT721'));
       const upgraded = await upgrades.upgradeBeacon(ans.beacon_address, ContractFactory);
       const txReceipt = await upgraded.deployTransaction.wait();
 
@@ -106,7 +106,7 @@ const questions = [
       const { implementation } = iFace.parseLog(txReceipt.events[0]).args;
 
       const resultData = {
-        upgradeTarget: 'OmnuumNFT1155',
+        upgradeTarget: 'OmnuumNFT721',
         chain: chainName,
         timeStamp: new Date().toLocaleString(),
         deployer: deployerSigner.address,
@@ -116,7 +116,7 @@ const questions = [
         transaction: txReceipt.transactionHash,
       };
       console.log(chalk.yellowBright('\n☀️ Result\n'), resultData);
-      console.log(chalk.greenBright('\nNew NFT1155 Implementation deployed, then Beacon upgrade is done!'));
+      console.log(chalk.greenBright('\nNew NFT721 Implementation deployed, then Beacon upgrade is done!'));
 
       inquirer
         .prompt([
@@ -132,7 +132,7 @@ const questions = [
           },
         ])
         .then(async (result) => {
-          const filename = `${chainName}_${getDateSuffix()}_NFT1155_upgrade.json`;
+          const filename = `${chainName}_${getDateSuffix()}_NFT721_upgrade.json`;
           if (result.localSave) {
             await writeFile(`${dirPath}/${filename}`, JSON.stringify(resultData), 'utf8');
           }
