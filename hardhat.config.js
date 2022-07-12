@@ -7,7 +7,7 @@ require('@nomiclabs/hardhat-solhint');
 require('hardhat-gas-reporter');
 
 require('@openzeppelin/hardhat-upgrades');
-require('hardhat-contract-sizer');
+// require('hardhat-contract-sizer');
 
 require('hardhat-abi-exporter');
 require('solidity-coverage');
@@ -36,6 +36,17 @@ module.exports = {
     mainnet: {
       url: process.env.MAINNET_URL || '',
     },
+    matic: {
+      url: process.env.POLYGON_MAINNET_RPC_URL || '',
+      accounts: [
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
       accounts: [
@@ -52,6 +63,28 @@ module.exports = {
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
+      accounts: [
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
+    },
+    goerli: {
+      url: process.env.GOERLI_URL || '',
+      accounts: [
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
+    },
+    mumbai: {
+      url: process.env.MUMBAI_RPC_URL || '',
       accounts: [
         process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
         process.env.ACCOUNT_TESTER_A,

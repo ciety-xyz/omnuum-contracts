@@ -24,6 +24,12 @@ const getChainName = async () => {
       return 'ropsten';
     case 4:
       return 'rinkeby';
+    case 5:
+      return 'goerli';
+    case 137:
+      return 'matic';
+    case 80001:
+      return 'mumbai';
     case 31337:
       return 'localhost';
     default:
@@ -67,14 +73,20 @@ const getRPCProvider = async () => {
   const chainName = await getChainName();
 
   const jsonRpcProvider =
-    chainName == 'localhost'
+    chainName === 'localhost'
       ? null
-      : chainName == 'mainnet'
+      : chainName === 'mainnet'
       ? process.env.MAINNET_URL
-      : chainName == 'rinkeby'
+      : chainName === 'rinkeby'
       ? process.env.RINKEBY_URL
-      : chainName == 'ropsten'
+      : chainName === 'ropsten'
       ? process.env.ROPSTEN_URL
+      : chainName === 'goerli'
+      ? process.env.GOERLI_URL
+      : chainName === 'matic'
+      ? process.env.POLYGON_MAINNET_RPC_URL
+      : chainName === 'mumbai'
+      ? process.env.MUMBAI_RPC_URL
       : null;
 
   return new ethers.providers.JsonRpcProvider(jsonRpcProvider);
