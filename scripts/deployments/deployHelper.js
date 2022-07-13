@@ -223,7 +223,10 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 
   log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
-  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, { timeout: 60000 });
+  const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, {
+    timeout: DEP_CONSTANTS.timeout,
+    pollingInterval: DEP_CONSTANTS.pollingInterval,
+  });
   const { deployTxReceipt, implAddress, adminAddress, gasUsed, blockNumber } = await getProxyDeployMetadata(proxyContract);
 
   log &&

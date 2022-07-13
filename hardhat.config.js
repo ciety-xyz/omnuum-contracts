@@ -46,6 +46,7 @@ module.exports = {
         process.env.ACCOUNT_TESTER_D,
         process.env.ACCOUNT_TESTER_E,
       ].filter((a) => a),
+      gasLimit: 30_000_000,
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
@@ -59,7 +60,6 @@ module.exports = {
       ].filter((a) => a),
       // gasPrice: 50 * 10 ** 9,
       gasPrice: 'auto',
-      gasLimit: 10_000_000,
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
@@ -105,7 +105,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.POLYGONSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
     },
   },
   contractSizer: {

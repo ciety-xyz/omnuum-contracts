@@ -102,9 +102,7 @@ const questions = [
         sendEtherFee,
       );
 
-      const txResponse = await revealManager
-        .connect(nftOwnerSigner)
-        .vrfRequest(ans.nft_address, { value: sendEtherFee, gasLimit: 10000000 });
+      const txResponse = await revealManager.connect(nftOwnerSigner).vrfRequest(ans.nft_address, { value: sendEtherFee });
 
       console.log('txRseponse', txResponse);
       const txReceipt = await txResponse.wait();

@@ -17,7 +17,7 @@ const DEP_CONSTANTS = require('./deployConstants');
 
   console.log(`${chalk.blueBright(`START DEPLOYMENT to ${await getChainName()} at ${new Date()}`)}`);
 
-  const OmnuumDeploySigner = await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider(ethers.provider));
+  const OmnuumDeploySigner = await new ethers.Wallet(process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, await getRPCProvider());
 
   const walletOwnerAccounts = createWalletOwnerAccounts(DEP_CONSTANTS.wallet.ownerAddresses, DEP_CONSTANTS.wallet.ownerLevels);
 

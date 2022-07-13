@@ -20,7 +20,7 @@ contract OmnuumVRFManager is Ownable, VRFConsumerBase {
 
     /// @notice safety margin ratio of LINK/ETH exchange rate to prevent risk of price volatility
     /// @dev 2 decimals (150 == 1.5)
-    uint16 public safetyRatio = 150;
+    uint16 public safetyRatio = 100;
 
     constructor(
         address _LINK,

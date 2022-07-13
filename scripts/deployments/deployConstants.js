@@ -6,7 +6,8 @@ const { ethers } = require('hardhat');
 
 const DEP_CONSTANTS = {
   confirmWait: 1,
-  pollingInterval: 600000,
+  timeout: 180000, // 3 mins
+  pollingInterval: 5000, // 5 secs
   OmnuumDeployer: process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
   mintManager: {
     feeRate: 5000, // feeRate: 5.000 % (default)

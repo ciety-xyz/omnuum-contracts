@@ -50,7 +50,7 @@ async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3
       };
       provider.getFeeData = async () => FEE_DATA;
     } else {
-      provider = await getRPCProvider(ethers.provider);
+      provider = await getRPCProvider();
     }
 
     const OmnuumDeploySigner =

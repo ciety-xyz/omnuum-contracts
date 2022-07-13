@@ -15,7 +15,7 @@ async function sendMoney(toAddress, amountInEther, gasPrices) {
       };
       provider.getFeeData = async () => FEE_DATA;
     } else {
-      provider = await getRPCProvider(ethers.provider);
+      provider = await getRPCProvider();
     }
 
     const chainName = await getChainName();
