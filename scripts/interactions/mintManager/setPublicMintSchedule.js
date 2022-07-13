@@ -69,12 +69,12 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
       const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
 
-      const txResponse = await mintManager
+      const tx = await mintManager
         .connect(nftOwnerSigner)
         .setPublicMintSchedule(
           ans.nft_address,
@@ -85,7 +85,9 @@ const questions = [
           Number(ans.max_mint_at_address),
         );
 
-      const txReceipt = await txResponse.wait();
+      console.log('tx', tx);
+
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Mint schedule is set..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

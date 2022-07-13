@@ -8,6 +8,9 @@ import '../utils/Ownable.sol';
 /// @title TicketManager - manage ticket and verify ticket signature
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
 contract TicketManager is EIP712 {
+    string private constant SIGNING_DOMAIN = 'OmnuumTicket';
+    string private constant SIGNATURE_VERSION = '1';
+
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
 
     struct Ticket {
@@ -24,9 +27,6 @@ contract TicketManager is EIP712 {
 
     /// @dev nft => groupId => ticket owner => use count
     mapping(address => mapping(uint256 => mapping(address => uint32))) public ticketUsed;
-
-    string private constant SIGNING_DOMAIN = 'OmnuumTicket';
-    string private constant SIGNATURE_VERSION = '1';
 
     event SetTicketSchedule(address indexed nftContract, uint256 indexed groupId, uint256 endDate);
 
