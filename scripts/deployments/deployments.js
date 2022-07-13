@@ -162,11 +162,12 @@ const deployNFT = async ({
 
   const { logs } = deployReceipt;
 
-  console.log('왓더퍽!', log);
+  // filter event emitted by NFT Factory => where having nft contract address
+  const factoryEvt = logs.filter((event) => event.address === nftFactoryAddress)[0];
 
-  const {
-    args: { nftContract: beaconProxyAddress },
-  } = NftFactory.interface.parseLog(logs[logs.length - 1]);
+  const abiCoder = ethers.utils.defaultAbiCoder;
+
+  const beaconProxyAddress = abiCoder.decode(['address'], factoryEvt.topics[1]);
 
   return { beaconProxyAddress, deployReceipt };
 };
