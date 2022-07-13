@@ -104,7 +104,9 @@ module.exports = {
     coinmarketcap: process.env.COINMARKETCAP_KEY,
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+    },
   },
   contractSizer: {
     alphaSort: true,

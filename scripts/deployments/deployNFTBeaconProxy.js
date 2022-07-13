@@ -1,5 +1,5 @@
 const inquirer = require('inquirer');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 const fs = require('fs');
 const chalk = require('chalk');
 const { mkdir } = require('fs/promises');
@@ -92,7 +92,7 @@ const questions = [
       const chainName = await getChainName();
       console.log(chalk.green(`${`\nSTART DEPLOYMENT to ${chainName} at ${new Date()}`}`));
 
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
 
       const projectOwnerSigner = new ethers.Wallet(ans.project_owner_private_key, provider);
 
