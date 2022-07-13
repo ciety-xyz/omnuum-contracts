@@ -193,11 +193,4 @@ contract OmnuumMintManager is OwnableUpgradeable {
 
         emit MintFeePaid(_nftContract, msg.sender, 0, msg.value);
     }
-
-    /// @notice set ca manager
-    /// @dev only owner can use this function
-    /// @param _caManager address of CA manager
-    function setCaManager(address _caManager) external onlyOwner {
-        caManager = _caManager;
-    }
 }

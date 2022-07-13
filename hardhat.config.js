@@ -105,7 +105,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY,
+      mainnet: process.env.POLYGONSCAN_API_KEY,
     },
   },
   contractSizer: {

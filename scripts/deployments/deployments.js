@@ -162,6 +162,8 @@ const deployNFT = async ({
 
   const { logs } = deployReceipt;
 
+  console.log('왓더퍽!', log);
+
   const {
     args: { nftContract: beaconProxyAddress },
   } = NftFactory.interface.parseLog(logs[logs.length - 1]);
