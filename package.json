@@ -43,7 +43,8 @@
     "upgrade:proxy": "npx hardhat run scripts/upgrades/upgradeProxy.js --network $npm_config_network",
     "upgrade:beacon": "npx hardhat run scripts/upgrades/upgradeBeacon.js --network $npm_config_network",
     "coverage": "npx hardhat coverage --network hardhat",
-    "forceImport": "npx hardhat run scripts/upgrades/forceImport.js --network $npm_config_network"
+    "forceImport": "npx hardhat run scripts/upgrades/forceImport.js --network $npm_config_network",
+    "queryGas": "hh run utils/getGasFeeData.js --network $npm_config_network"
   },
   "dependencies": {
     "@marpple/omnuum-digitalSigning": "npm:@marpple/omnuum-digitalsigning@^1.0.4",
@@ -95,6 +96,7 @@
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.6.9",
     "mocha": "^9.2.0",
+    "nyc": "^15.1.0",
     "prettier": "^2.5.1",
     "prettier-eslint": "^13.0.0",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
