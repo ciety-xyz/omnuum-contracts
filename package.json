@@ -12,7 +12,7 @@
     "test": "npm run compile && npx hardhat test --network localhost",
     "node": "npx hardhat node",
     "run:local": "npx hardhat --network localhost run ",
-    "deploy:managers": "npx hardhat run scripts/deployments/runDeploy.js --network $npm_config_network",
+    "deploy:managers": "npx hardhat run scripts/deployments/deployManagerContracts.js --network $npm_config_network",
     "deploy:nft": "npx hardhat run scripts/deployments/deployNFTBeaconProxy.js --network $npm_config_network",
     "verify:wallet": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/wallet.js --network $npm_config_network",
     "verify:nftBeaconProxy": "npx hardhat verify $npm_config_address --constructor-args scripts/verifications/nftBeaconProxy.js --network $npm_config_network",

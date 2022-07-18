@@ -2,8 +2,7 @@ const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getTicketWithSignature, getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
-const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
-const { queryGasDataAndProceed } = require('../../gas/queryGas');
+const { nullCheck, getRPCProvider, queryGasDataAndProceed } = require('../../deployments/deployHelper');
 
 require('dotenv').config();
 

@@ -1,92 +1,53 @@
-const inquirer = require('inquirer');
+const axios = require('axios');
 
 const { ethers } = require('hardhat');
-const { nullCheck, numberCheck, getChainName } = require('../deployments/deployHelper');
-const { queryGasToPolygon } = require('./queryGasToPolygon');
-const { queryGasFeeToEthers } = require('./queryGasUsingEthersjs');
+const { go, entries, map, object } = require('fxjs');
 
-const queryGasFeeData = async () => {
-  let feeData;
-  const chainName = await getChainName();
-  // matic 은 프로바이더에서 EIP-1559 에 맞게 정확히 데이터를 내려주지 않는다. 그래서, 폴리곤에서 제공하는 API 를 따로 사용
-  if (chainName === 'matic') {
-    feeData = await queryGasToPolygon();
-  } else {
-    feeData = await queryGasFeeToEthers();
-  }
-  return feeData;
+const queryGasFeeToEthers = async (provider) => {
+  const feeData = await provider.getFeeData();
+
+  const bnToGWei = (bigNumber) => ethers.utils.formatUnits(bigNumber, 'gwei');
+
+  const fees = {
+    ...go(
+      entries(feeData),
+      map(([k, fee]) => [k, bnToGWei(fee)]),
+      object,
+    ),
+    raw: feeData,
+  };
+
+  return fees;
 };
 
-const notNullAndNumber = (val) => {
-  let result;
-  const isNotNull = nullCheck(val);
-  const isNumber = numberCheck(val);
-  if (isNotNull === true && isNumber === true) {
-    result = true;
-  }
-  if (isNotNull !== true) {
-    result = isNotNull;
-  }
-  if (isNumber !== true) {
-    result = isNumber;
-  }
-  return result;
+const truncGweiDecimals = (val) => {
+  const allowedGweiDecimals = 9;
+  return Math.round(Number(val) * 10 ** allowedGweiDecimals) / 10 ** allowedGweiDecimals;
 };
 
-// eslint-disable-next-line consistent-return
-const queryGasDataAndProceed = async () => {
-  let proceed;
+const queryGasToPolygon = async () =>
+  new Promise((res, rej) => {
+    axios
+      .get('https://gasstation-mainnet.matic.network/v2')
+      .then((response) => {
+        let {
+          fast: { maxPriorityFee, maxFee },
+        } = response.data;
 
-  do {
-    // eslint-disable-next-line no-await-in-loop
-    const gasFeeData = await queryGasFeeData();
-    const {
-      raw: { maxFeePerGas, maxPriorityFeePerGas },
-    } = gasFeeData;
+        maxPriorityFee = truncGweiDecimals(maxPriorityFee);
+        maxFee = truncGweiDecimals(maxFee);
 
-    console.log('⛽️ Real-time Gas Fee');
-    console.dir(gasFeeData, { depth: 10 });
+        const feeData = {
+          maxFeePerGas: `${maxFee}`,
+          maxPriorityFeePerGas: `${maxPriorityFee}`,
+          raw: {
+            maxFeePerGas: ethers.utils.parseUnits(`${maxFee}`, 'gwei'),
+            maxPriorityFeePerGas: ethers.utils.parseUnits(`${maxPriorityFee}`, 'gwei'),
+          },
+        };
+        res(feeData);
+      })
+      .catch((e) => rej(e.response.data.error));
+  });
 
-    // eslint-disable-next-line no-await-in-loop
-    const ans = await inquirer.prompt([
-      {
-        name: 'proceed',
-        type: 'list',
-        choices: ['ProceedWithCurrentFee', 'UserInput', 'Refresh', 'Abort'],
-        message: '🤔 Proceed with current gas fee? or input user-defined gas fee ?',
-        validate: nullCheck,
-      },
-    ]);
-    proceed = ans.proceed;
-    if (proceed === 'ProceedWithCurrentFee') {
-      return { maxFeePerGas, maxPriorityFeePerGas, proceed: true };
-    }
-    if (proceed === 'UserInput') {
-      // eslint-disable-next-line no-await-in-loop
-      const userInputGasFee = await inquirer.prompt([
-        {
-          name: 'maxFeePerGas',
-          type: 'input',
-          message: '🤑 Max fee per gas ? (in ETH)',
-          validate: notNullAndNumber,
-        },
-        {
-          name: 'maxPriorityFeePerGas',
-          type: 'input',
-          message: '🤑 Max priority fee per gas ? (in ETH)',
-          validate: notNullAndNumber,
-        },
-      ]);
-      return {
-        maxFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxFeePerGas, 'gwei'),
-        maxPriorityFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxPriorityFeePerGas, 'gwei'),
-        proceed: true,
-      };
-    }
-    if (proceed === 'Abort') {
-      return { maxFeePerGas: null, maxPriorityFeePerGas: null, proceed: false };
-    }
-  } while (proceed === 'Refresh');
-};
-
-module.exports = { queryGasDataAndProceed, queryGasFeeData };
+module.exports = { queryGasToPolygon, queryGasFeeToEthers };

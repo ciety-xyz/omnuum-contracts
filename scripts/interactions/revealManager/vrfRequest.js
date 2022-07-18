@@ -2,9 +2,8 @@ const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 
 const chalk = require('chalk');
-const { nullCheck, getRPCProvider, getChainName } = require('../../deployments/deployHelper');
+const { nullCheck, getRPCProvider, getChainName, queryGasDataAndProceed } = require('../../deployments/deployHelper');
 const DEP_CONSTANTS = require('../../deployments/deployConstants');
-const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   dev_deployer_private_key: 'dev_deployer_private_key',
@@ -120,7 +119,7 @@ const questions = [
         sendEtherFee,
       );
 
-      const response = await queryGasDataAndProceed();
+      const response = await queryGasDataAndProceed(provider);
       maxFeePerGas = response.maxFeePerGas;
       maxPriorityFeePerGas = response.maxPriorityFeePerGas;
       proceed = response.proceed;

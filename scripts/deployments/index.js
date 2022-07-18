@@ -1,4 +1,4 @@
-const { ethers, upgrades, config, run } = require('hardhat');
+const { ethers, upgrades, config } = require('hardhat');
 const { writeFile, mkdir, rm, access } = require('fs/promises');
 
 upgrades.silenceWarnings();
@@ -12,47 +12,37 @@ const {
   structurizeProxyData,
   structurizeContractData,
   getChainName,
-  getRPCProvider,
   createWalletOwnerAccounts,
+  getSingleFallbackProvider,
 } = require('./deployHelper');
 const DEP_CONSTANTS = require('./deployConstants');
 const { compile } = require('../../utils/hardhat.js');
 const { s3Upload } = require('../../utils/s3.js');
 
-async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3Save = false }) {
+async function main({ deployerPK, signerAddress, localSave = true, s3Save = false, withCompile = true }) {
   try {
     console.log(`
-         *******   ****     **** ****     ** **     ** **     ** ****     ****
-        **/////** /**/**   **/**/**/**   /**/**    /**/**    /**/**/**   **/**
-       **     //**/**//** ** /**/**//**  /**/**    /**/**    /**/**//** ** /**
-      /**      /**/** //***  /**/** //** /**/**    /**/**    /**/** //***  /**
-      /**      /**/**  //*   /**/**  //**/**/**    /**/**    /**/**  //*   /**
-      //**     ** /**   /    /**/**   //****/**    /**/**    /**/**   /    /**
-       //*******  /**        /**/**    //***//******* //******* /**        /**
-        ///////   //         // //      ///  ///////   ///////  //         //
+         *******    ****     ****  ****     **  **     **  **     **  ****     ****
+        **/////**  /**/**   **/** /**/**   /**/ **    /** /**    /** /**/**   **/**
+       **     //** /**//** ** /** /**//**  /**/ **    /** /**    /** /**//** ** /**
+      /**      /** /** //***  /** /** //** /**/ **    /** /**    /** /** //***  /**
+      /**      /** /**  //*   /** /**  //**/**/ **    /** /**    /** /**  //*   /**
+      //**     **  /**   /    /** /**   //****/ **    /** /**    /** /**   /    /**
+       //*******   /**        /** /**    //***/ /*******  //*******  /**        /**
+        ///////    //         //  //      ///   ///////    ///////   //         //
     `);
 
-    await compile({ force: true, quiet: true });
+    withCompile && (await compile({ force: true, quiet: true }));
     const chainName = await getChainName();
 
     // prepare deploy result directory structure
     await mkdir('./scripts/deployments/deployResults/managers', { recursive: true });
     await mkdir('./scripts/deployments/deployResults/subgraphManifest', { recursive: true });
 
-    let provider;
-    if (gasPrices) {
-      // Wrap the provider so we can override fee data.
-      provider = new ethers.providers.FallbackProvider([ethers.provider], 1);
-      const FEE_DATA = {
-        maxFeePerGas: ethers.utils.parseUnits(gasPrices.maxFeePerGas, 'gwei'),
-        maxPriorityFeePerGas: ethers.utils.parseUnits(gasPrices.maxPriorityFeePerGas, 'gwei'),
-      };
-      provider.getFeeData = async () => FEE_DATA;
-    } else {
-      provider = await getRPCProvider();
-    }
+    // Wrap the provider so we can override fee data as EIP-1559.
+    const provider = await getSingleFallbackProvider();
 
-    const OmnuumDeploySigner =
+    const deployer =
       chainName === 'localhost'
         ? (await ethers.getSigners())[0]
         : await new ethers.Wallet(deployerPK || process.env.OMNUUM_DEPLOYER_PRIVATE_KEY, provider);
@@ -61,31 +51,31 @@ async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3
       chainName === 'localhost' ? (await ethers.getSigners()).slice(1, 6).map((x) => x.address) : DEP_CONSTANTS.wallet.ownerAddresses,
       DEP_CONSTANTS.wallet.ownerLevels,
     );
-
     const deployStartTime = new Date();
-
     console.log(`${chalk.blueBright(`START DEPLOYMENT to ${chainName} at ${deployStartTime}`)}`);
-
-    const deploy_metadata = {
-      deployer: OmnuumDeploySigner.address,
-      solidity: {
-        version: config.solidity.compilers[0].version,
-      },
-    };
 
     // write tmp history file for restore already deployed history
     await tryCatch(
       () => access(prev_history_file_path),
-      () => writeFile(prev_history_file_path, JSON.stringify(deploy_metadata)),
+      () =>
+        writeFile(
+          prev_history_file_path,
+          JSON.stringify({
+            deployer: deployer.address,
+            solidity: {
+              version: config.solidity.compilers[0].version,
+            },
+          }),
+        ),
     );
 
     const { nft, nftFactory, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ deploySigner: OmnuumDeploySigner, walletOwnerAccounts, signatureSignerAddress: signerAddress });
+      await deployManagers({ deploySigner: deployer, walletOwnerAccounts, signatureSignerAddress: signerAddress });
 
     const resultData = {
       network: chainName,
       deployStartAt: deployStartTime.toLocaleTimeString(),
-      deployer: OmnuumDeploySigner.address,
+      deployer: deployer.address,
       caManager: structurizeProxyData(caManager),
       mintManager: structurizeProxyData(mintManager),
       exchange: structurizeProxyData(exchange),
@@ -105,7 +95,7 @@ async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3
     const subgraphManifestData = {
       network: chainName,
       deployStartAt: deployStartTime.toLocaleTimeString(),
-      deployer: OmnuumDeploySigner.address,
+      deployer: deployer.address,
       caManager: {
         address: caManager.proxyContract.address,
         startBlock: `${caManager.blockNumber}`,

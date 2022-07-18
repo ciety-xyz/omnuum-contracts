@@ -3,9 +3,8 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const CONSTANTS = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
-const { deployProxy, deployNormal, deployBeacon, getChainName, getRPCProvider, nullCheck } = require('./deployHelper');
+const { deployProxy, deployNormal, deployBeacon, getChainName, nullCheck, queryGasFeeData } = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
-const { queryGasToPolygon } = require('../gas/queryGasToPolygon');
 
 const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts }) => {
   /* Deploy CA Manager */
@@ -157,7 +156,7 @@ const deployNFT = async ({
     signerPrivateKey,
   });
 
-  const gasFeeData = await queryGasToPolygon();
+  const gasFeeData = await queryGasFeeData();
   const {
     raw: { maxFeePerGas, maxPriorityFeePerGas },
   } = gasFeeData;

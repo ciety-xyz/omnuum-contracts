@@ -1,8 +1,7 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { nullCheck, getRPCProvider, queryGasDataAndProceed } = require('../../deployments/deployHelper');
 const { testValues } = require('../../../utils/constants');
-const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   nft_owner_private_key: 'nft_owner_private_key',
@@ -60,7 +59,7 @@ const questions = [
 
       const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
       if (!proceed) {
-        console.log('Transaction Aborted!');
+        console.log('🚨 Transaction Aborted!');
         return;
       }
 

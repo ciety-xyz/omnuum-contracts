@@ -1,9 +1,14 @@
+const inquirer = require('inquirer');
 const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
+
 const { writeFile, readFile } = require('fs/promises');
-const { go, zip, map } = require('fxjs');
+const { go, zip, map, each } = require('fxjs');
+
 const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
+
 const DEP_CONSTANTS = require('./deployConstants');
+const { queryGasFeeToEthers, queryGasToPolygon } = require('../gas/queryGas');
 
 const prev_history_file_path = './scripts/deployments/deployResults/tmp_history.json';
 
@@ -35,6 +40,37 @@ const getChainName = async () => {
     default:
       return 'unrecognized network';
   }
+};
+
+const getRPCProvider = async () => {
+  const chainName = await getChainName();
+
+  const jsonRpcProvider =
+    chainName === 'localhost'
+      ? null
+      : chainName === 'mainnet'
+      ? process.env.MAINNET_URL
+      : chainName === 'rinkeby'
+      ? process.env.RINKEBY_URL
+      : chainName === 'ropsten'
+      ? process.env.ROPSTEN_URL
+      : chainName === 'goerli'
+      ? process.env.GOERLI_URL
+      : chainName === 'matic'
+      ? process.env.POLYGON_MAINNET_RPC_URL
+      : chainName === 'mumbai'
+      ? process.env.MUMBAI_RPC_URL
+      : null;
+
+  return new ethers.providers.JsonRpcProvider(jsonRpcProvider);
+};
+
+const getSingleFallbackProvider = async (provider) => new ethers.providers.FallbackProvider([provider ?? (await getRPCProvider())], 1);
+
+// Side effect to provider overriding getFeeData function
+const set1559FeeDataToProvider = (provider, maxFeePerGas, maxPriorityFeePerGas) => {
+  // eslint-disable-next-line no-param-reassign
+  provider.getFeeData = async () => ({ maxFeePerGas, maxPriorityFeePerGas });
 };
 
 const readDeployTmpHistory = () => go(readFile(prev_history_file_path, 'utf8'), JSON.parse);
@@ -69,29 +105,6 @@ const isLocalNetwork = async (provider) => {
   return ![1, 2, 3, 4, 5].includes(+chainId);
 };
 
-const getRPCProvider = async () => {
-  const chainName = await getChainName();
-
-  const jsonRpcProvider =
-    chainName === 'localhost'
-      ? null
-      : chainName === 'mainnet'
-      ? process.env.MAINNET_URL
-      : chainName === 'rinkeby'
-      ? process.env.RINKEBY_URL
-      : chainName === 'ropsten'
-      ? process.env.ROPSTEN_URL
-      : chainName === 'goerli'
-      ? process.env.GOERLI_URL
-      : chainName === 'matic'
-      ? process.env.POLYGON_MAINNET_RPC_URL
-      : chainName === 'mumbai'
-      ? process.env.MUMBAI_RPC_URL
-      : null;
-
-  return new ethers.providers.JsonRpcProvider(jsonRpcProvider);
-};
-
 const nullCheck = (val) => {
   if (!(val === '')) {
     return true;
@@ -104,6 +117,90 @@ const numberCheck = (val) => {
     return true;
   }
   return '🚨 Only number allows';
+};
+
+const notNullAndNumber = (val) => {
+  let result;
+  const isNotNull = nullCheck(val);
+  const isNumber = numberCheck(val);
+  if (isNotNull === true && isNumber === true) {
+    result = true;
+  }
+  if (isNotNull !== true) {
+    result = isNotNull;
+  }
+  if (isNumber !== true) {
+    result = isNumber;
+  }
+  return result;
+};
+
+const queryGasFeeData = async (provider) => {
+  let feeData;
+  const chainName = await getChainName();
+  // matic 은 프로바이더에서 EIP-1559 에 맞게 정확히 데이터를 내려주지 않는다. 그래서, 폴리곤에서 제공하는 API 를 따로 사용
+  if (chainName === 'matic') {
+    feeData = await queryGasToPolygon();
+  } else {
+    feeData = await queryGasFeeToEthers(provider);
+  }
+  return feeData;
+};
+
+// eslint-disable-next-line consistent-return
+const queryGasDataAndProceed = async () => {
+  let proceed;
+
+  do {
+    // eslint-disable-next-line no-await-in-loop
+    const gasFeeData = await queryGasFeeData(await getRPCProvider());
+    const {
+      raw: { maxFeePerGas, maxPriorityFeePerGas },
+    } = gasFeeData;
+
+    console.log('⛽️ Real-time Gas Fee');
+    console.dir(gasFeeData, { depth: 10 });
+
+    // eslint-disable-next-line no-await-in-loop
+    const ans = await inquirer.prompt([
+      {
+        name: 'proceed',
+        type: 'list',
+        choices: ['ProceedWithCurrentFee', 'UserInput', 'Refresh', 'Abort'],
+        message: '🤔 Proceed with current gas fee? or input user-defined gas fee ?',
+        validate: nullCheck,
+      },
+    ]);
+    proceed = ans.proceed;
+    if (proceed === 'ProceedWithCurrentFee') {
+      return { maxFeePerGas, maxPriorityFeePerGas, proceed: true };
+    }
+    if (proceed === 'UserInput') {
+      // eslint-disable-next-line no-await-in-loop
+      const userInputGasFee = await inquirer.prompt([
+        {
+          name: 'maxFeePerGas',
+          type: 'input',
+          message: '🤑 Max fee per gas ? (in gwei)',
+          validate: notNullAndNumber,
+        },
+        {
+          name: 'maxPriorityFeePerGas',
+          type: 'input',
+          message: '🤑 Max priority fee per gas ? (in gwei)',
+          validate: notNullAndNumber,
+        },
+      ]);
+      return {
+        maxFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxFeePerGas, 'gwei'),
+        maxPriorityFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxPriorityFeePerGas, 'gwei'),
+        proceed: true,
+      };
+    }
+    if (proceed === 'Abort') {
+      return { maxFeePerGas: null, maxPriorityFeePerGas: null, proceed: false };
+    }
+  } while (proceed === 'Refresh');
 };
 
 const getDateSuffix = () =>
@@ -230,11 +327,28 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 
   log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
+  // Fallback Provider
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+  if (!proceed) {
+    throw new Error('🚨 Transaction Aborted!');
+  }
+
+  // Set EIP-1559 Fee Data to Provider ( Override tx to type:2 )
+  set1559FeeDataToProvider(deploySigner.provider, maxFeePerGas, maxPriorityFeePerGas);
+
   const proxyContract = await upgrades.deployProxy(contractFactory.connect(deploySigner), args, {
     timeout: DEP_CONSTANTS.timeout,
     pollingInterval: DEP_CONSTANTS.pollingInterval,
   });
+
   const { deployTxReceipt, implAddress, adminAddress, gasUsed, blockNumber } = await getProxyDeployMetadata(proxyContract);
+
+  await go(
+    deployTxReceipt.events,
+    each(async (tx) => {
+      console.log(await tx.getTransaction());
+    }),
+  );
 
   log &&
     deployProxyConsole(
@@ -336,7 +450,6 @@ module.exports = {
   isNotMainOrRinkeby,
   getDateSuffix,
   nullCheck,
-  numberCheck,
   getRPCProvider,
   getChainName,
   tryCatch,
@@ -344,4 +457,9 @@ module.exports = {
   createWalletOwnerAccounts,
   prev_history_file_path,
   writeDeployTmpHistory,
+  set1559FeeDataToProvider,
+  getSingleFallbackProvider,
+  numberCheck,
+  queryGasFeeData,
+  queryGasDataAndProceed,
 };

@@ -1,7 +1,6 @@
 const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
-const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
-const { queryGasDataAndProceed } = require('../../gas/queryGas');
+const { nullCheck, getRPCProvider, queryGasDataAndProceed } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
   nft_contract_address: 'nft_contract_address',
