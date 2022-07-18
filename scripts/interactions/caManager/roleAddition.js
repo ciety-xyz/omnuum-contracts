@@ -40,7 +40,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
 
       const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.ca_manager_address);

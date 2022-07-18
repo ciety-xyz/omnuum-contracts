@@ -32,7 +32,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const requesterSigner = new ethers.Wallet(ans.requester_private_key, provider);
 
       const wallet = (await ethers.getContractFactory('OmnuumWallet')).attach(ans.wallet_address);

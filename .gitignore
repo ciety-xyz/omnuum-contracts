@@ -17,3 +17,5 @@ data/
 coverage/
 coverage.json
 artifacts/
+
+mockMetadata/1

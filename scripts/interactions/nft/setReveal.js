@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
@@ -33,12 +34,23 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
+
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
+
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
       const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
-      const txResponse = await nftContract.connect(nftOwnerSigner).setRevealed(ans.base_uri);
-      const txReceipt = await txResponse.wait();
+      const tx = await nftContract.connect(nftOwnerSigner).setRevealed(ans.base_uri, { maxFeePerGas, maxPriorityFeePerGas });
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Reveal is set.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

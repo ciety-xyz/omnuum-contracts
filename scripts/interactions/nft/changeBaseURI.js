@@ -33,11 +33,18 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
+
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataA«ndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
+
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
       const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
-      const txResponse = await nftContract.connect(nftOwnerSigner).changeBaseURI(ans.base_uri);
+      const txResponse = await nftContract.connect(nftOwnerSigner).changeBaseURI(ans.base_uri, { maxFeePerGas, maxPriorityFeePerGas });
 
       const txReceipt = await txResponse.wait();
 

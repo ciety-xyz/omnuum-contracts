@@ -1,9 +1,11 @@
 const { ethers } = require('hardhat');
 const chalk = require('chalk');
+const inquirer = require('inquirer');
 const CONSTANTS = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
-const { deployProxy, deployNormal, deployBeacon, getChainName } = require('./deployHelper');
+const { deployProxy, deployNormal, deployBeacon, getChainName, getRPCProvider, nullCheck } = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
+const { queryGasToPolygon } = require('../gas/queryGasToPolygon');
 
 const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts }) => {
   /* Deploy CA Manager */
@@ -155,10 +157,38 @@ const deployNFT = async ({
     signerPrivateKey,
   });
 
-  const txResponse = await NftFactory.attach(nftFactoryAddress)
+  const gasFeeData = await queryGasToPolygon();
+  const {
+    raw: { maxFeePerGas, maxPriorityFeePerGas },
+  } = gasFeeData;
+
+  console.log(`⛽️ Real-time Gas Fee from ${await getChainName()}`);
+  console.dir(gasFeeData, { depth: 5 });
+
+  const { proceed } = await inquirer.prompt([
+    {
+      name: 'proceed',
+      type: 'confirm',
+      message: '🤔 proceed ?',
+      validate: nullCheck,
+    },
+  ]);
+  if (!proceed) {
+    console.log('Transaction Aborted!');
+    return;
+  }
+
+  const tx = await NftFactory.attach(nftFactoryAddress)
     .connect(projectOwnerSigner)
-    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload);
-  const deployReceipt = await txResponse.wait();
+    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload, {
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+    });
+
+  console.log('🔑 Transaction');
+  console.dir(tx, { depth: 10 });
+
+  const deployReceipt = await tx.wait();
 
   const { logs } = deployReceipt;
 

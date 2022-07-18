@@ -3,6 +3,7 @@ const { ethers } = require('hardhat');
 const { addHours } = require('date-fns');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
 const { toSolDate } = require('../../../test/etc/util.js');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   nft_owner_private_key: 'nft_owner_private_key',
@@ -70,6 +71,13 @@ const questions = [
   inquirer.prompt(questions).then(async (ans) => {
     try {
       const provider = await getRPCProvider();
+
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
+
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
       const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
@@ -83,9 +91,11 @@ const questions = [
           ethers.utils.parseEther(ans.base_price),
           Number(ans.supply),
           Number(ans.max_mint_at_address),
+          { maxFeePerGas, maxPriorityFeePerGas },
         );
 
-      console.log('tx', tx);
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
 
       const txReceipt = await tx.wait();
 

@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const main = require('./index');
 
 const { nullCheck } = require('./deployHelper');
+const { queryGasDataAndProceed } = require('../gas/queryGas');
 
 const inquirerParams = {
   devDeployerPrivateKey: 'devDeployerPrivateKey',
@@ -71,6 +72,8 @@ const gasQuestions = [
           s3Save: ans.s3Save,
         });
       } else {
+        await queryGasDataAndProceed();
+
         inquirer.prompt(gasQuestions).then(async (gasAns) => {
           await main({
             deployerPK: ans.devDeployerPrivateKey,

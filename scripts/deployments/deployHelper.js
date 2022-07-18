@@ -99,6 +99,13 @@ const nullCheck = (val) => {
   return '🚨 Null is not allowed';
 };
 
+const numberCheck = (val) => {
+  if (!Number.isNaN(Number(val))) {
+    return true;
+  }
+  return '🚨 Only number allows';
+};
+
 const getDateSuffix = () =>
   `${new Date().toLocaleDateString().replace(/\//g, '-')}_${new Date().toLocaleTimeString('en', { hour12: false })}`;
 
@@ -329,6 +336,7 @@ module.exports = {
   isNotMainOrRinkeby,
   getDateSuffix,
   nullCheck,
+  numberCheck,
   getRPCProvider,
   getChainName,
   tryCatch,

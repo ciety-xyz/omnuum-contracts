@@ -39,7 +39,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const nftOwnerSigner = new ethers.Wallet(ans.nftOwnerPrivateKey, provider);
 
       const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress).connect(nftOwnerSigner);

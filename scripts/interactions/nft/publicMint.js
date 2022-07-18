@@ -3,6 +3,7 @@ const inquirer = require('inquirer');
 const { getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
@@ -69,7 +70,13 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
+
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
 
       const payload = await getPayloadWithSignature({
         senderVerifierAddress: ans.senderVerifierAddress,
@@ -85,12 +92,13 @@ const questions = [
 
       const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
 
-      const txResponse = await nftContract
+      const tx = await nftContract
         .connect(minterSigner)
-        .publicMint(ans.mintQuantity, ans.groupId, payload, { value: sendValue, gasLimit: 10000000 });
+        .publicMint(ans.mintQuantity, ans.groupId, payload, { value: sendValue, maxFeePerGas, maxPriorityFeePerGas });
 
-      console.log('txRseponse', txResponse);
-      const txReceipt = await txResponse.wait();
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Public mint is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

@@ -3,7 +3,8 @@ const { ethers } = require('hardhat');
 
 const chalk = require('chalk');
 const { nullCheck, getRPCProvider, getChainName } = require('../../deployments/deployHelper');
-const { testValues, chainlink } = require('../../../utils/constants');
+const DEP_CONSTANTS = require('../../deployments/deployConstants');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   dev_deployer_private_key: 'dev_deployer_private_key',
@@ -57,14 +58,15 @@ const questions = [
   inquirer.prompt(questions).then(async (ans) => {
     try {
       const chainName = await getChainName();
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
+      const chainlinkData = DEP_CONSTANTS.vrfManager.chainlink[chainName];
       const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
 
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
       const revealManager = (await ethers.getContractFactory('RevealManager')).attach(ans.reveal_manager_address);
       const vrfManager = (await ethers.getContractFactory('OmnuumVRFManager')).attach(ans.vrf_manager_address);
 
-      const requiredLinkFee = chainlink[chainName].fee;
+      const requiredLinkFee = chainlinkData.fee;
 
       const { sendLink } = await inquirer.prompt([
         {
@@ -73,36 +75,63 @@ const questions = [
           message: `${chalk.yellowBright(`🤔 Do you want to send ${requiredLinkFee} LINK to exchange manager contract?`)}`,
         },
       ]);
+      let maxFeePerGas;
+      let maxPriorityFeePerGas;
+      let proceed;
+
       if (sendLink) {
+        const response = await queryGasDataAndProceed();
+        maxFeePerGas = response.maxFeePerGas;
+        maxPriorityFeePerGas = response.maxPriorityFeePerGas;
+        proceed = response.proceed;
+        if (!proceed) {
+          console.log('Transaction Aborted!');
+          return;
+        }
         const linkContract = new ethers.Contract(
-          chainlink[chainName].LINK,
+          chainlinkData.LINK,
           ['function transfer(address _to, uint256 _value) returns (bool)'],
           devDeployerSigner,
         );
-        const txTransfer = await linkContract.transfer(ans.exchange_manager_address, requiredLinkFee);
+        const txTransfer = await linkContract.transfer(ans.exchange_manager_address, requiredLinkFee, {
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+        });
 
         const txTransferReceipt = await txTransfer.wait();
         console.log(
-          `💰💰💰 LINK fee is transferred from devDeployer to Exchange Manager.\nBlock: ${txTransferReceipt.blockNumber}\nTransaction: ${txTransferReceipt.transactionHash}\nValue: ${chainlink[chainName].fee}`,
+          `💰💰💰 LINK fee is transferred from devDeployer to Exchange Manager.\nBlock: ${txTransferReceipt.blockNumber}\nTransaction: ${txTransferReceipt.transactionHash}\nValue: ${chainlinkData.fee}`,
         );
       }
+      const omnuumExchange = await ethers.getContractAt('OmnuumExchange', ans.exchange_manager_address);
 
-      const sendEtherFee = testValues.tmpLinkExRate
+      const sendEtherFee = (await omnuumExchange.tmpLinkExRate())
         .mul(requiredLinkFee)
         .div(ethers.utils.parseEther('1'))
         .mul(ethers.BigNumber.from(await vrfManager.safetyRatio()))
         .div(ethers.BigNumber.from('100'));
 
       console.log(
-        `💰 Sending ${chalk.redBright(
-          sendEtherFee,
-        )} ETH to revealManager...\n=> Value is sent through internal transaction to VRF manager\n${chalk.green(
+        `💰 Sending ${chalk.redBright(sendEtherFee)} ${
+          chainName === 'matic' || chainName === 'mumbai' ? 'MATIC' : 'ETH'
+        } to revealManager...\n=> Value is sent through internal transaction to VRF manager\n${chalk.green(
           '=> Request Verifiable Random Function to ChainLINK Oracle',
         )}`,
         sendEtherFee,
       );
 
-      const txResponse = await revealManager.connect(nftOwnerSigner).vrfRequest(ans.nft_address, { value: sendEtherFee });
+      const response = await queryGasDataAndProceed();
+      maxFeePerGas = response.maxFeePerGas;
+      maxPriorityFeePerGas = response.maxPriorityFeePerGas;
+      proceed = response.proceed;
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
+
+      const txResponse = await revealManager
+        .connect(nftOwnerSigner)
+        .vrfRequest(ans.nft_address, { value: sendEtherFee, maxFeePerGas, maxPriorityFeePerGas });
 
       console.log('txRseponse', txResponse);
       const txReceipt = await txResponse.wait();

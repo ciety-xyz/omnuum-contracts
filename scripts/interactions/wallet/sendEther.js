@@ -32,7 +32,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const senderSigner = new ethers.Wallet(ans.ether_sender_private_key, provider);
 
       const txResponse = await senderSigner.sendTransaction({

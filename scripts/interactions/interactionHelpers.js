@@ -1,5 +1,5 @@
+const ethers = require('hardhat');
 const { ifElse, identity } = require('fxjs');
-const { ethers } = require('hardhat');
 
 const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, payloadTopic, groupId }) => ({
   types: {

@@ -1,0 +1,35 @@
+{
+  "name": "POLYBEAR GENESIS #3",
+  "description": "Our friend teddy bears are friends born from polygons. Maybe the teddy bears were born into the world to be friends in the blockchain world. Growing up in a world of polygons, they love circles, triangles, and squares. How many teddy bears like the dodecahedron?",
+  "token_id": "3",
+  "provenance_hash": "0x88f55796e9f5dfa3b7c0fc26a23c1adc86dcc1e4b74d1cf6cd7e3dcba1598950",
+  "initial_sequence_index": "5",
+  "image": "ipfs://bafkreihdwey6hewm4w6gdgchypaqe7ijh2xsx5mmw3ntxbyimmc7k4h3lu",
+  "image_hash": "0x286f084d73b4356d27aa69254ef0b42b938e2be712cae69382d52313359cf02c",
+  "attributes": [
+    {
+      "value": "Poly Bear",
+      "trait_type": "POLYBEAR GENESIS"
+    },
+    {
+      "value": "stripe",
+      "trait_type": "bg"
+    },
+    {
+      "value": "mint",
+      "trait_type": "body"
+    },
+    {
+      "value": "star",
+      "trait_type": "skin"
+    },
+    {
+      "value": "hungry",
+      "trait_type": "face"
+    },
+    {
+      "value": "green gum",
+      "trait_type": "mouth"
+    }
+  ]
+}

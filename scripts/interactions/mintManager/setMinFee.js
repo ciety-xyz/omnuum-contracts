@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
-const { testValues } = require('../../../utils/constants');
 
 const questions = [
   {
@@ -27,7 +26,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const deployerSigner = new ethers.Wallet(ans.deployer_private_key, provider);
       const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
 

@@ -33,7 +33,6 @@ async function main({ deployerPK, signerAddress, gasPrices, localSave = true, s3
     `);
 
     await compile({ force: true, quiet: true });
-
     const chainName = await getChainName();
 
     // prepare deploy result directory structure

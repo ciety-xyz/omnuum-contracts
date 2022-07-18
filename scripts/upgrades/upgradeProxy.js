@@ -63,7 +63,7 @@ const questions = [
       await mkdir(dirPath, { recursive: true });
       const chainName = await getChainName();
 
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
 
       let deployerSigner;
       if (ans.signer_method === 'from_PK') {

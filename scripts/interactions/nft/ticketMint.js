@@ -3,6 +3,7 @@ const inquirer = require('inquirer');
 const { getTicketWithSignature, getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 require('dotenv').config();
 
@@ -85,7 +86,13 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
+
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
 
       const ticket = await getTicketWithSignature({
         ticketManagerAddress: ans.ticketManagerAddress,
@@ -110,10 +117,13 @@ const questions = [
       const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
 
       const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
-      const txResponse = await nftContract
+      const tx = await nftContract
         .connect(minterSigner)
-        .ticketMint(ans.mintQuantity, ticket, payload, { value: sendValue, gasLimit: 10000000 });
-      const txReceipt = await txResponse.wait();
+        .ticketMint(ans.mintQuantity, ticket, payload, { value: sendValue, maxFeePerGas, maxPriorityFeePerGas });
+
+      c;
+
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Ticket Mint is on the way.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

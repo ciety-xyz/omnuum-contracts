@@ -3,6 +3,7 @@ const { ethers } = require('hardhat');
 const { addHours } = require('date-fns');
 const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
 const { toSolDate } = require('../../../test/etc/util.js');
+const { queryGasDataAndProceed } = require('../../gas/queryGas');
 
 const inquirerParams = {
   nft_owner_private_key: 'nft_owner_private_key',
@@ -48,16 +49,27 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getRPCProvider();
       const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
 
       const ticketManager = (await ethers.getContractFactory('TicketManager')).attach(ans.ticket_manager_address);
 
-      const txResponse = await ticketManager
-        .connect(nftOwnerSigner)
-        .setEndDate(ans.nft_address, ans.group_id, toSolDate(addHours(new Date(), Number(ans.end_day_from_now))));
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      if (!proceed) {
+        console.log('Transaction Aborted!');
+        return;
+      }
 
-      const txReceipt = await txResponse.wait();
+      const tx = await ticketManager
+        .connect(nftOwnerSigner)
+        .setEndDate(ans.nft_address, ans.group_id, toSolDate(addHours(new Date(), Number(ans.end_day_from_now))), {
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+        });
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Ticket schedule is set..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

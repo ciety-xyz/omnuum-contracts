@@ -1,6 +1,6 @@
 const inquirer = require('inquirer');
 const { go, range, map } = require('fxjs');
-const ethers = require('ethers');
+const ethers = require('hardhat');
 const { nullCheck } = require('../scripts/deployments/deployHelper');
 
 const question = [
