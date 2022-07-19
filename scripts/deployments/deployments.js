@@ -3,26 +3,39 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const CONSTANTS = require('../../utils/constants');
 const DEP_CONSTANTS = require('./deployConstants');
-const { deployProxy, deployNormal, deployBeacon, getChainName, nullCheck, queryGasFeeData } = require('./deployHelper');
+const {
+  deployProxy,
+  deployNormal,
+  deployBeacon,
+  getChainName,
+  nullCheck,
+  queryGasFeeData,
+  registerContractsToCAManager,
+  registerRoleToCAManager,
+} = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
 
-const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts }) => {
+const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts, maxFeePerGasLimit, gasModeAuto }) => {
   /* Deploy CA Manager */
   const caManager = await deployProxy({
     contractName: 'OmnuumCAManager',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
   });
 
-  /* Register CA Manager itself */
-  await (
-    await caManager.proxyContract.connect(deploySigner).registerContract(caManager.proxyContract.address, DEP_CONSTANTS.caManager.topic)
-  ).wait(DEP_CONSTANTS.confirmWait);
-  console.log(`\n${chalk.yellow('Complete self-registration to CA Manager')} - ${new Date()}`);
+  // /* Register CA Manager itself */
+  // await (
+  //   await caManager.proxyContract.connect(deploySigner).registerContract(caManager.proxyContract.address, DEP_CONSTANTS.caManager.topic)
+  // ).wait(DEP_CONSTANTS.confirmWait);
+  // console.log(`\n${chalk.yellow('Complete self-registration to CA Manager')} - ${new Date()}`);
 
   /* Deploy Mint Manager */
   const mintManager = await deployProxy({
     contractName: 'OmnuumMintManager',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [DEP_CONSTANTS.mintManager.feeRate, caManager.proxyContract.address],
   });
 
@@ -30,6 +43,8 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const exchange = await deployProxy({
     contractName: 'OmnuumExchange',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [caManager.proxyContract.address],
   });
 
@@ -37,12 +52,16 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const ticketManager = await deployNormal({
     contractName: 'TicketManager',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
   });
 
   /* Deploy Reveal Manager */
   const revealManager = await deployNormal({
     contractName: 'RevealManager',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [caManager.proxyContract.address],
   });
 
@@ -50,12 +69,16 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const senderVerifier = await deployNormal({
     contractName: 'SenderVerifier',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
   });
 
   /* Deploy VRF Manager */
   const vrfManager = await deployNormal({
     contractName: 'OmnuumVRFManager',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [...Object.values(DEP_CONSTANTS.vrfManager.chainlink[await getChainName()]), caManager.proxyContract.address],
   });
 
@@ -63,6 +86,8 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const wallet = await deployNormal({
     contractName: 'OmnuumWallet',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
   });
 
@@ -70,54 +95,62 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const nft = await deployBeacon({
     contractName: 'OmnuumNFT721',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
   });
 
   const nftFactory = await deployNormal({
     contractName: 'NftFactory',
     deploySigner,
+    gasModeAuto,
+    maxFeePerGasLimit,
     args: [caManager.proxyContract.address, nft.beacon.address, signatureSignerAddress],
   });
 
-  /* Register CA accounts to CA Manager */
-  console.log(`\n${chalk.green('Start Contract Registrations to CA Manager...')} - ${new Date()}`);
-  await (
-    await caManager.proxyContract
-      .connect(deploySigner)
-      .registerContractMultiple(
-        [
-          mintManager.proxyContract.address,
-          exchange.proxyContract.address,
-          ticketManager.contract.address,
-          revealManager.contract.address,
-          senderVerifier.contract.address,
-          vrfManager.contract.address,
-          wallet.contract.address,
-          nftFactory.contract.address,
-        ],
-        [
-          CONSTANTS.ContractTopic.MINTMANAGER,
-          CONSTANTS.ContractTopic.EXCHANGE,
-          CONSTANTS.ContractTopic.TICKET,
-          CONSTANTS.ContractTopic.REVEAL,
-          CONSTANTS.ContractTopic.VERIFIER,
-          CONSTANTS.ContractTopic.VRF,
-          CONSTANTS.ContractTopic.WALLET,
-          CONSTANTS.ContractTopic.NFTFACTORY,
-        ],
-      )
-  ).wait(DEP_CONSTANTS.confirmWait);
-  console.log(`${chalk.yellow('Complete!')} - ${new Date()}`);
+  await registerContractsToCAManager({
+    caManagerInstance: caManager.proxyContract,
+    deployer: deploySigner,
+    addresses: [
+      mintManager.proxyContract.address,
+      exchange.proxyContract.address,
+      ticketManager.contract.address,
+      revealManager.contract.address,
+      senderVerifier.contract.address,
+      vrfManager.contract.address,
+      wallet.contract.address,
+      nftFactory.contract.address,
+    ],
+    topics: [
+      CONSTANTS.ContractTopic.MINTMANAGER,
+      CONSTANTS.ContractTopic.EXCHANGE,
+      CONSTANTS.ContractTopic.TICKET,
+      CONSTANTS.ContractTopic.REVEAL,
+      CONSTANTS.ContractTopic.VERIFIER,
+      CONSTANTS.ContractTopic.VRF,
+      CONSTANTS.ContractTopic.WALLET,
+      CONSTANTS.ContractTopic.NFTFACTORY,
+    ],
+    gasModeAuto,
+    maxFeePerGasLimit,
+  });
 
-  /* Register contract roles to CA manager */
-  /* VRF manager => EXCHANGE role */
-  /* Reveal manager => VRF role */
+  await registerRoleToCAManager({
+    caManagerInstance: caManager.proxyContract,
+    deployer: deploySigner,
+    addresses: [vrfManager.contract.address],
+    roleTopic: DEP_CONSTANTS.roles.EXCHANGE,
+    gasModeAuto,
+    maxFeePerGasLimit,
+  });
 
-  console.log(`\n${chalk.green('Start Role Additions to CA Manager...')} - ${new Date()}`);
-  await (await caManager.proxyContract.connect(deploySigner).addRole([vrfManager.contract.address], DEP_CONSTANTS.roles.EXCHANGE)).wait();
-  await (
-    await caManager.proxyContract.connect(deploySigner).addRole([revealManager.contract.address], DEP_CONSTANTS.roles.VRF)
-  ).wait(DEP_CONSTANTS.confirmWait);
-  console.log(`${chalk.yellow('Complete!')} - ${new Date()}`);
+  await registerRoleToCAManager({
+    caManagerInstance: caManager.proxyContract,
+    deployer: deploySigner,
+    addresses: [revealManager.contract.address],
+    roleTopic: DEP_CONSTANTS.roles.VRF,
+    gasModeAuto,
+    maxFeePerGasLimit,
+  });
 
   return {
     nft,

@@ -19,7 +19,15 @@ const DEP_CONSTANTS = require('./deployConstants');
 const { compile } = require('../../utils/hardhat.js');
 const { s3Upload } = require('../../utils/s3.js');
 
-async function main({ deployerPK, signerAddress, localSave = true, s3Save = false, withCompile = true }) {
+async function main({
+  deployerPK,
+  signerAddress,
+  maxFeePerGasLimit,
+  gasModeAuto = true,
+  localSave = true,
+  s3Save = false,
+  withCompile = true,
+}) {
   try {
     console.log(`
          *******    ****     ****  ****     **  **     **  **     **  ****     ****
@@ -70,7 +78,13 @@ async function main({ deployerPK, signerAddress, localSave = true, s3Save = fals
     );
 
     const { nft, nftFactory, vrfManager, mintManager, caManager, exchange, ticketManager, senderVerifier, revealManager, wallet } =
-      await deployManagers({ deploySigner: deployer, walletOwnerAccounts, signatureSignerAddress: signerAddress });
+      await deployManagers({
+        deploySigner: deployer,
+        walletOwnerAccounts,
+        signatureSignerAddress: signerAddress,
+        maxFeePerGasLimit,
+        gasModeAuto,
+      });
 
     const resultData = {
       network: chainName,
@@ -159,6 +173,10 @@ async function main({ deployerPK, signerAddress, localSave = true, s3Save = fals
         fileBuffer: Buffer.from(JSON.stringify(subgraphManifestData)),
       });
     }
+
+    console.log(chalk.yellowBright('\n============================ 🏁 Result Summary ============================'));
+    console.dir(subgraphManifestData, { depth: 10 });
+    console.log(chalk.yellowBright('================== End Of Manager Contracts Deployments ==================='));
 
     return resultData;
   } catch (e) {

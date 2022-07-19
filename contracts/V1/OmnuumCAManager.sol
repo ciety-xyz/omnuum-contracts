@@ -31,6 +31,8 @@ contract OmnuumCAManager is OwnableUpgradeable {
 
     function initialize() public initializer {
         __Ownable_init();
+
+        // Self-registration for the synthetic sugar of subgraph
         string memory _topic = 'CAMANAGER';
         address _caManager = address(this);
         managerContracts[_caManager] = Contract(_topic, true);

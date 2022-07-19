@@ -7,10 +7,13 @@ const { go, zip, map, each } = require('fxjs');
 
 const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
 
+const axios = require('axios');
 const DEP_CONSTANTS = require('./deployConstants');
 const { queryGasFeeToEthers, queryGasToPolygon } = require('../gas/queryGas');
 
 const prev_history_file_path = './scripts/deployments/deployResults/tmp_history.json';
+
+const BREAK_LINE = '\n======================================================================================================';
 
 const tryCatch = async (f, catchFn) => {
   try {
@@ -147,35 +150,83 @@ const queryGasFeeData = async (provider) => {
   return feeData;
 };
 
+const queryGasFeeEIP1559 = async (confidenceLevel = 99) => {
+  const { chainId } = await ethers.provider.getNetwork();
+
+  // Block Native Query Gas only supports "Ethereum Mainnet (chainId = 1) and Polygon Mainnet (chainId = 137)"
+  if (![1, 137].includes(Number(chainId))) {
+    // 'localhost'
+    const { maxFeePerGas, maxPriorityFeePerGas } = await queryGasFeeData(ethers.provider);
+    return { maxFeePerGas, maxPriorityFeePerGas };
+  }
+
+  const apiKey = process.env.BLOCK_NATIVE_API_KEY;
+  if (!apiKey) {
+    throw new Error('apiKey is missing. Set your .env of process.env.BLOCK_NATIVE_API_KEY. See https://docs.blocknative.com/ ');
+  }
+  const {
+    data: { blockPrices },
+  } = await axios.get('https://api.blocknative.com/gasprices/blockprices', {
+    headers: {
+      Authorization: `${apiKey}`,
+    },
+    params: {
+      confidenceLevels: confidenceLevel,
+      withBaseFees: false,
+      chainid: chainId,
+    },
+  });
+  const { maxFeePerGas, maxPriorityFeePerGas } = blockPrices[0].estimatedPrices[0];
+  return { maxFeePerGas, maxPriorityFeePerGas };
+};
+
 // eslint-disable-next-line consistent-return
-const queryGasDataAndProceed = async () => {
-  let proceed;
+const queryEIP1559GasFeesAndProceed = async (gasModeAuto, maxFeePerGasLimit, logging = true) => {
+  let cmd;
+
+  const convertsGasFeesUnit = (maxFeePerGasInGwei, maxPriorityFeePerGasInGwei) => ({
+    maxFeePerGas: ethers.utils.parseUnits(maxFeePerGasInGwei, 'gwei'),
+    maxPriorityFeePerGas: ethers.utils.parseUnits(maxPriorityFeePerGasInGwei, 'gwei'),
+  });
 
   do {
     // eslint-disable-next-line no-await-in-loop
-    const gasFeeData = await queryGasFeeData(await getRPCProvider());
-    const {
-      raw: { maxFeePerGas, maxPriorityFeePerGas },
-    } = gasFeeData;
+    const { maxFeePerGas, maxPriorityFeePerGas } = await queryGasFeeEIP1559();
 
-    console.log('⛽️ Real-time Gas Fee');
-    console.dir(gasFeeData, { depth: 10 });
+    if (logging) {
+      console.log('\n⛽️ Real-time Gas Fee');
+      console.log(`  - max. fee/gas: ${maxFeePerGas}\n  - max. priority fee/gas: ${maxPriorityFeePerGas}`);
+    }
+
+    if (gasModeAuto) {
+      // If automode, check if gasFee is over the maxFeePerGasLimit
+      if (maxFeePerGas > Number(maxFeePerGasLimit)) {
+        console.log(
+          `🚨🚨🚨 Automatic Gas Strategy is Blocked due to current maxFeePerGas ${maxFeePerGas} > ${Number(maxFeePerGasLimit)} (Your Limit)
+          Gas mode is switched to manual.`,
+        );
+      } else {
+        console.log(` => Process transaction right away. Gas Fee Automation: ${gasModeAuto}`);
+        return { ...convertsGasFeesUnit(maxFeePerGas, maxPriorityFeePerGas), proceed: true };
+      }
+    }
 
     // eslint-disable-next-line no-await-in-loop
     const ans = await inquirer.prompt([
       {
-        name: 'proceed',
+        name: 'cmd',
         type: 'list',
         choices: ['ProceedWithCurrentFee', 'UserInput', 'Refresh', 'Abort'],
-        message: '🤔 Proceed with current gas fee? or input user-defined gas fee ?',
+        message: '\n🤔 Proceed with current gas fee? or input user-defined gas fee ?',
         validate: nullCheck,
       },
     ]);
-    proceed = ans.proceed;
-    if (proceed === 'ProceedWithCurrentFee') {
-      return { maxFeePerGas, maxPriorityFeePerGas, proceed: true };
+    cmd = ans.cmd;
+
+    if (cmd === 'ProceedWithCurrentFee') {
+      return { ...convertsGasFeesUnit(maxFeePerGas, maxPriorityFeePerGas), proceed: true };
     }
-    if (proceed === 'UserInput') {
+    if (cmd === 'UserInput') {
       // eslint-disable-next-line no-await-in-loop
       const userInputGasFee = await inquirer.prompt([
         {
@@ -191,16 +242,13 @@ const queryGasDataAndProceed = async () => {
           validate: notNullAndNumber,
         },
       ]);
-      return {
-        maxFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxFeePerGas, 'gwei'),
-        maxPriorityFeePerGas: ethers.utils.parseUnits(userInputGasFee.maxPriorityFeePerGas, 'gwei'),
-        proceed: true,
-      };
+
+      return { ...convertsGasFeesUnit(userInputGasFee.maxFeePerGas, userInputGasFee.maxPriorityFeePerGas), proceed: true };
     }
-    if (proceed === 'Abort') {
+    if (cmd === 'Abort') {
       return { maxFeePerGas: null, maxPriorityFeePerGas: null, proceed: false };
     }
-  } while (proceed === 'Refresh');
+  } while (cmd === 'Refresh');
 };
 
 const getDateSuffix = () =>
@@ -261,7 +309,7 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
     ].join('')}`,
   );
 
-const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
+const deployBeacon = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
   const history = await readDeployTmpHistory();
 
@@ -280,7 +328,16 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
     };
   }
 
-  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log &&
+    console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Beacon')}:`)} ${contractName} - ${new Date()}`);
+
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  if (!proceed) {
+    throw new Error('🚨 Transaction Aborted!');
+  }
+
+  // Set EIP-1559 Fee Data to Provider ( Override tx to type:2 )
+  set1559FeeDataToProvider(deploySigner.provider, maxFeePerGas, maxPriorityFeePerGas);
 
   const beacon = await upgrades.deployBeacon(contractFactory.connect(deploySigner));
   const txResponse = await beacon.deployed();
@@ -299,6 +356,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
       blockNumber: blockNumber.toString(),
     },
   });
+  console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
 
   return {
     beacon,
@@ -309,7 +367,7 @@ const deployBeacon = async ({ contractName, deploySigner, log = true }) => {
   };
 };
 
-const deployProxy = async ({ contractName, deploySigner, args = [], log = true }) => {
+const deployProxy = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
   const history = await readDeployTmpHistory();
   const contractFactory = await ethers.getContractFactory(contractName);
 
@@ -325,10 +383,11 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
     };
   }
 
-  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log &&
+    console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Proxy')}:`)} ${contractName} - ${new Date()}`);
 
   // Fallback Provider
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -343,12 +402,13 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
 
   const { deployTxReceipt, implAddress, adminAddress, gasUsed, blockNumber } = await getProxyDeployMetadata(proxyContract);
 
-  await go(
-    deployTxReceipt.events,
-    each(async (tx) => {
-      console.log(await tx.getTransaction());
-    }),
-  );
+  // Log Transactions
+  // await go(
+  //   deployTxReceipt.events,
+  //   each(async (tx) => {
+  //     console.log(await tx.getTransaction());
+  //   }),
+  // );
 
   log &&
     deployProxyConsole(
@@ -371,6 +431,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
       blockNumber: blockNumber.toString(),
     },
   });
+  console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
 
   return {
     proxyContract,
@@ -382,7 +443,7 @@ const deployProxy = async ({ contractName, deploySigner, args = [], log = true }
   };
 };
 
-const deployNormal = async ({ contractName, deploySigner, args = [], log = true }) => {
+const deployNormal = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
   const history = await readDeployTmpHistory();
 
@@ -396,10 +457,11 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
     };
   }
 
-  log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
+  log &&
+    console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Normal')}:`)} ${contractName} - ${new Date()}`);
 
   // Fallback Provider
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -423,6 +485,7 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
       args,
     },
   });
+  console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
 
   return {
     contract,
@@ -448,6 +511,38 @@ const createWalletOwnerAccounts = (addressArray, votesArray) => {
   );
 };
 
+const registerContractsToCAManager = async ({ caManagerInstance, deployer, addresses, topics, gasModeAuto, maxFeePerGasLimit }) => {
+  console.log(`${BREAK_LINE}\n${chalk.magentaBright('Start Contract Registrations to CA Manager...')} - ${new Date()}`);
+
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  if (!proceed) {
+    throw new Error('🚨 Transaction Aborted!');
+  }
+
+  // Set EIP-1559 Fee Data to Provider ( Override tx to type:2 )
+  set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
+
+  const tx = await caManagerInstance.connect(deployer).registerContractMultiple(addresses, topics);
+  await tx.wait(DEP_CONSTANTS.confirmWait);
+  console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
+};
+
+const registerRoleToCAManager = async ({ caManagerInstance, deployer, addresses, roleTopic, gasModeAuto, maxFeePerGasLimit }) => {
+  console.log(`${BREAK_LINE}\n${chalk.magentaBright('Start Role Setting to CA Manager...')} - ${new Date()}`);
+
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  if (!proceed) {
+    throw new Error('🚨 Transaction Aborted!');
+  }
+
+  // Set EIP-1559 Fee Data to Provider ( Override tx to type:2 )
+  set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
+
+  const tx = await caManagerInstance.connect(deployer).addRole(addresses, roleTopic);
+  await tx.wait(DEP_CONSTANTS.confirmWait);
+  console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
+};
+
 module.exports = {
   structurizeProxyData,
   structurizeContractData,
@@ -470,5 +565,8 @@ module.exports = {
   getSingleFallbackProvider,
   numberCheck,
   queryGasFeeData,
-  queryGasDataAndProceed,
+  queryGasDataAndProceed: queryEIP1559GasFeesAndProceed,
+  queryGasFeeEIP1559,
+  registerContractsToCAManager,
+  registerRoleToCAManager,
 };
