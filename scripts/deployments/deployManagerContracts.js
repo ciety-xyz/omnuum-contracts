@@ -3,6 +3,7 @@ const rimraf = require('rimraf');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 
+const path = require('path');
 const main = require('./index');
 
 const { nullCheck } = require('./deployHelper');
@@ -53,7 +54,8 @@ const questions = [
   inquirer.prompt(questions).then(async (ans) => {
     try {
       if (ans.cleanHistory) {
-        rimraf.sync();
+        // Remove deployment temp history file
+        rimraf.sync(path.resolve(__dirname, 'deployResults', 'tmp_history.json'));
       }
 
       await main({
