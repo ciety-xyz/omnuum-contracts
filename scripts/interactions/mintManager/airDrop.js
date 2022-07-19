@@ -1,12 +1,6 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const {
-  nullCheck,
-  getRPCProvider,
-  queryEIP1559GasFeesAndProceed,
-  getSingleFallbackProvider,
-  consoleBalance,
-} = require('../../deployments/deployHelper');
+const { nullCheck, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider, consoleBalance } = require('../../deployments/deployHelper');
 const { testValues } = require('../../../utils/constants');
 
 const inquirerParams = {

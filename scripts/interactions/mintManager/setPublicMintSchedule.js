@@ -1,55 +1,55 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 const { addHours } = require('date-fns');
-const { nullCheck, getRPCProvider, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
+const { nullCheck, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider, consoleBalance } = require('../../deployments/deployHelper');
 const { toSolDate } = require('../../../test/etc/util.js');
 
 const inquirerParams = {
-  nft_owner_private_key: 'nft_owner_private_key',
-  nft_address: 'nft_address',
-  mint_manager_address: 'mint_manager_address',
-  group_id: 'group_id',
-  end_day_from_now: 'end_day_from_now',
-  base_price: 'base_price',
+  nftOwnerPrivateKey: 'nftOwnerPrivateKey',
+  nftAddress: 'nftAddress',
+  mintManagerAddress: 'mintManagerAddress',
+  groupId: 'groupId',
+  endDayFromNow: 'endDayFromNow',
+  basePrice: 'basePrice',
   supply: 'supply',
-  max_mint_at_address: 'max_mint_at_address',
+  maxMintAtAddress: 'maxMintAtAddress',
 };
 
 const questions = [
   {
-    name: inquirerParams.nft_owner_private_key,
+    name: inquirerParams.nftOwnerPrivateKey,
     type: 'input',
-    message: '🤔 NFT project owner private key is ...',
+    message: '🤔 NFT project owner [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.nft_address,
+    name: inquirerParams.nftAddress,
     type: 'input',
-    message: '🤔 NFT contract address is...',
+    message: '🤔 NFT contract [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.mint_manager_address,
+    name: inquirerParams.mintManagerAddress,
     type: 'input',
-    message: '🤔 Mint manager address is...',
+    message: '🤔 Mint manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.group_id,
+    name: inquirerParams.groupId,
     type: 'input',
-    message: '🤔 Public mint schedule group id is you want to be set...',
+    message: '🤔 Public schedule [ GROUP ID ] is set to be...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.end_day_from_now,
+    name: inquirerParams.endDayFromNow,
     type: 'input',
-    message: '🤔 How much end day from now is... (unit: hr)',
+    message: '🤔 Schedule [ PERIOD ] is... (unit: hr)',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.base_price,
+    name: inquirerParams.basePrice,
     type: 'input',
-    message: '🤔 How much is the base_price... (unit: ether)',
+    message: '🤔 [ BASE PRICE ] is... (unit: ether)',
     validate: nullCheck,
   },
   {
@@ -59,9 +59,9 @@ const questions = [
     validate: nullCheck,
   },
   {
-    name: inquirerParams.max_mint_at_address,
+    name: inquirerParams.maxMintAtAddress,
     type: 'input',
-    message: '🤔 How much max mint quantity per address...',
+    message: '🤔 [Max Mint Quantity Per Address] is ...',
     validate: nullCheck,
   },
 ];
@@ -69,27 +69,26 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
+      const provider = await getSingleFallbackProvider();
+      const nftOwnerSigner = new ethers.Wallet(ans.nftOwnerPrivateKey, provider);
 
+      await consoleBalance(nftOwnerSigner.address);
       const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {
-        console.log('Transaction Aborted!');
-        return;
+        throw new Error('🚨 Transaction Aborted!');
       }
 
-      const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
-
-      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
+      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mintManagerAddress);
 
       const tx = await mintManager
         .connect(nftOwnerSigner)
         .setPublicMintSchedule(
-          ans.nft_address,
-          ans.group_id,
-          toSolDate(addHours(new Date(), Number(ans.end_day_from_now))),
-          ethers.utils.parseEther(ans.base_price),
+          ans.nftAddress,
+          ans.groupId,
+          toSolDate(addHours(new Date(), Number(ans.endDayFromNow))),
+          ethers.utils.parseEther(ans.basePrice),
           Number(ans.supply),
-          Number(ans.max_mint_at_address),
+          Number(ans.maxMintAtAddress),
           { maxFeePerGas, maxPriorityFeePerGas },
         );
 
