@@ -1,28 +1,35 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { getRPCProvider, nullCheck } = require('../../deployments/deployHelper');
+const {
+  getRPCProvider,
+  nullCheck,
+  getSingleFallbackProvider,
+  consoleBalance,
+  queryEIP1559GasFeesAndProceed,
+  set1559FeeDataToProvider,
+} = require('../../deployments/deployHelper');
 
 const inquirerParams = {
-  dev_deployer_private_key: 'dev_deployer_private_key',
-  ca_manager_address: 'ca_manager_address',
-  remove_manager_Address: 'remove_manager_Address',
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  caManagerAddress: 'caManagerAddress',
+  removeManagerAddress: 'removeManagerAddress',
 };
 
 const questions = [
   {
-    name: inquirerParams.dev_deployer_private_key,
+    name: inquirerParams.devDeployerPrivateKey,
     type: 'input',
-    message: '🤔 Dev deployer private key is ...',
+    message: '🤔 Deployer [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.ca_manager_address,
+    name: inquirerParams.caManagerAddress,
     type: 'input',
-    message: '🤔 CA manager proxy address is...',
+    message: '🤔 CA Manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.remove_manager_Address,
+    name: inquirerParams.removeManagerAddress,
     type: 'input',
     message: '🤔 Manager address to be removed...',
     validate: nullCheck,
@@ -32,13 +39,24 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
-      const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
+      const provider = await getSingleFallbackProvider();
+      const deployer = new ethers.Wallet(ans.devDeployerPrivateKey, provider);
 
-      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.ca_manager_address);
+      await consoleBalance(deployer.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
 
-      const txResponse = await caManager.connect(devDeployerSigner).removeContract(ans.remove_manager_Address);
-      const txReceipt = await txResponse.wait();
+      set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
+
+      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.caManagerAddress);
+
+      const tx = await caManager.connect(deployer).removeContract(ans.removeManagerAddress);
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Manager Contract is removed..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
