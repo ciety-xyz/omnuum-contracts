@@ -8,10 +8,9 @@ const {
   deployNormal,
   deployBeacon,
   getChainName,
-  nullCheck,
-  queryGasFeeData,
   registerContractsToCAManager,
   registerRoleToCAManager,
+  getChainId,
 } = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
 
@@ -176,6 +175,7 @@ const deployNFT = async ({
   collectionId,
   name,
   symbol,
+  chainId,
 }) => {
   /* Deploy NFT721 Beacon Proxy */
   const NftFactory = await ethers.getContractFactory('NftFactory');
@@ -189,33 +189,9 @@ const deployNFT = async ({
     signerPrivateKey,
   });
 
-  const gasFeeData = await queryGasFeeData();
-  const {
-    raw: { maxFeePerGas, maxPriorityFeePerGas },
-  } = gasFeeData;
-
-  console.log(`⛽️ Real-time Gas Fee from ${await getChainName()}`);
-  console.dir(gasFeeData, { depth: 5 });
-
-  const { proceed } = await inquirer.prompt([
-    {
-      name: 'proceed',
-      type: 'confirm',
-      message: '🤔 proceed ?',
-      validate: nullCheck,
-    },
-  ]);
-  if (!proceed) {
-    console.log('Transaction Aborted!');
-    return;
-  }
-
   const tx = await NftFactory.attach(nftFactoryAddress)
     .connect(projectOwnerSigner)
-    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload, {
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-    });
+    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload);
 
   console.log('🔑 Transaction');
   console.dir(tx, { depth: 10 });
@@ -228,9 +204,7 @@ const deployNFT = async ({
   const factoryEvt = logs.filter((event) => event.address === nftFactoryAddress)[0];
 
   const abiCoder = ethers.utils.defaultAbiCoder;
-
   const beaconProxyAddress = abiCoder.decode(['address'], factoryEvt.topics[1]);
-
   return { beaconProxyAddress, deployReceipt };
 };
 

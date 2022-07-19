@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
-const { nullCheck, getRPCProvider, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
+const { nullCheck, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
@@ -69,7 +69,7 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
+      const provider = await getSingleFallbackProvider();
 
       const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {

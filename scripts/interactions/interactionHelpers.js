@@ -1,5 +1,6 @@
 const ethers = require('hardhat');
 const { ifElse, identity } = require('fxjs');
+const { getChainId } = require('../deployments/deployHelper');
 
 const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, payloadTopic, groupId }) => ({
   types: {
@@ -20,7 +21,7 @@ const getPayloadTypedData = async ({ senderVerifierAddress, minterAddress, paylo
     name: 'Omnuum',
     version: '1',
     verifyingContract: senderVerifierAddress,
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    chainId: await getChainId(),
   },
   message: {
     sender: minterAddress,
@@ -52,7 +53,7 @@ const getTicketTypedDate = async ({ ticketManagerAddress, minterAddress, nftCont
       name: 'OmnuumTicket',
       version: '1',
       verifyingContract: ticketManagerAddress,
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: await getChainId(),
     },
     message: {
       user: minterAddress,
@@ -92,6 +93,7 @@ const getTicketWithSignature = async ({
 
 const getPayloadWithSignature = async ({ senderVerifierAddress, minterAddress, payloadTopic, groupId, signerPrivateKey }) => {
   const { signingEIP712 } = await import('@marpple/omnuum-digitalSigning');
+
   const payloadTypedData = await getPayloadTypedData({ senderVerifierAddress, minterAddress, payloadTopic, groupId });
 
   const { signature } = signingEIP712({

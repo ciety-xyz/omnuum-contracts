@@ -4,73 +4,82 @@ const fs = require('fs');
 const chalk = require('chalk');
 const { mkdir } = require('fs/promises');
 const { deployNFT } = require('./deployments');
-const { getDateSuffix, nullCheck, getRPCProvider, getChainName } = require('./deployHelper');
+const {
+  getDateSuffix,
+  nullCheck,
+  getChainName,
+  getSingleFallbackProvider,
+  consoleBalance,
+  queryEIP1559GasFeesAndProceed,
+  set1559FeeDataToProvider,
+  getChainId,
+} = require('./deployHelper');
 
 const inquirerParams = {
-  project_owner_private_key: 'project_owner_private_key',
-  signer_privateKey: 'signer_privateKey',
-  sender_verifier_address: 'sender_verifier_address',
-  nft_factory_address: 'nft_factory_address',
-  max_supply: 'max_supply',
-  cover_uri: 'cover_uri',
-  nft_collection_id: 'nft_collection_id',
+  projectOwnerPrivateKey: 'projectOwnerPrivateKey',
+  signerPrivateKey: 'signerPrivateKey',
+  senderVerifierAddress: 'senderVerifierAddress',
+  nftFactoryAddress: 'nftFactoryAddress',
+  maxSupply: 'maxSupply',
+  coverUri: 'coverUri',
+  collectionId: 'collectionId',
   name: 'name',
   symbol: 'symbol',
 };
 
 const questions = [
   {
-    name: inquirerParams.project_owner_private_key,
+    name: inquirerParams.projectOwnerPrivateKey,
     type: 'input',
-    message: '🤔 Project owner private key is...',
+    message: '🤔 Project owner [ PRIVATE KEY ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.signer_privateKey,
+    name: inquirerParams.signerPrivateKey,
     type: 'input',
-    message: '🤔 Payload signers private key is...',
+    message: '🤔 Signer [ PRIVATE KEY ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.sender_verifier_address,
+    name: inquirerParams.senderVerifierAddress,
     type: 'input',
-    message: '🤔 Sender verifier address is...',
+    message: '🤔 Sender verifier [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.nft_factory_address,
+    name: inquirerParams.nftFactoryAddress,
     type: 'input',
-    message: '🤔 Nft factory address is...',
+    message: '🤔 Nft factory [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.max_supply,
+    name: inquirerParams.maxSupply,
     type: 'input',
-    message: '🤔 Max supply is...',
+    message: '🤔 [ MAX SUPPLY ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.cover_uri,
+    name: inquirerParams.coverUri,
     type: 'input',
-    message: '🤔 Cover uri is...',
+    message: '🤔 [ COVER URI ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.nft_collection_id,
+    name: inquirerParams.collectionId,
     type: 'input',
-    message: '🤔 NFT collection id you would like is...',
+    message: '🤔 [ COLLECTION ID ] to be is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.name,
     type: 'input',
-    message: '🤔 NFT name is...',
+    message: '🤔 [ NAME ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.symbol,
     type: 'input',
-    message: '🤔 NFT symbol is...',
+    message: '🤔 [ SYMBOL ] is...',
     validate: nullCheck,
   },
 ];
@@ -89,23 +98,32 @@ const questions = [
 
   inquirer.prompt(questions).then(async (ans) => {
     try {
+      const provider = await getSingleFallbackProvider();
+
       const chainName = await getChainName();
       console.log(chalk.green(`${`\nSTART DEPLOYMENT to ${chainName} at ${new Date()}`}`));
 
-      const provider = await getRPCProvider();
+      const projectOwnerSigner = new ethers.Wallet(ans.projectOwnerPrivateKey, provider);
 
-      const projectOwnerSigner = new ethers.Wallet(ans.project_owner_private_key, provider);
+      await consoleBalance(projectOwnerSigner.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
+
+      set1559FeeDataToProvider(projectOwnerSigner.provider, maxFeePerGas, maxPriorityFeePerGas);
 
       const nftDeployment = await deployNFT({
         projectOwnerSigner,
-        senderVerifierAddress: ans.sender_verifier_address,
-        signerPrivateKey: ans.signer_privateKey,
-        maxSupply: ans.max_supply,
-        coverUri: ans.cover_uri,
-        nftFactoryAddress: ans.nft_factory_address,
-        collectionId: ans.nft_collection_id,
+        senderVerifierAddress: ans.senderVerifierAddress,
+        signerPrivateKey: ans.signerPrivateKey,
+        maxSupply: ans.maxSupply,
+        coverUri: ans.coverUri,
+        nftFactoryAddress: ans.nftFactoryAddress,
+        collectionId: ans.collectionId,
         name: ans.name,
         symbol: ans.symbol,
+        chainId: await getChainId(),
       });
 
       const { transactionHash, blockNumber, gasUsed } = nftDeployment.deployReceipt;

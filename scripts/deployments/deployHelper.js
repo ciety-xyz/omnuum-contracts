@@ -45,6 +45,8 @@ const getChainName = async () => {
   }
 };
 
+const getChainId = async () => (await ethers.provider.getNetwork()).chainId;
+
 const getRPCProvider = async () => {
   const chainName = await getChainName();
 
@@ -229,8 +231,9 @@ const queryEIP1559GasFeesAndProceed = async (isGasModeAuto, maxFeePerGasLimit, l
       // If automode, check if gasFee is over the maxFeePerGasLimit
       if (maxFeePerGas > Number(maxFeePerGasLimit)) {
         console.log(
-          `🚨🚨🚨 Automatic Gas Strategy is Blocked due to current maxFeePerGas ${maxFeePerGas} > ${Number(maxFeePerGasLimit)} (Your Limit)
-          Gas mode is switched to manual.`,
+          `🚨 Automatic Gas Strategy is STOPPED
+              due to ${chalk.redBright(`current maxFeePerGas ${maxFeePerGas} > ${Number(maxFeePerGasLimit)} (Your Limit)`)}
+              ${chalk.greenBright('=> Gas mode is switched to MANUAL.')}`,
         );
       } else {
         console.log(`${chalk.yellowBright(`=> Process transaction right away. Gas Fee Automation: ${isGasModeAuto}`)}`);
@@ -244,7 +247,7 @@ const queryEIP1559GasFeesAndProceed = async (isGasModeAuto, maxFeePerGasLimit, l
         name: 'cmd',
         type: 'list',
         choices: ['ProceedWithCurrentFee', 'UserInput', 'Refresh', 'Abort'],
-        message: '\n🤔 Proceed with current gas fee? or input user-defined gas fee ?',
+        message: '🤔 Proceed with current gas fee? or input user-defined gas fee ?',
         validate: nullCheck,
       },
     ]);
@@ -608,4 +611,5 @@ module.exports = {
   registerRoleToCAManager,
   inquiryGasStrategyMode,
   consoleBalance,
+  getChainId,
 };
