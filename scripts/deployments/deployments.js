@@ -15,12 +15,12 @@ const {
 } = require('./deployHelper');
 const { getPayloadWithSignature } = require('../interactions/interactionHelpers');
 
-const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts, maxFeePerGasLimit, gasModeAuto }) => {
+const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwnerAccounts, maxFeePerGasLimit, isGasModeAuto }) => {
   /* Deploy CA Manager */
   const caManager = await deployProxy({
     contractName: 'OmnuumCAManager',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
@@ -34,7 +34,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const mintManager = await deployProxy({
     contractName: 'OmnuumMintManager',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [DEP_CONSTANTS.mintManager.feeRate, caManager.proxyContract.address],
   });
@@ -43,7 +43,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const exchange = await deployProxy({
     contractName: 'OmnuumExchange',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [caManager.proxyContract.address],
   });
@@ -52,7 +52,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const ticketManager = await deployNormal({
     contractName: 'TicketManager',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
@@ -60,7 +60,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const revealManager = await deployNormal({
     contractName: 'RevealManager',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [caManager.proxyContract.address],
   });
@@ -69,7 +69,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const senderVerifier = await deployNormal({
     contractName: 'SenderVerifier',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
@@ -77,7 +77,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const vrfManager = await deployNormal({
     contractName: 'OmnuumVRFManager',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [...Object.values(DEP_CONSTANTS.vrfManager.chainlink[await getChainName()]), caManager.proxyContract.address],
   });
@@ -86,7 +86,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const wallet = await deployNormal({
     contractName: 'OmnuumWallet',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [DEP_CONSTANTS.wallet.consensusRatio, DEP_CONSTANTS.wallet.minLimitForConsensus, walletOwnerAccounts],
   });
@@ -95,14 +95,14 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
   const nft = await deployBeacon({
     contractName: 'OmnuumNFT721',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
   const nftFactory = await deployNormal({
     contractName: 'NftFactory',
     deploySigner,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
     args: [caManager.proxyContract.address, nft.beacon.address, signatureSignerAddress],
   });
@@ -130,7 +130,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
       CONSTANTS.ContractTopic.WALLET,
       CONSTANTS.ContractTopic.NFTFACTORY,
     ],
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
@@ -139,7 +139,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     deployer: deploySigner,
     addresses: [vrfManager.contract.address],
     roleTopic: DEP_CONSTANTS.roles.EXCHANGE,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 
@@ -148,7 +148,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     deployer: deploySigner,
     addresses: [revealManager.contract.address],
     roleTopic: DEP_CONSTANTS.roles.VRF,
-    gasModeAuto,
+    isGasModeAuto,
     maxFeePerGasLimit,
   });
 

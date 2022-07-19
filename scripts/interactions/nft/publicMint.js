@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
-const { nullCheck, getRPCProvider, queryGasDataAndProceed } = require('../../deployments/deployHelper');
+const { nullCheck, getRPCProvider, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
@@ -71,7 +71,7 @@ const questions = [
     try {
       const provider = await getRPCProvider();
 
-      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {
         console.log('Transaction Aborted!');
         return;

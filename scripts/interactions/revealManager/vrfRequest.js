@@ -2,7 +2,7 @@ const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
 
 const chalk = require('chalk');
-const { nullCheck, getRPCProvider, getChainName, queryGasDataAndProceed } = require('../../deployments/deployHelper');
+const { nullCheck, getRPCProvider, getChainName, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
 const DEP_CONSTANTS = require('../../deployments/deployConstants');
 
 const inquirerParams = {
@@ -79,7 +79,7 @@ const questions = [
       let proceed;
 
       if (sendLink) {
-        const response = await queryGasDataAndProceed();
+        const response = await queryEIP1559GasFeesAndProceed();
         maxFeePerGas = response.maxFeePerGas;
         maxPriorityFeePerGas = response.maxPriorityFeePerGas;
         proceed = response.proceed;
@@ -119,7 +119,7 @@ const questions = [
         sendEtherFee,
       );
 
-      const response = await queryGasDataAndProceed(provider);
+      const response = await queryEIP1559GasFeesAndProceed();
       maxFeePerGas = response.maxFeePerGas;
       maxPriorityFeePerGas = response.maxPriorityFeePerGas;
       proceed = response.proceed;

@@ -68,6 +68,25 @@ const getRPCProvider = async () => {
   return new ethers.providers.JsonRpcProvider(jsonRpcProvider);
 };
 
+const inquiryGasStrategyMode = async () => {
+  let maxFeePerGasLimit;
+  const { isGasModeAuto } = await inquirer.prompt({
+    name: 'isGasModeAuto',
+    type: 'confirm',
+    message: chalk.yellow('🤔 Gas Strategy runs in Auto Mode... ?'),
+  });
+
+  if (isGasModeAuto) {
+    const limit = await inquirer.prompt({
+      name: 'maxFeePerGasLimit',
+      type: 'input',
+      message: chalk.yellow('🤔 Input MaxFeePerGas Limit (gwei)... ? (when over limit, gas strategy switch to Auto => Manual)  '),
+    });
+    maxFeePerGasLimit = limit.maxFeePerGasLimit;
+  }
+  return { isGasModeAuto, maxFeePerGasLimit };
+};
+
 const getSingleFallbackProvider = async (provider) => new ethers.providers.FallbackProvider([provider ?? (await getRPCProvider())], 1);
 
 // Side effect to provider overriding getFeeData function
@@ -180,14 +199,22 @@ const queryGasFeeEIP1559 = async (confidenceLevel = 99) => {
   return { maxFeePerGas, maxPriorityFeePerGas };
 };
 
-// eslint-disable-next-line consistent-return
-const queryEIP1559GasFeesAndProceed = async (gasModeAuto, maxFeePerGasLimit, logging = true) => {
-  let cmd;
+const convertsGasFeesUnit = (maxFeePerGasInGwei, maxPriorityFeePerGasInGwei) => ({
+  maxFeePerGas: ethers.utils.parseUnits(maxFeePerGasInGwei, 'gwei'),
+  maxPriorityFeePerGas: ethers.utils.parseUnits(maxPriorityFeePerGasInGwei, 'gwei'),
+});
 
-  const convertsGasFeesUnit = (maxFeePerGasInGwei, maxPriorityFeePerGasInGwei) => ({
-    maxFeePerGas: ethers.utils.parseUnits(maxFeePerGasInGwei, 'gwei'),
-    maxPriorityFeePerGas: ethers.utils.parseUnits(maxPriorityFeePerGasInGwei, 'gwei'),
-  });
+// eslint-disable-next-line consistent-return
+const queryEIP1559GasFeesAndProceed = async (isGasModeAuto, maxFeePerGasLimit, logging = true) => {
+  if (!isGasModeAuto) {
+    const ans = await inquiryGasStrategyMode();
+    // eslint-disable-next-line no-param-reassign
+    isGasModeAuto = ans.isGasModeAuto;
+    // eslint-disable-next-line no-param-reassign
+    maxFeePerGasLimit = ans.maxFeePerGasLimit;
+  }
+
+  let cmd;
 
   do {
     // eslint-disable-next-line no-await-in-loop
@@ -198,7 +225,7 @@ const queryEIP1559GasFeesAndProceed = async (gasModeAuto, maxFeePerGasLimit, log
       console.log(`  - max. fee/gas: ${maxFeePerGas}\n  - max. priority fee/gas: ${maxPriorityFeePerGas}`);
     }
 
-    if (gasModeAuto) {
+    if (isGasModeAuto) {
       // If automode, check if gasFee is over the maxFeePerGasLimit
       if (maxFeePerGas > Number(maxFeePerGasLimit)) {
         console.log(
@@ -206,7 +233,7 @@ const queryEIP1559GasFeesAndProceed = async (gasModeAuto, maxFeePerGasLimit, log
           Gas mode is switched to manual.`,
         );
       } else {
-        console.log(` => Process transaction right away. Gas Fee Automation: ${gasModeAuto}`);
+        console.log(`${chalk.yellowBright(`=> Process transaction right away. Gas Fee Automation: ${isGasModeAuto}`)}`);
         return { ...convertsGasFeesUnit(maxFeePerGas, maxPriorityFeePerGas), proceed: true };
       }
     }
@@ -309,7 +336,7 @@ const deployConsole = (contractName, deployAddress, gasUsed, txHash, blockNumber
     ].join('')}`,
   );
 
-const deployBeacon = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, log = true }) => {
+const deployBeacon = async ({ contractName, deploySigner, isGasModeAuto, maxFeePerGasLimit, log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
   const history = await readDeployTmpHistory();
 
@@ -331,7 +358,7 @@ const deployBeacon = async ({ contractName, deploySigner, gasModeAuto, maxFeePer
   log &&
     console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Beacon')}:`)} ${contractName} - ${new Date()}`);
 
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(isGasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -367,7 +394,7 @@ const deployBeacon = async ({ contractName, deploySigner, gasModeAuto, maxFeePer
   };
 };
 
-const deployProxy = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
+const deployProxy = async ({ contractName, deploySigner, isGasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
   const history = await readDeployTmpHistory();
   const contractFactory = await ethers.getContractFactory(contractName);
 
@@ -387,7 +414,7 @@ const deployProxy = async ({ contractName, deploySigner, gasModeAuto, maxFeePerG
     console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Proxy')}:`)} ${contractName} - ${new Date()}`);
 
   // Fallback Provider
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(isGasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -443,7 +470,7 @@ const deployProxy = async ({ contractName, deploySigner, gasModeAuto, maxFeePerG
   };
 };
 
-const deployNormal = async ({ contractName, deploySigner, gasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
+const deployNormal = async ({ contractName, deploySigner, isGasModeAuto, maxFeePerGasLimit, args = [], log = true }) => {
   const contractFactory = await ethers.getContractFactory(contractName);
   const history = await readDeployTmpHistory();
 
@@ -461,7 +488,7 @@ const deployNormal = async ({ contractName, deploySigner, gasModeAuto, maxFeePer
     console.log(`${BREAK_LINE}\n${chalk.magentaBright(`Start Deploying ${chalk.redBright('Normal')}:`)} ${contractName} - ${new Date()}`);
 
   // Fallback Provider
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(isGasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -511,10 +538,10 @@ const createWalletOwnerAccounts = (addressArray, votesArray) => {
   );
 };
 
-const registerContractsToCAManager = async ({ caManagerInstance, deployer, addresses, topics, gasModeAuto, maxFeePerGasLimit }) => {
+const registerContractsToCAManager = async ({ caManagerInstance, deployer, addresses, topics, isGasModeAuto, maxFeePerGasLimit }) => {
   console.log(`${BREAK_LINE}\n${chalk.magentaBright('Start Contract Registrations to CA Manager...')} - ${new Date()}`);
 
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(isGasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -527,10 +554,10 @@ const registerContractsToCAManager = async ({ caManagerInstance, deployer, addre
   console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
 };
 
-const registerRoleToCAManager = async ({ caManagerInstance, deployer, addresses, roleTopic, gasModeAuto, maxFeePerGasLimit }) => {
+const registerRoleToCAManager = async ({ caManagerInstance, deployer, addresses, roleTopic, isGasModeAuto, maxFeePerGasLimit }) => {
   console.log(`${BREAK_LINE}\n${chalk.magentaBright('Start Role Setting to CA Manager...')} - ${new Date()}`);
 
-  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(gasModeAuto, maxFeePerGasLimit);
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed(isGasModeAuto, maxFeePerGasLimit);
   if (!proceed) {
     throw new Error('🚨 Transaction Aborted!');
   }
@@ -541,6 +568,16 @@ const registerRoleToCAManager = async ({ caManagerInstance, deployer, addresses,
   const tx = await caManagerInstance.connect(deployer).addRole(addresses, roleTopic);
   await tx.wait(DEP_CONSTANTS.confirmWait);
   console.log(`${chalk.greenBright('Complete!')} - ${new Date()}`);
+};
+
+const consoleBalance = async (address, provider) => {
+  if (!provider) {
+    // eslint-disable-next-line no-param-reassign
+    provider = ethers.provider;
+  }
+  const balance = await provider.getBalance(address);
+  console.log(`Address: ${address} has balance ${ethers.utils.formatUnits(balance, 'ether')} ether`);
+  return balance;
 };
 
 module.exports = {
@@ -565,8 +602,10 @@ module.exports = {
   getSingleFallbackProvider,
   numberCheck,
   queryGasFeeData,
-  queryGasDataAndProceed: queryEIP1559GasFeesAndProceed,
+  queryEIP1559GasFeesAndProceed,
   queryGasFeeEIP1559,
   registerContractsToCAManager,
   registerRoleToCAManager,
+  inquiryGasStrategyMode,
+  consoleBalance,
 };

@@ -1,37 +1,43 @@
-const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { getRPCProvider, nullCheck } = require('../../deployments/deployHelper');
+const inquirer = require('inquirer');
+const {
+  nullCheck,
+  getSingleFallbackProvider,
+  queryEIP1559GasFeesAndProceed,
+  consoleBalance,
+  set1559FeeDataToProvider,
+} = require('../../deployments/deployHelper');
 
 const inquirerParams = {
-  dev_deployer_private_key: 'dev_deployer_private_key',
-  ca_manager_address: 'ca_manager_address',
-  tobe_register_Address: 'tobe_register_Address',
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  caManagerAddress: 'caManagerAddress',
+  tobeRegisterAddress: 'tobeRegisterAddress',
   topic: 'topic',
 };
 
 const questions = [
   {
-    name: inquirerParams.dev_deployer_private_key,
+    name: inquirerParams.devDeployerPrivateKey,
     type: 'input',
-    message: '🤔 Dev deployer private key is ...',
+    message: '🤔 Deployer [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.ca_manager_address,
+    name: inquirerParams.caManagerAddress,
     type: 'input',
-    message: '🤔 CA manager proxy address is...',
+    message: '🤔 CA Manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.tobe_register_Address,
+    name: inquirerParams.tobeRegisterAddress,
     type: 'input',
-    message: '🤔 New Manager address you want to register...',
+    message: '🤔 New Manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.topic,
     type: 'input',
-    message: '🤔 Contract topic is...',
+    message: '🤔 Contract [ TOPIC] is...',
     validate: nullCheck,
   },
 ];
@@ -39,13 +45,25 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
-      const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
+      const provider = await getSingleFallbackProvider();
+      const deployer = new ethers.Wallet(ans.devDeployerPrivateKey, provider);
 
-      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.ca_manager_address);
+      await consoleBalance(deployer.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
 
-      const txResponse = await caManager.connect(devDeployerSigner).registerContract(ans.tobe_register_Address, ans.topic);
-      const txReceipt = await txResponse.wait();
+      set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
+
+      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.caManagerAddress);
+
+      const tx = await caManager.connect(deployer).registerContract(ans.tobeRegisterAddress, ans.topic);
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Manager Contract is registered..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);

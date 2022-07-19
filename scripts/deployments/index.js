@@ -23,7 +23,7 @@ async function main({
   deployerPK,
   signerAddress,
   maxFeePerGasLimit,
-  gasModeAuto = true,
+  isGasModeAuto = true,
   localSave = true,
   s3Save = false,
   withCompile = true,
@@ -83,7 +83,7 @@ async function main({
         walletOwnerAccounts,
         signatureSignerAddress: signerAddress,
         maxFeePerGasLimit,
-        gasModeAuto,
+        isGasModeAuto,
       });
 
     const resultData = {

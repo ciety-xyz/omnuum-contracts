@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getTicketWithSignature, getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
-const { nullCheck, getRPCProvider, queryGasDataAndProceed } = require('../../deployments/deployHelper');
+const { nullCheck, getRPCProvider, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
 
 require('dotenv').config();
 
@@ -87,7 +87,7 @@ const questions = [
     try {
       const provider = await getRPCProvider();
 
-      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {
         console.log('Transaction Aborted!');
         return;

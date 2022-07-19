@@ -6,7 +6,7 @@ const chalk = require('chalk');
 const path = require('path');
 const main = require('./index');
 
-const { nullCheck } = require('./deployHelper');
+const { nullCheck, inquiryGasStrategyMode } = require('./deployHelper');
 
 const inquirerParams = {
   devDeployerPrivateKey: 'devDeployerPrivateKey',
@@ -53,21 +53,8 @@ const questions = [
 (async () => {
   try {
     inquirer.prompt(questions).then(async (ans) => {
-      let maxFeePerGasLimit;
-      const { gasModeAuto } = await inquirer.prompt({
-        name: 'gasModeAuto',
-        type: 'confirm',
-        message: chalk.yellow('🤔 Gas Strategy runs in Auto Mode... ?'),
-      });
+      const { isGasModeAuto, maxFeePerGasLimit } = await inquiryGasStrategyMode();
 
-      if (gasModeAuto) {
-        const limit = await inquirer.prompt({
-          name: 'maxFeePerGasLimit',
-          type: 'input',
-          message: chalk.yellow('🤔 Input MaxFeePerGas Limit (gwei)... ? (when over limit, gas strategy switch to Auto => Manual)  '),
-        });
-        maxFeePerGasLimit = limit.maxFeePerGasLimit;
-      }
       if (ans.cleanHistory) {
         // Remove deployment temp history file
         rimraf.sync(path.resolve(__dirname, 'deployResults', 'tmp_history.json'));
@@ -76,7 +63,7 @@ const questions = [
       await main({
         deployerPK: ans.devDeployerPrivateKey,
         signerAddress: ans.signatureSignerAddress,
-        gasModeAuto,
+        isGasModeAuto,
         maxFeePerGasLimit,
         localSave: ans.save === 'OnlyLocal' || ans.save === 'Both',
         s3Save: ans.save === 'OnlyS3' || ans.save === 'Both',
