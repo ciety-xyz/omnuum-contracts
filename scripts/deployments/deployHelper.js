@@ -222,7 +222,7 @@ const queryEIP1559GasFeesAndProceed = async (isGasModeAuto, maxFeePerGasLimit, l
 
     if (logging) {
       console.log('\n⛽️ Real-time Gas Fee');
-      console.log(`  - max. fee/gas: ${maxFeePerGas}\n  - max. priority fee/gas: ${maxPriorityFeePerGas}`);
+      console.log(chalk.redBright(`  - max. fee/gas: ${maxFeePerGas}\n  - max. priority fee/gas: ${maxPriorityFeePerGas}`));
     }
 
     if (isGasModeAuto) {
@@ -576,7 +576,7 @@ const consoleBalance = async (address, provider) => {
     provider = ethers.provider;
   }
   const balance = await provider.getBalance(address);
-  console.log(`Address: ${address} has balance ${ethers.utils.formatUnits(balance, 'ether')} ether`);
+  console.log(chalk.redBright(`\n  Address: ${address}\n  Balance: ${ethers.utils.formatUnits(balance, 'ether')} ether\n`));
   return balance;
 };
 

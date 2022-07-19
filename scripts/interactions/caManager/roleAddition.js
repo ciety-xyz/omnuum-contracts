@@ -1,38 +1,45 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { getRPCProvider, nullCheck } = require('../../deployments/deployHelper');
+const {
+  getRPCProvider,
+  nullCheck,
+  getSingleFallbackProvider,
+  consoleBalance,
+  queryEIP1559GasFeesAndProceed,
+  set1559FeeDataToProvider,
+} = require('../../deployments/deployHelper');
 const Constants = require('../../../utils/constants');
 
 const inquirerParams = {
-  dev_deployer_private_key: 'dev_deployer_private_key',
-  ca_manager_address: 'ca_manager_address',
-  role_register_contract_address: 'role_register_contract_address',
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  caManagerAddress: 'caManagerAddress',
+  roleRegisterContractAddress: 'roleRegisterContractAddress',
   role: 'role',
 };
 
 const questions = [
   {
-    name: inquirerParams.dev_deployer_private_key,
+    name: inquirerParams.devDeployerPrivateKey,
     type: 'input',
-    message: '🤔 Dev deployer private key is ...',
+    message: '🤔 Deployer [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.ca_manager_address,
+    name: inquirerParams.caManagerAddress,
     type: 'input',
-    message: '🤔 CA manager proxy address is...',
+    message: '🤔 CA Manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.role_register_contract_address,
+    name: inquirerParams.roleRegisterContractAddress,
     type: 'input',
-    message: '🤔 Contract address you want to register role...',
+    message: '🤔 Contract [ ADDRESS ] to register role...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.role,
     type: 'input',
-    message: '🤔 Contract role is...',
+    message: '🤔 Contract [ ROLE ] is...',
     validate: nullCheck,
   },
 ];
@@ -40,13 +47,25 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
-      const devDeployerSigner = new ethers.Wallet(ans.dev_deployer_private_key, provider);
+      const provider = await getSingleFallbackProvider();
 
-      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.ca_manager_address);
+      const deployer = new ethers.Wallet(ans.devDeployerPrivateKey, provider);
 
-      const txResponse = await caManager.connect(devDeployerSigner).addRole([ans.role_register_contract_address], ans.role);
-      const txReceipt = await txResponse.wait();
+      await consoleBalance(deployer.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
+
+      set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
+
+      const caManager = (await ethers.getContractFactory('OmnuumCAManager')).attach(ans.caManagerAddress);
+      const tx = await caManager.connect(deployer).addRole([ans.roleRegisterContractAddress], ans.role);
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+
+      const txReceipt = await tx.wait();
 
       console.log(txReceipt);
       console.log(`💋 Role has been added.\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
