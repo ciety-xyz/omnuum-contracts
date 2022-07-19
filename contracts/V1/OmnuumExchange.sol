@@ -21,7 +21,7 @@ contract OmnuumExchange is OwnableUpgradeable {
 
     event Exchange(address indexed baseToken, address indexed targetToken, uint256 amount, address user, address indexed receipient);
 
-    function initialize(address _caManagerA) public initializer {
+    function initialize(address _caManagerA, uint256 _exRate) public initializer {
         /// @custom:error (AE1) - Zero address not acceptable
         require(_caManagerA != address(0), 'AE1');
 
@@ -29,7 +29,7 @@ contract OmnuumExchange is OwnableUpgradeable {
 
         caManager = OmnuumCAManager(_caManagerA);
 
-        tmpLinkExRate = 100 ether; // 100 matic
+        tmpLinkExRate = _exRate; // in unit (ether or matic)
     }
 
     /// @notice calculate amount when given amount of token is swapped to target token

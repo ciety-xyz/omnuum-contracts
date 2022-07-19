@@ -27,6 +27,16 @@ const DEP_CONSTANTS = {
   caManager: {
     topic: 'CAMANAGER',
   },
+  exchange: {
+    exRate: {
+      31337: ethers.utils.parseEther('0.000001'), // GoChain Testnet ( = hardhat localhost)
+      1: ethers.utils.parseEther('0.007333333'), // Ethereum Mainnet
+      4: ethers.utils.parseEther('0.007333333'), // Rinkeby
+      5: ethers.utils.parseEther('0.007333333'), // Goerli
+      137: ethers.utils.parseEther('100'), // Polygon Mainnet
+      80001: ethers.utils.parseEther('100'), // Mumbai
+    },
+  },
   vrfManager: {
     chainlink: {
       mainnet: {

@@ -45,7 +45,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     deploySigner,
     isGasModeAuto,
     maxFeePerGasLimit,
-    args: [caManager.proxyContract.address],
+    args: [caManager.proxyContract.address, DEP_CONSTANTS.exchange.exRate[(await deploySigner.provider.getNetwork()).chainId]],
   });
 
   /* Deploy Ticket Manager */

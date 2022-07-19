@@ -1,6 +1,7 @@
 const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 
+const chalk = require('chalk');
 const {
   nullCheck,
   getSingleFallbackProvider,
@@ -52,6 +53,22 @@ const questions = [
       set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
 
       const exchange = (await ethers.getContractFactory('OmnuumExchange')).attach(ans.exchangeAddress);
+
+      const currentRate = ethers.utils.formatEther(await exchange.tmpLinkExRate());
+
+      const { confirm } = await inquirer.prompt([
+        {
+          name: 'confirm',
+          type: 'confirm',
+          message: chalk.redBright(
+            `\n  Current Rate: ${currentRate} ethers => Change Rate: ${ans.newExchangeRate} ethers.\n  Want to Proceed ?`,
+          ),
+        },
+      ]);
+
+      if (!confirm) {
+        throw new Error('Aborted!');
+      }
 
       const tx = await exchange.connect(deployer).updateTmpExchangeRate(ethers.utils.parseEther(ans.newExchangeRate));
 

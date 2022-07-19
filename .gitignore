@@ -19,3 +19,6 @@ coverage.json
 artifacts/
 
 mockMetadata/1
+
+.openzeppelin/rinkeby.json
+.openzeppelin/unknown-[0-9]*.json
