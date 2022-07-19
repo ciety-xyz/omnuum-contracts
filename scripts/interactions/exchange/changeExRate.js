@@ -1,21 +1,69 @@
-const { ethers } = require('ethers');
-const { readFile } = require('fs/promises');
-const deployed = require('../../../artifacts/contracts/V1/OmnuumExchange.sol/OmnuumExchange.json');
+const { ethers } = require('hardhat');
+const inquirer = require('inquirer');
 
-async function main() {
-  const provider = new ethers.providers.InfuraProvider('homestead', {});
+const {
+  nullCheck,
+  getSingleFallbackProvider,
+  consoleBalance,
+  queryEIP1559GasFeesAndProceed,
+  set1559FeeDataToProvider,
+} = require('../../deployments/deployHelper');
 
-  const signer = await new ethers.Wallet('', provider);
+const inquirerParams = {
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  exchangeAddress: 'exchangeAddress',
+  newExchangeRate: 'newExchangeRate',
+  topic: 'topic',
+};
 
-  console.log('signer address', signer.address);
+const questions = [
+  {
+    name: inquirerParams.devDeployerPrivateKey,
+    type: 'input',
+    message: '🤔 Deployer [ PRIVATE KEY ] is ...',
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.exchangeAddress,
+    type: 'input',
+    message: '🤔 Exchange [ ADDRESS ] is...',
+    validate: nullCheck,
+  },
+  {
+    name: inquirerParams.newExchangeRate,
+    type: 'input',
+    message: '🤔 New [ EXCHANGERATE ] (in ether) is...',
+    validate: nullCheck,
+  },
+];
 
-  const contract = new ethers.ContractFactory(deployed.abi, deployed.bytecode).attach('0x680756B2794B4d4Ad265040B18539f19f90F13CC');
+(async () => {
+  inquirer.prompt(questions).then(async (ans) => {
+    try {
+      const provider = await getSingleFallbackProvider();
+      const deployer = new ethers.Wallet(ans.devDeployerPrivateKey, provider);
 
-  const tx = await contract.connect(signer).updateTmpExchangeRate('7333333333000000');
+      await consoleBalance(deployer.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
 
-  const receipt = await tx.wait();
+      set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
 
-  console.log(receipt);
-}
+      const exchange = (await ethers.getContractFactory('OmnuumExchange')).attach(ans.exchangeAddress);
 
-main();
+      const tx = await exchange.connect(deployer).updateTmpExchangeRate(ethers.utils.parseEther(ans.newExchangeRate));
+
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+
+      const txReceipt = await tx.wait();
+
+      console.log(txReceipt);
+      console.log(`💋 Manager Contract is registered..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
+    } catch (e) {
+      console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
+    }
+  });
+})();
