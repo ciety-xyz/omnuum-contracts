@@ -37,7 +37,7 @@ const questions = [
   {
     name: inquirerParams.topic,
     type: 'input',
-    message: '🤔 Contract [ TOPIC] is...',
+    message: '🤔 Contract [ TOPIC ] is...',
     validate: nullCheck,
   },
 ];
