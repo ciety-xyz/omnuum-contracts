@@ -1,75 +1,79 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { nullCheck, getRPCProvider, queryEIP1559GasFeesAndProceed } = require('../../deployments/deployHelper');
+const {
+  nullCheck,
+  getRPCProvider,
+  queryEIP1559GasFeesAndProceed,
+  getSingleFallbackProvider,
+  consoleBalance,
+} = require('../../deployments/deployHelper');
 const { testValues } = require('../../../utils/constants');
 
 const inquirerParams = {
-  nft_owner_private_key: 'nft_owner_private_key',
-  nft_address: 'nft_address',
-  mint_manager_address: 'mint_manager_address',
-  airdrop_receiver_A: 'airdrop_receiver_A',
-  quantity_to_A: 'quantity_to_A',
-  airdrop_receiver_B: 'airdrop_receiver_B',
-  quantity_to_B: 'quantity_to_B',
-  estimate_gas: 'estimate_gas',
+  nftOwnerPrivateKey: 'nftOwnerPrivateKey',
+  nftAddress: 'nftAddress',
+  mintManagerAddress: 'mintManagerAddress',
+  airDropReveiver: 'airDropReveiver',
+  airDropQty: 'airDropQty',
+  isJustEstimateGas: 'isJustEstimateGas',
 };
 
 const questions = [
   {
-    name: inquirerParams.nft_owner_private_key,
+    name: inquirerParams.nftOwnerPrivateKey,
     type: 'input',
-    message: '🤔 NFT project owner private key is ...',
+    message: '🤔 NFT project owner [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.nft_address,
+    name: inquirerParams.nftAddress,
     type: 'input',
-    message: '🤔 NFT contract address is...',
+    message: '🤔 NFT contract [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.mint_manager_address,
+    name: inquirerParams.mintManagerAddress,
     type: 'input',
-    message: '🤔 Mint manager address is...',
+    message: '🤔 Mint manager [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.airdrop_receiver_A,
+    name: inquirerParams.airDropReveiver,
     type: 'input',
-    message: '🤔 Airdrop receiver address is...',
+    message: '🤔 Airdrop receiver [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.quantity_to_A,
+    name: inquirerParams.airDropQty,
     type: 'input',
-    message: '🤔 How many nfts airdrop to receiver is...',
+    message: '🤔 Airdrop [ QUANTITY ] is...',
     validate: nullCheck,
   },
   {
-    name: inquirerParams.estimate_gas,
+    name: inquirerParams.isJustEstimateGas,
     type: 'confirm',
-    message: '🤔 Just estimate gas?',
+    message: '🤔 Just [ ESTIMATE GAS ]... ?',
   },
 ];
 
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
+      const provider = await getSingleFallbackProvider();
+      const nftOwnerSigner = new ethers.Wallet(ans.nftOwnerPrivateKey, provider);
 
+      await consoleBalance(nftOwnerSigner.address);
       const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {
-        console.log('🚨 Transaction Aborted!');
-        return;
+        throw new Error('🚨 Transaction Aborted!');
       }
 
-      const nftOwnerSigner = new ethers.Wallet(ans.nft_owner_private_key, provider);
-      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
+      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mintManagerAddress);
 
-      const value = testValues.minFee.mul(Number(ans.quantity_to_A));
-      const args = [ans.nft_address, [ans.airdrop_receiver_A], [ans.quantity_to_A], { value, maxFeePerGas, maxPriorityFeePerGas }];
+      const value = testValues.minFee.mul(Number(ans.airDropQty));
+      const args = [ans.nftAddress, [ans.airDropReveiver], [ans.airDropQty], { value, maxFeePerGas, maxPriorityFeePerGas }];
 
-      if (ans.estimate_gas) {
+      if (ans.isJustEstimateGas) {
         const gas = await mintManager.connect(nftOwnerSigner).estimateGas.mintMultiple(...args);
         console.log(`Gas Estimation: ${gas}`);
         return;
