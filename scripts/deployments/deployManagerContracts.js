@@ -1,5 +1,8 @@
+const rimraf = require('rimraf');
+
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+
 const main = require('./index');
 
 const { nullCheck } = require('./deployHelper');
@@ -12,6 +15,7 @@ const inquirerParams = {
   eip1559: 'eip1559',
   save: 'save',
   withCompile: 'withCompile',
+  cleanHistory: 'cleanHistory',
 };
 
 const questions = [
@@ -36,13 +40,22 @@ const questions = [
   {
     name: inquirerParams.withCompile,
     type: 'confirm',
-    message: chalk.yellow('🤔 re-compile ?'),
+    message: chalk.yellow('🤔 Re-compile solidity files?'),
+  },
+  {
+    name: inquirerParams.cleanHistory,
+    type: 'confirm',
+    message: chalk.yellow('🤔 Clean deployment history ?'),
   },
 ];
 
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
+      if (ans.cleanHistory) {
+        rimraf.sync();
+      }
+
       await main({
         deployerPK: ans.devDeployerPrivateKey,
         signerAddress: ans.signatureSignerAddress,

@@ -398,6 +398,15 @@ const deployNormal = async ({ contractName, deploySigner, args = [], log = true 
 
   log && console.log(`\n${chalk.magentaBright('Start Deploying:')} ${contractName} - ${new Date()}`);
 
+  // Fallback Provider
+  const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryGasDataAndProceed();
+  if (!proceed) {
+    throw new Error('🚨 Transaction Aborted!');
+  }
+
+  // Set EIP-1559 Fee Data to Provider ( Override tx to type:2 )
+  set1559FeeDataToProvider(deploySigner.provider, maxFeePerGas, maxPriorityFeePerGas);
+
   const contract = await contractFactory.connect(deploySigner).deploy(...args);
   const txResponse = await contract.deployed();
   const deployTxReceipt = await txResponse.deployTransaction.wait(DEP_CONSTANTS.confirmWait);

@@ -33,5 +33,6 @@ module.exports = {
     'no-console': 0,
     'no-unused-vars': 0,
     'no-nested-ternary': 0,
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
   },
 };
