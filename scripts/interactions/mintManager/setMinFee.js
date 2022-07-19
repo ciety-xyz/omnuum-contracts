@@ -1,24 +1,37 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
-const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const {
+  nullCheck,
+  getRPCProvider,
+  getSingleFallbackProvider,
+  consoleBalance,
+  queryEIP1559GasFeesAndProceed,
+  set1559FeeDataToProvider,
+} = require('../../deployments/deployHelper');
+
+const inquirerParams = {
+  devDeployerPrivateKey: 'devDeployerPrivateKey',
+  caManagerAddress: 'caManagerAddress',
+  minFee: 'minFee',
+};
 
 const questions = [
   {
-    name: 'deployer_private_key',
+    name: inquirerParams.devDeployerPrivateKey,
     type: 'input',
-    message: '🤔 MintManager deployer private key is ...',
+    message: '🤔 Deployer [ PRIVATE KEY ] is ...',
     validate: nullCheck,
   },
   {
-    name: 'mint_manager_address',
+    name: inquirerParams.mintManagerAddress,
     type: 'input',
-    message: '🤔 MintManager contract address is ...',
+    message: '🤔 MintManager contract [ ADDRESS ]  is ...',
     validate: nullCheck,
   },
   {
-    name: 'minFee',
+    name: inquirerParams.minFee,
     type: 'input',
-    message: '🤔 MinFee value ... (in ether)',
+    message: '🤔 new [ MIN FEE ] value is... (in ether)',
     validate: nullCheck,
   },
 ];
@@ -26,14 +39,24 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider();
-      const deployerSigner = new ethers.Wallet(ans.deployer_private_key, provider);
-      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mint_manager_address);
+      const provider = await getSingleFallbackProvider();
+      const deployer = new ethers.Wallet(ans.devDeployerPrivateKey, provider);
 
-      const txResponse = await mintManager.connect(deployerSigner).setMinFee(ethers.utils.parseEther(ans.minFee));
+      await consoleBalance(deployer.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
 
-      const txReceipt = await txResponse.wait();
+      set1559FeeDataToProvider(deployer.provider, maxFeePerGas, maxPriorityFeePerGas);
 
+      const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mintManagerAddress);
+
+      const tx = await mintManager.connect(deployer).setMinFee(ethers.utils.parseEther(ans.minFee));
+      console.log('🔑 Transaction');
+      console.dir(tx, { depth: 10 });
+
+      const txReceipt = await tx.wait();
       console.log(txReceipt);
 
       console.log(`\n\nUpdated minFee: ${await mintManager.minFee()}`);

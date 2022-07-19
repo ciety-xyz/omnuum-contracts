@@ -594,6 +594,7 @@ module.exports = {
   isNotMainOrRinkeby,
   getDateSuffix,
   nullCheck,
+  notNullAndNumber,
   getRPCProvider,
   getChainName,
   tryCatch,

@@ -13,6 +13,7 @@ const {
   queryEIP1559GasFeesAndProceed,
   set1559FeeDataToProvider,
   getChainId,
+  notNullAndNumber,
 } = require('./deployHelper');
 
 const inquirerParams = {
@@ -56,7 +57,7 @@ const questions = [
     name: inquirerParams.maxSupply,
     type: 'input',
     message: '🤔 [ MAX SUPPLY ] is...',
-    validate: nullCheck,
+    validate: notNullAndNumber,
   },
   {
     name: inquirerParams.coverUri,
@@ -68,7 +69,7 @@ const questions = [
     name: inquirerParams.collectionId,
     type: 'input',
     message: '🤔 [ COLLECTION ID ] to be is...',
-    validate: nullCheck,
+    validate: notNullAndNumber,
   },
   {
     name: inquirerParams.name,
