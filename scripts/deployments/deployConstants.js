@@ -11,6 +11,14 @@ const DEP_CONSTANTS = {
   OmnuumDeployer: process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
   mintManager: {
     feeRate: 5000, // feeRate: 5.000 % (default)
+    minFee: {
+      31337: ethers.utils.parseEther('0.0005'), // GoChain Testnet ( = hardhat localhost)
+      1: ethers.utils.parseEther('0.0005'), // Ethereum Mainnet
+      4: ethers.utils.parseEther('0.0005'), // Rinkeby
+      5: ethers.utils.parseEther('0.0005'), // Goerli
+      137: ethers.utils.parseEther('1'), // Polygon Mainnet
+      80001: ethers.utils.parseEther('1'), // Mumbai
+    },
   },
   wallet: {
     consensusRatio: 55,

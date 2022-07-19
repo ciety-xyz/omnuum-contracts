@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const { ethers } = require('hardhat');
+const chalk = require('chalk');
 const {
   nullCheck,
   getRPCProvider,
@@ -11,7 +12,7 @@ const {
 
 const inquirerParams = {
   devDeployerPrivateKey: 'devDeployerPrivateKey',
-  caManagerAddress: 'caManagerAddress',
+  mintManagerAddress: 'mintManagerAddress',
   minFee: 'minFee',
 };
 
@@ -52,14 +53,27 @@ const questions = [
 
       const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mintManagerAddress);
 
+      const currentMinFee = ethers.utils.formatEther(await mintManager.minFee());
+
+      const { confirm } = await inquirer.prompt([
+        {
+          name: 'confirm',
+          type: 'confirm',
+          message: chalk.redBright(`\n  Current min Fee: ${currentMinFee} ether => Change to: ${ans.minFee} ether.\n  Want to Proceed ?`),
+        },
+      ]);
+
+      if (!confirm) {
+        throw new Error('Aborted!');
+      }
+
       const tx = await mintManager.connect(deployer).setMinFee(ethers.utils.parseEther(ans.minFee));
       console.log('🔑 Transaction');
       console.dir(tx, { depth: 10 });
 
       const txReceipt = await tx.wait();
       console.log(txReceipt);
-
-      console.log(`\n\nUpdated minFee: ${await mintManager.minFee()}`);
+      console.log(`💋 Minimum Fee is Updated..\nBlock: ${txReceipt.blockNumber}\nTransaction: ${txReceipt.transactionHash}`);
     } catch (e) {
       console.error('\n 🚨 ==== ERROR ==== 🚨 \n', e);
     }

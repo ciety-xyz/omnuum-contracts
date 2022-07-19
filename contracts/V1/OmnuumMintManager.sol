@@ -58,11 +58,15 @@ contract OmnuumMintManager is OwnableUpgradeable {
         uint256 basePrice; // minting price
     }
 
-    function initialize(uint256 _feeRate, address _caManager) public initializer {
+    function initialize(
+        uint256 _feeRate,
+        address _caManager,
+        uint256 _minFee
+    ) public initializer {
         __Ownable_init();
         feeRate = _feeRate;
         caManager = _caManager;
-        minFee = 0.0005 ether;
+        minFee = _minFee; // unit in ether or matic
     }
 
     /// @notice get fee rate of given nft contract

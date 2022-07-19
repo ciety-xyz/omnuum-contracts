@@ -61,7 +61,7 @@ const questions = [
           name: 'confirm',
           type: 'confirm',
           message: chalk.redBright(
-            `\n  Current Rate: ${currentRate} ethers => Change Rate: ${ans.newExchangeRate} ethers.\n  Want to Proceed ?`,
+            `\n  Current Rate: ${currentRate} ether => Change Rate: ${ans.newExchangeRate} ether.\n  Want to Proceed ?`,
           ),
         },
       ]);

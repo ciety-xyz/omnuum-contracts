@@ -24,6 +24,7 @@
     "itx:registerNFT": "npx hardhat run scripts/interactions/caManager/registerNFT.js --network $npm_config_network",
     "itx:addRole": "npx hardhat run scripts/interactions/caManager/roleAddition.js --network $npm_config_network",
     "itx:removeRole": "npx hardhat run scripts/interactions/caManager/roleRemoval.js --network $npm_config_network",
+    "itx:setMinFee": "npx hardhat run scripts/interactions/mintManager/setMinFee.js --network $npm_config_network",
     "itx:changeExchangeRate": "npx hardhat run scripts/interactions/exchange/changeExRate.js --network $npm_config_network",
     "itx:setTicketSchedule": "npx hardhat run scripts/interactions/ticketManager/setEndDate.js --network $npm_config_network",
     "itx:setPublicSchedule": "npx hardhat run scripts/interactions/mintManager/setPublicMintSchedule.js --network $npm_config_network",

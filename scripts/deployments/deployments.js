@@ -35,7 +35,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     deploySigner,
     isGasModeAuto,
     maxFeePerGasLimit,
-    args: [DEP_CONSTANTS.mintManager.feeRate, caManager.proxyContract.address],
+    args: [DEP_CONSTANTS.mintManager.feeRate, caManager.proxyContract.address, DEP_CONSTANTS.mintManager.minFee[await getChainId()]],
   });
 
   /* Deploy Exchange */
@@ -44,7 +44,7 @@ const deployManagers = async ({ deploySigner, signatureSignerAddress, walletOwne
     deploySigner,
     isGasModeAuto,
     maxFeePerGasLimit,
-    args: [caManager.proxyContract.address, DEP_CONSTANTS.exchange.exRate[(await deploySigner.provider.getNetwork()).chainId]],
+    args: [caManager.proxyContract.address, DEP_CONSTANTS.exchange.exRate[await getChainId()]],
   });
 
   /* Deploy Ticket Manager */
