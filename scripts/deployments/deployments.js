@@ -189,9 +189,11 @@ const deployNFT = async ({
     signerPrivateKey,
   });
 
+  const args = [maxSupply, coverUri, collectionId, name, symbol, payload];
+
   const tx = await NftFactory.attach(nftFactoryAddress)
     .connect(projectOwnerSigner)
-    .deploy(maxSupply, coverUri, collectionId, name, symbol, payload);
+    .deploy(...args);
 
   console.log('🔑 Transaction');
   console.dir(tx, { depth: 10 });
@@ -205,7 +207,7 @@ const deployNFT = async ({
 
   const abiCoder = ethers.utils.defaultAbiCoder;
   const beaconProxyAddress = abiCoder.decode(['address'], factoryEvt.topics[1]);
-  return { beaconProxyAddress, deployReceipt };
+  return { beaconProxyAddress, deployReceipt, args };
 };
 
 module.exports = { deployNFT, deployManagers };

@@ -114,7 +114,11 @@ const questions = [
 
       set1559FeeDataToProvider(projectOwnerSigner.provider, maxFeePerGas, maxPriorityFeePerGas);
 
-      const nftDeployment = await deployNFT({
+      const {
+        beaconProxyAddress,
+        deployReceipt: { transactionHash, blockNumber, gasUsed },
+        args,
+      } = await deployNFT({
         projectOwnerSigner,
         senderVerifierAddress: ans.senderVerifierAddress,
         signerPrivateKey: ans.signerPrivateKey,
@@ -127,16 +131,15 @@ const questions = [
         chainId: await getChainId(),
       });
 
-      const { transactionHash, blockNumber, gasUsed } = nftDeployment.deployReceipt;
-
       console.log(
         chalk.yellow(
           `🌹 NFT Project Proxy is deployed.
-          - Beacon Proxy Address: ${nftDeployment.beaconProxyAddress}
+          - Beacon Proxy Address: ${beaconProxyAddress}
           - Owner:${projectOwnerSigner.address}
           - Block:${blockNumber}
           - Transaction:${transactionHash}
           - Gas:${gasUsed.toNumber()}
+          - Arguments: ${args}
           `,
         ),
       );
@@ -149,11 +152,12 @@ const questions = [
         Buffer.from(
           JSON.stringify({
             nftProject: {
-              beaconProxy: nftDeployment.beaconProxyAddress,
+              beaconProxy: beaconProxyAddress,
               projectOwner: projectOwnerSigner.address,
               blockNumber,
               transactionHash,
               gasUsed: gasUsed.toNumber(),
+              args,
             },
           }),
         ),

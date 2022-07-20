@@ -1,0 +1,27 @@
+{
+  "name": "GOERLI GENESIS #2",
+  "description": "Do not gentle into the good night",
+  "token_id": "2",
+  "provenance_hash": "0x987654321",
+  "initial_sequence_index": "1",
+  "image": "ipfs://QmfWTQ9XdcacMJ29PacakuBR4CrRnANSGWqu5ArrFWMgUK",
+  "image_hash": "0xf2b0ca0b513350ab8ad41475a1bd7798e2b4d01c515e671bfc6ee1a556460e96",
+  "attributes": [
+    {
+      "value": "NYC",
+      "trait_type": "Country"
+    },
+    {
+      "value": "Tremendous",
+      "trait_type": "City"
+    },
+    {
+      "value": "SkyRocketing",
+      "trait_type": "Price"
+    },
+    {
+      "value": "No doubt",
+      "trait_type": "Should go?"
+    },
+  ]
+}
