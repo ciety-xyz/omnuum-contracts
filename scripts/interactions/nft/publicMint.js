@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 const inquirer = require('inquirer');
 const { getPayloadWithSignature } = require('../interactionHelpers');
 const { payloadTopic } = require('../../../utils/constants');
-const { nullCheck, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider } = require('../../deployments/deployHelper');
+const { nullCheck, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider, consoleBalance } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
   nftContractAddress: 'nftContractAddress',
@@ -19,43 +19,43 @@ const questions = [
   {
     name: inquirerParams.nftContractAddress,
     type: 'input',
-    message: '🤔 nft contract address is...',
+    message: '🤔 nft contract [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.senderVerifierAddress,
     type: 'input',
-    message: '🤔 senderVerifier contract address is...',
+    message: '🤔 senderVerifier contract [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.minterAddress,
     type: 'input',
-    message: '🤔 Minter Address is...',
+    message: '🤔 Minter [ ADDRESS ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.minterPrivateKey,
     type: 'input',
-    message: '🤔 Minter Private Key is...',
+    message: '🤔 Minter [ PRIVATE KEY ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.groupId,
     type: 'input',
-    message: '🤔 Public schedule group id is...(uint: dec)',
+    message: '🤔 Public schedule [ GROUP ID ] is...(uint: dec)',
     validate: nullCheck,
   },
   {
     name: inquirerParams.OmSignatureSignerPrivateKey,
     type: 'input',
-    message: '🤔 Omnuum Signature Signer PrivateKey is...',
+    message: '🤔 Signature Signer [ PRIVATE KEY ] is...',
     validate: nullCheck,
   },
   {
     name: inquirerParams.publicPrice,
     type: 'input',
-    message: '🤔 Mint Price at public is...(must be greater or equal to public base price) (unit: ETH)',
+    message: '🤔 [ Mint Price ] at public is...(must be greater or equal to public base price) (unit: ETH)',
     validate: nullCheck,
   },
   {
@@ -70,11 +70,16 @@ const questions = [
   inquirer.prompt(questions).then(async (ans) => {
     try {
       const provider = await getSingleFallbackProvider();
+      const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
+      const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
 
+      // Todo: nested mapping data retrieve
+      // await nftContract.publicMintSchedules();
+
+      await consoleBalance(minterSigner.address);
       const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
       if (!proceed) {
-        console.log('Transaction Aborted!');
-        return;
+        throw new Error('🚨 Transaction Aborted!');
       }
 
       const payload = await getPayloadWithSignature({
@@ -86,10 +91,6 @@ const questions = [
       });
 
       const sendValue = ethers.utils.parseEther(ans.publicPrice).mul(Number(ans.mintQuantity));
-
-      const nftContract = (await ethers.getContractFactory('OmnuumNFT721')).attach(ans.nftContractAddress);
-
-      const minterSigner = new ethers.Wallet(ans.minterPrivateKey, provider);
 
       const tx = await nftContract
         .connect(minterSigner)

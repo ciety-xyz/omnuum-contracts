@@ -131,6 +131,16 @@ const questions = [
         chainId: await getChainId(),
       });
 
+      // Encode data for verification
+      const iFace = new ethers.utils.Interface(['function initialize(address,address,uint32,string,address) public']);
+      const data = iFace.encodeFunctionData(iFace.getFunction('initialize'), [
+        `${ans.caManagerAddress}`, // caManager
+        `${new ethers.Wallet(ans.signerPrivateKey, provider).address}`, // OmnuumSigner
+        `${ans.maxSupply}`, // MaxSupply
+        `${ans.coverUri}`, // coverUri
+        `${projectOwnerSigner.address}`, // Project Owner
+      ]);
+
       console.log(
         chalk.yellow(
           `🌹 NFT Project Proxy is deployed.
@@ -158,6 +168,7 @@ const questions = [
               transactionHash,
               gasUsed: gasUsed.toNumber(),
               args,
+              verificationArguments: [beaconProxyAddress, data],
             },
           }),
         ),

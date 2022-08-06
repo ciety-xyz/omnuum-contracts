@@ -175,7 +175,6 @@ const deployNFT = async ({
   collectionId,
   name,
   symbol,
-  chainId,
 }) => {
   /* Deploy NFT721 Beacon Proxy */
   const NftFactory = await ethers.getContractFactory('NftFactory');
@@ -207,6 +206,7 @@ const deployNFT = async ({
 
   const abiCoder = ethers.utils.defaultAbiCoder;
   const beaconProxyAddress = abiCoder.decode(['address'], factoryEvt.topics[1]);
+
   return { beaconProxyAddress, deployReceipt, args };
 };
 
