@@ -2,7 +2,7 @@
   "name": "omnuum-contracts",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
-  "repository": "https://github.com/omnuum/omnuum-contracts",
+  "repository": "https://github.com/ciety-xyz/subgraph-v1",
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=16.0.0"
