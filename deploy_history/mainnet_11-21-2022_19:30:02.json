@@ -1,0 +1,10 @@
+{
+  "network": "mainnet",
+  "deployStartAt": "5:30:02 PM",
+  "deployer": "0x84803BBd4269f596D94e88fA4E697b21C39370d2",
+  "nft721": {
+    "impl": "0x89F0eE31c8256841EA06E4dbdE24f72ACC1e605C",
+    "beacon": "0xD4d7fd222Ccc3b574Cd6CA7DF632df1DB09ad388",
+    "address": "0xD4d7fd222Ccc3b574Cd6CA7DF632df1DB09ad388"
+  }
+}
