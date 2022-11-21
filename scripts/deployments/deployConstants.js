@@ -46,6 +46,12 @@ const DEP_CONSTANTS = {
         hash: '0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311',
         fee: ethers.utils.parseEther('0.1'),
       },
+      goerli: {
+        LINK: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
+        COORD: '0x2bce784e69d2Ff36c71edcB9F88358dB0DfB55b4',
+        hash: '0x0476f9a745b61ea5c0ab224d3a6e4c99f0b02fce4da01143a4f70aa80ae76e8a',
+        fee: ethers.utils.parseEther('0.1'),
+      },
     },
   },
   roles: {

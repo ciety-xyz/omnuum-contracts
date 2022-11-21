@@ -3,11 +3,11 @@ const { ethers } = require('hardhat');
 const iFace = new ethers.utils.Interface(['function initialize(address,address,uint32,string,address) public']);
 
 const data = iFace.encodeFunctionData(iFace.getFunction('initialize'), [
-  '0x22689146aDdFFE692b21f1b0C74649cF2C18927b', // caManager
-  '0x1c99bB58b1ceCB7668ae7FFca5771Fb5d7344f55', // OmnuumSigner
-  '1234', // MaxSupply
-  'gkg.com', // coverUri
-  '0xE8B67856F9f9Fc97b135139759ce575dB19dA5b1', // Project Owner
+  '0x4E80cABF3Ad2a4d1abD1Bbd2e511A7eA8e8cCdf9', // caManager
+  '0x6F75DDD866B9E390f9f668235C3219432EAa0eE3', // OmnuumSigner
+  '99', // MaxSupply
+  'ipfs://QmTrfNt151At8XkSxn7GaABhURdHwRDDSX3zbu4f8eikgo/', // coverUri
+  '0x6F75DDD866B9E390f9f668235C3219432EAa0eE3', // Project Owner
 ]);
 
-module.exports = ['0xB23D4c034d74E2f7ce4E39C86016e92E1266545A', data]; // Beacon Address
+module.exports = ['0x1FBfb9545B8167d027a2D84590b59f81cA1A2483', data]; // Beacon Address

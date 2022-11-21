@@ -36,6 +36,17 @@ module.exports = {
     mainnet: {
       url: process.env.MAINNET_URL || '',
     },
+    goerli: {
+      url: process.env.GOERLI_URL || '',
+      accounts: [
+        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
+        process.env.ACCOUNT_TESTER_A,
+        process.env.ACCOUNT_TESTER_B,
+        process.env.ACCOUNT_TESTER_C,
+        process.env.ACCOUNT_TESTER_D,
+        process.env.ACCOUNT_TESTER_E,
+      ].filter((a) => a),
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
       accounts: [
@@ -65,20 +76,23 @@ module.exports = {
   paths: {
     sources: './contracts',
   },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS ?? false,
-    currency: 'USD',
-    coinmarketcap: process.env.COINMARKETCAP_KEY,
-  },
+  // gasReporter: {
+  //   enabled: process.env.REPORT_GAS ?? false,
+  //   currency: 'USD',
+  //   coinmarketcap: process.env.COINMARKETCAP_KEY,
+  // },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+    },
   },
-  contractSizer: {
-    alphaSort: true,
-    disambiguatePaths: false,
-    runOnCompile: true,
-    strict: true,
-  },
+  // contractSizer: {
+  //   alphaSort: true,
+  //   disambiguatePaths: false,
+  //   runOnCompile: true,
+  //   strict: true,
+  // },
   abiExporter: [
     {
       path: './data/abi',
