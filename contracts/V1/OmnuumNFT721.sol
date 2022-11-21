@@ -11,6 +11,7 @@ import './OmnuumMintManager.sol';
 import './OmnuumCAManager.sol';
 import './TicketManager.sol';
 import './OmnuumWallet.sol';
+import './OperatorFilterRegistry/DefaultOperatorFiltererUpgradeable.sol';
 
 /// @title OmnuumNFT721 - NFT contract that implements the ERC721 standard
 /// @author Omnuum Dev Team - <crypto_dev@omnuum.com>
@@ -35,7 +36,7 @@ import './OmnuumWallet.sol';
                   `_v$$$$$$$$$$$$B*xt|(\fu&v_`
                      .`I[j#@$$$$$$$$@#j}I*/
 
-contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
+contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable, DefaultOperatorFiltererUpgradeable {
     using AddressUpgradeable for address;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
@@ -84,6 +85,7 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
         __ERC721_init(_name, _symbol);
         __ReentrancyGuard_init();
         __Ownable_init();
+        __DefaultOperatorFilterer_init();
 
         maxSupply = _maxSupply;
         omnuumSigner = _omnuumSigner;
@@ -91,6 +93,11 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
 
         caManager = OmnuumCAManager(_caManagerAddress);
         mintManager = OmnuumMintManager(caManager.getContract('MINTMANAGER'));
+    }
+
+    /// @dev For opensea filterRegistry
+    function initFilterRegistryAfterDeploy() external onlyOwner {
+        __DefaultOperatorFilterer();
     }
 
     /// @dev See {ERC721Upgradeable}.
@@ -224,5 +231,38 @@ contract OmnuumNFT721 is ERC721Upgradeable, ReentrancyGuardUpgradeable, OwnableU
         /// @custom:error (OO9) - Caller is not owner nor approved
         require(_isApprovedOrOwner(_msgSender(), tokenId), 'OO9');
         _burn(tokenId);
+    }
+
+    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
+        super.approve(operator, tokenId);
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 }
