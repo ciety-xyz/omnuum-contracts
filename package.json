@@ -31,6 +31,7 @@
     "itx:mintTicket": "npx hardhat run scripts/interactions/nft/ticketMint.js --network $npm_config_network",
     "itx:mintPublic": "npx hardhat run scripts/interactions/nft/publicMint.js --network $npm_config_network",
     "itx:airdrop": "npx hardhat run scripts/interactions/mintManager/airDrop.js --network $npm_config_network",
+    "itx:airdropBatch": "npx hardhat run scripts/interactions/mintManager/airDropBatch.js --network $npm_config_network",
     "itx:vrfRequest": "npx hardhat run scripts/interactions/revealManager/vrfRequest.js --network $npm_config_network",
     "itx:changeBaseURI": "npx hardhat run scripts/interactions/nft/changeBaseURI.js --network $npm_config_network",
     "itx:setReveal": "npx hardhat run scripts/interactions/nft/setReveal.js --network $npm_config_network",
