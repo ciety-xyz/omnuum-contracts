@@ -38,15 +38,6 @@ module.exports = {
     },
     matic: {
       url: process.env.POLYGON_MAINNET_RPC_URL || '',
-      accounts: [
-        process.env.OMNUUM_DEPLOYER_PRIVATE_KEY,
-        process.env.ACCOUNT_TESTER_A,
-        process.env.ACCOUNT_TESTER_B,
-        process.env.ACCOUNT_TESTER_C,
-        process.env.ACCOUNT_TESTER_D,
-        process.env.ACCOUNT_TESTER_E,
-      ].filter((a) => a),
-      gasLimit: 30_000_000,
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
@@ -60,6 +51,7 @@ module.exports = {
       ].filter((a) => a),
       // gasPrice: 50 * 10 ** 9,
       gasPrice: 'auto',
+      gasLimit: 10_000_000,
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',

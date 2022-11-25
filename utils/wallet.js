@@ -9,15 +9,15 @@ const assert = require('assert');
 const createWalletPath = (i) => `m/44'/60'/0'/0/${i}`;
 
 function createWallet() {
-  assert.deepStrictEqual(
-    Mnemonic.Words.ENGLISH,
-    go(
-      range(2048),
-      map((idx) => ethers.wordlists.en.getWord(idx)),
-    ),
-  );
+  // assert.deepStrictEqual(
+  //   Mnemonic.Words.ENGLISH,
+  //   go(
+  //     range(2048),
+  //     map((idx) => ethers.wordlists.en.getWord(idx)),
+  //   ),
+  // );
 
-  const mnemonic = new Mnemonic(256, Mnemonic.Words.ENGLISH);
+  const mnemonic = new Mnemonic(256);
   const xpriv = mnemonic.toHDPrivateKey();
 
   console.log(
@@ -30,18 +30,18 @@ function createWallet() {
 
 \tC: ${mnemonic.toString().split(' ').slice(16, 24)}
 
-\t${chalk.green('private key')}: ${xpriv}
+\t${chalk.green('xpriv')}: ${xpriv}
 `,
   );
 
-  const wallet = ethers.Wallet.fromMnemonic(mnemonic, createWalletPath(0), ethers.wordlists.en);
-
-  console.log('pk', wallet.privateKey);
-
-  console.log(
-    `
-\t${chalk.white('Wallet(0):')} ${wallet.address}`,
-  );
+  const wallet = ethers.Wallet.fromMnemonic(mnemonic.toString());
+  console.log(`${chalk.green('private key')}: ${wallet.privateKey}`);
+  console.log(`${chalk.green('public key')}: ${wallet.publicKey}`);
+  console.log(`${chalk.green('wallet address')}: ${wallet.address}`);
+  console.log(`${chalk.green('recovery phrase')}: ${mnemonic.toString()}`);
+  if (wallet.address.substring(0, 4).toLowerCase() !== '0xc1') {
+    createWallet();
+  }
 }
 
 function getPkFromMnemonic(mnemonic) {
@@ -55,5 +55,5 @@ function getPkFromMnemonic(mnemonic) {
   );
 }
 
-// createWallet()
+createWallet();
 // getPkFromMnemonic();
