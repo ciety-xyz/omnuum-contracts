@@ -34,6 +34,12 @@ const DEP_CONSTANTS = {
         hash: '0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445',
         fee: ethers.utils.parseEther('2'),
       },
+      matic: {
+        LINK: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
+        COORD: '0x8C7382F9D8f56b33781fE506E897a4F1e2d17255',
+        hash: '0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4',
+        fee: ethers.utils.parseEther('0.0001'),
+      },
       rinkeby: {
         LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
         COORD: '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B',

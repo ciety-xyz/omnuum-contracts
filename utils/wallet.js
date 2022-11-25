@@ -39,7 +39,6 @@ function createWallet() {
   console.log(`${chalk.green('public key')}: ${wallet.publicKey}`);
   console.log(`${chalk.green('wallet address')}: ${wallet.address}`);
   console.log(`${chalk.green('recovery phrase')}: ${mnemonic.toString()}`);
-  console.log(wallet.address.substring(0, 4).toLowerCase());
   if (wallet.address.substring(0, 4).toLowerCase() !== '0xc1') {
     createWallet();
   }

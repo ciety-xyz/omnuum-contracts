@@ -26,6 +26,8 @@ const getChainName = async () => {
       return 'rinkeby';
     case 5:
       return 'goerli';
+    case 137:
+      return 'matic';
     case 31337:
       return 'localhost';
     default:
@@ -73,6 +75,8 @@ const getRPCProvider = async () => {
       ? null
       : chainName === 'mainnet'
       ? process.env.MAINNET_URL
+      : chainName === 'matic'
+      ? process.env.MATIC_URL
       : chainName === 'rinkeby'
       ? process.env.RINKEBY_URL
       : chainName === 'goerli'

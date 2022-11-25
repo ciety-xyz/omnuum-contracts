@@ -36,6 +36,9 @@ module.exports = {
     mainnet: {
       url: process.env.MAINNET_URL || '',
     },
+    matic: {
+      url: process.env.MATIC_URL || '',
+    },
     goerli: {
       url: process.env.GOERLI_URL || '',
       accounts: [
