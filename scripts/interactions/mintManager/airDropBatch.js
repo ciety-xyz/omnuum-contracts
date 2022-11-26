@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 const { go, chunk, map } = require('fxjs');
-const { nullCheck, getRPCProvider } = require('../../deployments/deployHelper');
+const { nullCheck, consoleBalance, queryEIP1559GasFeesAndProceed, getSingleFallbackProvider } = require('../../deployments/deployHelper');
 
 const inquirerParams = {
   airdropReceiversFileName: 'airdropReceiversFileName',
@@ -59,8 +59,15 @@ const questions = [
 (async () => {
   inquirer.prompt(questions).then(async (ans) => {
     try {
-      const provider = await getRPCProvider(ethers.provider);
+      const provider = await getSingleFallbackProvider();
       const nftOwnerSigner = new ethers.Wallet(ans.nftProjectOwnerPrivateKey, provider);
+
+      await consoleBalance(nftOwnerSigner.address);
+      const { maxFeePerGas, maxPriorityFeePerGas, proceed } = await queryEIP1559GasFeesAndProceed();
+      if (!proceed) {
+        throw new Error('🚨 Transaction Aborted!');
+      }
+
       const mintManager = (await ethers.getContractFactory('OmnuumMintManager')).attach(ans.mintManagerAddress).connect(nftOwnerSigner);
       let airdropCum = 0;
       let airdropRound = 0;
@@ -74,7 +81,12 @@ const questions = [
         chunk(ans.airdropChunk),
         map(async (airdropReceiverGroup) => {
           const value = ethers.utils.parseEther('0.0005').mul(Number(ans.airdropQty) * Number(airdropReceiverGroup.length));
-          const args = [ans.nftContractAddress, airdropReceiverGroup, [...airdropReceiverGroup].fill(Number(ans.airdropQty)), { value }];
+          const args = [
+            ans.nftContractAddress,
+            airdropReceiverGroup,
+            [...airdropReceiverGroup].fill(Number(ans.airdropQty)),
+            { value, maxFeePerGas, maxPriorityFeePerGas },
+          ];
           const trxResponse = await mintManager.mintMultiple(...args);
           const txReceipt = await trxResponse.wait();
           console.log('\n==================================================');

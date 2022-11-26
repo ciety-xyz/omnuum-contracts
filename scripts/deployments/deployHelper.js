@@ -3,7 +3,7 @@ const { ethers, upgrades } = require('hardhat');
 const chalk = require('chalk');
 
 const { writeFile, readFile } = require('fs/promises');
-const { go, zip, map, each } = require('fxjs');
+const { go, zip, map } = require('fxjs');
 
 const UpgradeableBeacon = require('@openzeppelin/upgrades-core/artifacts/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol/UpgradeableBeacon.json');
 
@@ -202,8 +202,8 @@ const queryGasFeeEIP1559 = async (confidenceLevel = 99) => {
 };
 
 const convertsGasFeesUnit = (maxFeePerGasInGwei, maxPriorityFeePerGasInGwei) => ({
-  maxFeePerGas: ethers.utils.parseUnits(maxFeePerGasInGwei, 'gwei'),
-  maxPriorityFeePerGas: ethers.utils.parseUnits(maxPriorityFeePerGasInGwei, 'gwei'),
+  maxFeePerGas: ethers.utils.parseUnits(`${maxFeePerGasInGwei}`, 'gwei'),
+  maxPriorityFeePerGas: ethers.utils.parseUnits(`${maxPriorityFeePerGasInGwei}`, 'gwei'),
 });
 
 // eslint-disable-next-line consistent-return
