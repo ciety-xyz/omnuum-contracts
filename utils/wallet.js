@@ -9,6 +9,7 @@ const assert = require('assert');
 const createWalletPath = (i) => `m/44'/60'/0'/0/${i}`;
 
 function createWallet() {
+  console.log('??????????????????')
   // assert.deepStrictEqual(
   //   Mnemonic.Words.ENGLISH,
   //   go(
@@ -39,10 +40,6 @@ function createWallet() {
   console.log(`${chalk.green('public key')}: ${wallet.publicKey}`);
   console.log(`${chalk.green('wallet address')}: ${wallet.address}`);
   console.log(`${chalk.green('recovery phrase')}: ${mnemonic.toString()}`);
-  console.log(wallet.address.substring(0, 4).toLowerCase());
-  if (wallet.address.substring(0, 4).toLowerCase() !== '0xc1') {
-    createWallet();
-  }
 }
 
 function getPkFromMnemonic(mnemonic) {
